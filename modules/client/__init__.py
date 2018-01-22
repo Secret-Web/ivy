@@ -205,7 +205,7 @@ class ClientModule(Module):
 
     @property
     def is_running(self):
-        return self.process and self.process.poll() is None
+        return self.process and self.process.returncode is None
 
     async def install_miner(self, config=None):
         if self.client.dummy is not False: return
