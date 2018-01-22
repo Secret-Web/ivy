@@ -1,3 +1,4 @@
+epyphany
 websockets
 wakeonlan
 urwid

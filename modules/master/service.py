@@ -8,7 +8,7 @@ import traceback
 import os
 import re
 
-from epiphany import Service
+from epyphany import Service
 from ivy.net import NetListener
 
 

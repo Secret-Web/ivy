@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from wakeonlan import wol
 
-from epiphany import Service
+from epyphany import Service
 from ivy.module import Module
 from ivy.net import NetConnector
 from ivy.model.client import Client

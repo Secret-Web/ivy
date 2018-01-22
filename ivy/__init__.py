@@ -6,7 +6,7 @@ import logging
 import os
 import json
 
-from epiphany import Epiphany
+from epyphany import Epyphany
 
 
 def get_mac():
@@ -21,21 +21,21 @@ def gen_id():
     return id
 
 class Ivy:
-    def __init__(self, config_file, epiphany_port=29204):
+    def __init__(self, config_file, epyphany_port=29204):
         self.logger = logging.getLogger('Ivy')
 
         self.id = gen_id()
         self.config_file = config_file
         self.config = {}
 
-        self.epiphany = Epiphany(port=epiphany_port)
+        self.epyphany = Epyphany(port=epyphany_port)
 
         self.modules = {}
 
         self.load_config()
 
-        self.register_service = self.epiphany.register_service
-        self.register_listener = self.epiphany.register_listener
+        self.register_service = self.epyphany.register_service
+        self.register_listener = self.epyphany.register_listener
 
     def save_config(self):
         with open(self.config_file, 'w') as f:
@@ -66,4 +66,4 @@ class Ivy:
 
         self.save_config()
 
-        self.epiphany.begin()
+        self.epyphany.begin()
