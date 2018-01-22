@@ -262,6 +262,8 @@ class ClientModule(Module):
 
         args = config.program.execute['args']
 
+        print(args)
+
         args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.ivy.id, args)
 
         if config.wallet:
