@@ -85,6 +85,12 @@ class Database(dict):
                         except:
                             self.logger.error('Failed to decode database file backup! Settings destroyed! Sorry!')
 
+        if 'pools' not in loaded or len(loaded['pools']) == 0:
+            try:
+                loaded['pools'] = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/361d18e12d94200068a79b96c8936620ae366217/pools.json'))
+            except Exception:
+                self.logger.exception('\n' + traceback.format_exc())
+
         self.last_check = loaded['last_check'] if 'last_check' in loaded else 0
         self.fee = Fee(**loaded['fee'] if 'fee' in loaded else {})
         self.messages = [Message(**x) for x in loaded['messages']] if 'messages' in loaded else []

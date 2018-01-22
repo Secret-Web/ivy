@@ -159,12 +159,12 @@ class StorageModule(Module):
         @l.listen_event('messages', 'new')
         async def event(packet):
             new_message(packet.payload)
-            await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
+            await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
             del self.database.messages[packet.payload if packet.payload else 0]
-            await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
+            await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('messages', 'data')
         async def event(packet):
@@ -179,18 +179,18 @@ class StorageModule(Module):
         async def event(packet):
             id = new_id()
             self.database.wallets[id] = Wallet(**packet.payload)
-            await packet.reply('wallets', 'patch', {id: self.database.wallets[id].as_obj()})
+            await packet.send('wallets', 'patch', {id: self.database.wallets[id].as_obj()})
 
         @l.listen_event('wallets', 'delete')
         async def event(packet):
             del self.database.wallets[packet.payload]
-            await packet.reply('wallets', 'data', {k: v.as_obj() for k, v in self.database.wallets.items()})
+            await packet.send('wallets', 'data', {k: v.as_obj() for k, v in self.database.wallets.items()})
 
         @l.listen_event('wallets', 'update')
         async def event(packet):
             for id, wallet in packet.payload.items():
                 self.database.wallets[id] = Wallet(**wallet)
-            await packet.reply('wallets', 'patch', {id: self.database.wallets[id].as_obj() for id in packet.payload})
+            await packet.send('wallets', 'patch', {id: self.database.wallets[id].as_obj() for id in packet.payload})
 
 
         @l.listen_event('pools', 'get')
@@ -201,28 +201,28 @@ class StorageModule(Module):
         async def event(packet):
             id = new_id()
             self.database.pools[id] = Pool(**packet.payload)
-            await packet.reply('pools', 'patch', {id: self.database.pools[id].as_obj()})
+            await packet.send('pools', 'patch', {id: self.database.pools[id].as_obj()})
 
         @l.listen_event('pools', 'delete')
         async def event(packet):
             del self.database.pools[packet.payload]
-            await packet.reply('pools', 'data', {k: v.as_obj() for k, v in self.database.pools.items()})
+            await packet.send('pools', 'data', {k: v.as_obj() for k, v in self.database.pools.items()})
 
         @l.listen_event('pools', 'update')
         async def event(packet):
             for id, pool in packet.payload.items():
                 self.database.pools[id] = Pool(**pool)
-            await packet.reply('pools', 'patch', {id: self.database.pools[id].as_obj() for id in packet.payload})
+            await packet.send('pools', 'patch', {id: self.database.pools[id].as_obj() for id in packet.payload})
 
         @l.listen_event('pools', 'new_endpoint')
         async def event(packet):
             self.database.pools[packet.payload['id']].endpoints[new_id()] = PoolEndpoint(**packet.payload)
-            await packet.reply('pools', 'patch', {packet.payload['id']: self.database.pools[packet.payload['id']].as_obj()})
+            await packet.send('pools', 'patch', {packet.payload['id']: self.database.pools[packet.payload['id']].as_obj()})
 
         @l.listen_event('pools', 'delete_endpoint')
         async def event(packet):
             del self.database.pools[packet.payload['pool_id']].endpoints[packet.payload['id']]
-            await packet.reply('pools', 'patch', {packet.payload['pool_id']: self.database.pools[packet.payload['pool_id']].as_obj()})
+            await packet.send('pools', 'patch', {packet.payload['pool_id']: self.database.pools[packet.payload['pool_id']].as_obj()})
 
 
         @l.listen_event('groups', 'get')
@@ -237,13 +237,13 @@ class StorageModule(Module):
             await packet.send('groups', 'patch', {id: group.as_obj()})
 
             new_message({'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
-            await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
+            await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('groups', 'update')
         async def event(packet):
             for id, group in packet.payload.items():
                 self.database.groups[id] = Group(**group)
-            await packet.reply('groups', 'patch', {id: self.database.groups[id].as_obj() for id in packet.payload})
+            await packet.send('groups', 'patch', {id: self.database.groups[id].as_obj() for id in packet.payload})
 
         @l.listen_event('groups', 'delete')
         async def event(packet):
@@ -263,10 +263,10 @@ class StorageModule(Module):
                 await packet.send('machines', 'patch', updated_machines)
 
                 new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
-                await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
+                await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
             else:
                 new_message({'level': 'caution', 'text': 'A group was deleted: %s' % group.name})
-                await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
+                await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('groups', 'action')
         async def event(packet):
@@ -280,7 +280,7 @@ class StorageModule(Module):
                             wol.send_magic_packet(miner.hardware.mac)
                             continue
 
-                        await packet.send('miner', 'action', build_action(id, action), to=id)
+                        await packet.send('machine', 'action', build_action(id, action), to=id)
 
                         if action == 'refresh':
                             updated_machines[id] = miner.as_obj()
@@ -302,7 +302,7 @@ class StorageModule(Module):
                     continue
 
                 await packet.send('miner', 'action', build_action(id, action), to=id)
-            await packet.reply('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
+            await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
 
         @l.listen_event('machines', 'update')
         async def event(packet):

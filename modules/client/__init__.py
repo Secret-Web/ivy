@@ -305,7 +305,7 @@ class ClientModule(Module):
             self.connector.open(service.ip, service.port, {
                 'Miner-ID': self.ivy.id,
                 'Subscribe': {
-                    'machines': ['action'],
+                    'machine': ['action'],
                     'fee': ['update']
                 }
             })
@@ -319,7 +319,7 @@ class ClientModule(Module):
         self.master_priority = None
 
     def register_events(self, l):
-        @l.listen_event('machines', 'action')
+        @l.listen_event('machine', 'action')
         async def event(packet):
             self.logger.info('Action received: %r' % packet.payload)
             if packet.payload['id'] == 'patch':
