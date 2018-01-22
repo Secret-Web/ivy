@@ -142,7 +142,7 @@ class ClientModule(Module):
 
                 if update:
                     if self.master_priority is not None and self.connector.socket:
-                        await self.connector.socket.send('miners', 'stats', {self.ivy.id: stats.as_obj()})
+                        await self.connector.socket.send('machines', 'stats', {self.ivy.id: stats.as_obj()})
                     else:
                         self.logger.warning('Not connected to any MASTER SERVER.')
 

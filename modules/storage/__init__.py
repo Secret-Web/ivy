@@ -117,7 +117,7 @@ class StorageModule(Module):
                     for gpu in stats.hardware.gpus:
                         gpu.update()
 
-                    await packet.send('miners', 'stats', {packet.sender: self.database.stats[packet.sender].as_obj()})
+                    await packet.send('machines', 'stats', {packet.sender: self.database.stats[packet.sender].as_obj()})
 
         @l.listen_event('stats', 'query')
         async def event(packet):
@@ -291,7 +291,7 @@ class StorageModule(Module):
         @l.listen_event('machines', 'get')
         async def event(packet):
             await packet.reply('machines', 'data', {k: v.as_obj() for k, v in self.database.machines.items()})
-            await packet.reply('miners', 'stats', {k: v.as_obj() for k, v in self.database.stats.items()})
+            await packet.reply('machines', 'stats', {k: v.as_obj() for k, v in self.database.stats.items()})
 
         @l.listen_event('machines', 'action')
         async def event(packet):
@@ -320,7 +320,7 @@ class StorageModule(Module):
                     await packet.send('miner', 'action', build_action(id, 'patch'), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id in packet.payload})
 
-        @l.listen_event('miners', 'stats')
+        @l.listen_event('machines', 'stats')
         async def event(packet):
             updated_stats = {}
 
@@ -332,7 +332,7 @@ class StorageModule(Module):
                 updated_stats[id] = self.database.stats[id].as_obj()
 
             if len(updated_stats) > 0:
-                await packet.send('miners', 'stats', updated_stats)
+                await packet.send('machines', 'stats', updated_stats)
                 self.new_snapshot(packet.payload)
 
         def new_message(data):
