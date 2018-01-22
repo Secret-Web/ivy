@@ -262,6 +262,8 @@ class ClientModule(Module):
 
         args = config.program.execute['args']
 
+        args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.ivy.id, args)
+
         if config.wallet:
             args = re.sub('(-[^-\s]+) {user}', '\\1 %s' % config.wallet.address, args)
 
@@ -284,7 +286,7 @@ class ClientModule(Module):
 
         args = re.sub('(-[^-\s]+) {pwr}', '' if not overclock.pwr else '\\1 %s' % overclock.pwr, args)
 
-        args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.ivy.id, args)
+        args = re.sub('{miner\.id}', self.ivy.id, args)
 
         args = shlex.split(args)
         args.insert(0, './' + config.program.execute['file'])
