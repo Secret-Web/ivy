@@ -125,7 +125,7 @@ class ClientModule(Module):
                         gpu.fan = gpu_stats[i][1]
                         gpu.watts = 0
 
-                    if new_offline > 0:
+                    if new_offline > 0 and self.connector.socket:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'miner': self.ivy.id})
 
                     # If the miner is offline, set it online and force an update
@@ -141,7 +141,7 @@ class ClientModule(Module):
                         self.logger.exception('\n' + traceback.format_exc())
 
                 if update:
-                    if self.master_priority is not None:
+                    if self.master_priority is not None and self.connector.socket:
                         await self.connector.socket.send('miners', 'stats', {self.ivy.id: stats.as_obj()})
                     else:
                         self.logger.warning('Not connected to any MASTER SERVER.')
