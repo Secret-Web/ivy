@@ -25,7 +25,7 @@ class ClientModule(Module):
         for disk in psutil.disk_partitions():
             usage = psutil.disk_usage(disk.mountpoint)
             self.config['hardware']['storage'].append({
-                'device': disk.device,
+                'mount': disk.device,
                 'fstype': disk.fstype,
                 'space': {
                     'free': usage.free,
