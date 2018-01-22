@@ -40,7 +40,7 @@ class StorageModule(Module):
         self.ivy.register_listener('master')(self.on_discovery_master)
         self.register_events(self.connector)
 
-        self.task = asyncio.Task(self.update())
+        self.task = asyncio.ensure_future(self.update())
 
     async def update(self):
         while True:

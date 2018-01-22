@@ -118,7 +118,7 @@ class NetListener(Net):
         self.connections = {}
 
     def serve(self, host, port):
-        self.task = asyncio.Task(websockets.serve(self.listener, host, port))
+        self.task = asyncio.ensure_future(websockets.serve(self.listener, host, port))
 
     async def listener(self, ws, path):
         socket = SocketWrapper(ws)
@@ -153,7 +153,7 @@ class NetConnector(Net):
         self.socket = None
 
     def open(self, host, port, extra_headers=None):
-        self.task = asyncio.Task(self.listener(host, port, extra_headers=extra_headers))
+        self.task = asyncio.ensure_future(self.listener(host, port, extra_headers=extra_headers))
 
     async def close(self):
         self.task.cancel()

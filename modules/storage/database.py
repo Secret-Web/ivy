@@ -110,7 +110,7 @@ class Database(dict):
 
         self.stats = {}
 
-        self.task = asyncio.Task(self.periodic_save())
+        self.task = asyncio.ensure_future(self.periodic_save())
 
     @property
     def database_file(self):

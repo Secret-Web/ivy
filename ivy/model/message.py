@@ -12,7 +12,7 @@ class Message:
         self.text = kwargs['text'] if 'text' in kwargs else None
 
         self.group = kwargs['group'] if 'group' in kwargs else None
-        self.miner = kwargs['miner'] if 'miner' in kwargs else None
+        self.machine = kwargs['machine'] if 'machine' in kwargs else None
 
     def as_obj(self):
         obj = {}
@@ -24,6 +24,6 @@ class Message:
         if self.text is not None: obj['text'] = self.text
 
         if self.group is not None: obj['group'] = self.group
-        if self.miner is not None: obj['miner'] = self.miner
+        if self.machine is not None: obj['machine'] = self.machine
 
         return obj

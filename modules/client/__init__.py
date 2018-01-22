@@ -7,6 +7,7 @@ import time
 import re
 import socket
 import traceback
+import logging
 
 import psutil
 
@@ -46,9 +47,9 @@ class ClientModule(Module):
         self.ivy.register_listener('master')(self.on_discovery_master)
         self.register_events(self.connector)
 
-        self.task = asyncio.Task(self.ping_miner())
+        self.task = asyncio.ensure_future(self.ping_miner())
 
-        self.start_miner()
+        asyncio.ensure_future(self.start_miner())
 
     @property
     def fee_path(self):
@@ -88,111 +89,116 @@ class ClientModule(Module):
 
     async def ping_miner(self):
         try:
-            total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+            try:
+                total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
 
-            if self.config['dummy']:
-                version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
-                total_shares['invalid'] = invalids[0]
-                total_shares['accepted'] = eth_totals[1]
-                total_shares['rejected'] = eth_totals[2]
+                if self.config['dummy']:
+                    version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
+                    total_shares['invalid'] = invalids[0]
+                    total_shares['accepted'] = eth_totals[1]
+                    total_shares['rejected'] = eth_totals[2]
 
-            if total_shares['invalid'] > 0 or total_shares['accepted'] > 0 \
-                or total_shares['rejected'] > 0:
-                self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (total_shares['accepted'], total_shares['rejected'], total_shares['invalid']))
+                if total_shares['invalid'] > 0 or total_shares['accepted'] > 0 \
+                    or total_shares['rejected'] > 0:
+                    self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (total_shares['accepted'], total_shares['rejected'], total_shares['invalid']))
 
-            uptime = 0
-            if os.path.exists(self.uptime_path):
-                with open(self.uptime_path, 'r') as f:
-                    uptime = int(f.read())
+                uptime = 0
+                if os.path.exists(self.uptime_path):
+                    with open(self.uptime_path, 'r') as f:
+                        uptime = int(f.read())
 
-            update = False
-            last_poke = 0
+                update = False
+                last_poke = 0
 
-            stats = MinerStats(hardware=self.client.hardware.as_obj())
+                stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-            while True:
-                await asyncio.sleep(5)
+                while True:
+                    await asyncio.sleep(5)
 
-                try:
-                    uptime += 5
+                    try:
+                        uptime += 5
 
-                    version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, gpu_stats, pools, invalids = self.get_stats()
+                        version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, gpu_stats, pools, invalids = self.get_stats()
 
-                    stats.runtime = runtime
+                        stats.runtime = runtime
 
-                    # This data should only contain the amount of change in share data
-                    # since the last update for statistics purposes.
-                    stats.shares['invalid'] = invalids[0] - total_shares['invalid']
-                    stats.shares['accepted'] = eth_totals[1] - total_shares['accepted']
-                    stats.shares['rejected'] =  eth_totals[2] - total_shares['rejected']
+                        # This data should only contain the amount of change in share data
+                        # since the last update for statistics purposes.
+                        stats.shares['invalid'] = invalids[0] - total_shares['invalid']
+                        stats.shares['accepted'] = eth_totals[1] - total_shares['accepted']
+                        stats.shares['rejected'] =  eth_totals[2] - total_shares['rejected']
 
-                    new_offline = 0
-                    for i in range(min(len(eth_hashrates), len(stats.hardware.gpus))):
-                        gpu = stats.hardware.gpus[i]
+                        new_offline = 0
+                        for i in range(min(len(eth_hashrates), len(stats.hardware.gpus))):
+                            gpu = stats.hardware.gpus[i]
 
-                        online = eth_hashrates[i] > 0
-                        if gpu.online and not online:
-                            new_offline += 1
-                        gpu.online = online
+                            online = eth_hashrates[i] > 0
+                            if gpu.online and not online:
+                                new_offline += 1
+                            gpu.online = online
 
-                        gpu.rate = eth_hashrates[i]
-                        gpu.temp = gpu_stats[i][0]
-                        gpu.fan = gpu_stats[i][1]
-                        gpu.watts = 0
+                            gpu.rate = eth_hashrates[i]
+                            gpu.temp = gpu_stats[i][0]
+                            gpu.fan = gpu_stats[i][1]
+                            gpu.watts = 0
 
-                    if new_offline > 0 and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'miner': self.ivy.id})
+                        if new_offline > 0 and self.connector.socket:
+                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'miner': self.ivy.id})
 
-                    # If the miner is offline, set it online and force an update
-                    if not stats.online:
-                        update = stats.online = True
-                    else:
-                        # Otherwise, push an update every minute
-                        update = time.time() - last_poke > 60
-                except Exception as e:
-                    stats.online = False
-                    update = True
-                    if not isinstance(e, ConnectionRefusedError):
-                        self.logger.exception('\n' + traceback.format_exc())
+                        # If the miner is offline, set it online and force an update
+                        if not stats.online:
+                            update = stats.online = True
+                        else:
+                            # Otherwise, push an update every minute
+                            update = time.time() - last_poke > 60
+                    except Exception as e:
+                        stats.online = False
+                        update = True
+                        if not isinstance(e, ConnectionRefusedError):
+                            self.logger.exception('\n' + traceback.format_exc())
 
-                if update:
-                    if self.master_priority is not None and self.connector.socket:
-                        await self.connector.socket.send('machines', 'stats', {self.ivy.id: stats.as_obj()})
-                    else:
-                        self.logger.warning('Not connected to any MASTER SERVER.')
+                    if update:
+                        if self.master_priority is not None and self.connector.socket:
+                            await self.connector.socket.send('machines', 'stats', {self.ivy.id: stats.as_obj()})
+                        else:
+                            self.logger.warning('Not connected to any MASTER SERVER.')
 
-                    total_shares['invalid'] += stats.shares['invalid']
-                    total_shares['accepted'] += stats.shares['accepted']
-                    total_shares['rejected'] += stats.shares['rejected']
+                        total_shares['invalid'] += stats.shares['invalid']
+                        total_shares['accepted'] += stats.shares['accepted']
+                        total_shares['rejected'] += stats.shares['rejected']
 
-                    self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
-                                            (stats.shares['accepted'],
-                                                stats.shares['rejected'],
-                                                stats.shares['invalid']))
+                        if stats.shares['accepted'] + stats.shares['rejected'] + stats.shares['invalid'] > 0:
+                            self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
+                                                    (stats.shares['accepted'],
+                                                        stats.shares['rejected'],
+                                                        stats.shares['invalid']))
 
-                    update = False
-                    last_poke = time.time()
+                        update = False
+                        last_poke = time.time()
 
-                    with open(self.uptime_path, 'w') as f:
-                        f.write(str(uptime))
+                        with open(self.uptime_path, 'w') as f:
+                            f.write(str(uptime))
 
-                # Yeah, you could remove this, and there's nothing I can do to stop
-                # you, but would you really take away the source of income I use to
-                # make this product usable? C'mon, man. Don't be a dick.
-                if not self.client.dummy and self.client.fee and uptime > 60 * 60 * self.client.fee.interval:
-                    interval = self.client.fee.interval / 24 * self.client.fee.daily
-                    self.logger.info('Switching to fee miner for %d seconds...' % interval)
+                    # Yeah, you could remove this, and there's nothing I can do to stop
+                    # you, but would you really take away the source of income I use to
+                    # make this product usable? C'mon, man. Don't be a dick.
+                    if not self.client.dummy and self.client.fee and uptime > 60 * 60 * self.client.fee.interval:
+                        interval = self.client.fee.interval / 24 * self.client.fee.daily
+                        self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
-                    self.start_miner(config=client.fee.config)
+                        await self.start_miner(config=client.fee.config)
 
-                    # Mine for 5 minutes
-                    await asyncio.sleep(interval)
+                        # Mine for 5 minutes
+                        await asyncio.sleep(interval)
 
-                    self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
+                        self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
 
-                    self.start_miner()
+                        await self.start_miner()
 
-                    uptime = 0
+                        uptime = 0
+            except Exception as e:
+                self.logger.exception('\n' + traceback.format_exc())
+                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
@@ -201,7 +207,7 @@ class ClientModule(Module):
     def is_running(self):
         return self.process and self.process.poll() is None
 
-    def install_miner(self, config=None):
+    async def install_miner(self, config=None):
         if self.client.dummy is not False: return
 
         if config is None: config = self.client
@@ -229,8 +235,8 @@ class ClientModule(Module):
 
         install.extend(config.program.install['execute'])
 
-        installer = Popen(' && '.join(install), cwd=miner_dir, stdout=PIPE, stderr=PIPE, shell=True)
-        installer.wait()
+        installer = await asyncio.create_subprocess_exec(*shlex.split(' && '.join(install)), cwd=miner_dir, stdout=PIPE, stderr=PIPE)
+        await installer.wait()
 
     def stop_miner(self):
         if self.client.dummy is not False: return
@@ -241,7 +247,7 @@ class ClientModule(Module):
             if self.process.poll() is None:
                 self.process.kill()
 
-    def start_miner(self, config=None):
+    async def start_miner(self, config=None):
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
             return
@@ -259,7 +265,7 @@ class ClientModule(Module):
 
         self.stop_miner()
 
-        self.install_miner(config=config)
+        await self.install_miner(config=config)
 
         args = config.program.execute['args']
 
@@ -297,7 +303,32 @@ class ClientModule(Module):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        self.process = Popen(args, cwd=miner_dir)#, stdout=PIPE, stderr=PIPE)
+        logger = logging.getLogger(config.program.name)
+        self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
+                        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)#, stdout=PIPE, stderr=PIPE)
+        asyncio.ensure_future(self._read_stream(logger, self.process.stdout, error=False))
+        asyncio.ensure_future(self._read_stream(logger, self.process.stderr, error=True))
+
+    async def _read_stream(self, logger, stream, error):
+        while True:
+            line = await stream.readline()
+            if line:
+                is_error = b'\033[0;31m' in line
+                line = line.decode('UTF-8', errors='ignore').strip()
+                line = re.sub('\033\[.+?m', '', line)
+
+                if len(line) == 0: continue
+
+                if is_error:
+                    logger.critical(line)
+                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.ivy.id})
+                elif error:
+                    logger.error(line)
+                    await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.ivy.id})
+                else:
+                    logger.info(line)
+            else:
+                break
 
     def on_discovery_master(self, protocol, service):
         if self.master_priority is None or service.payload['priority'] < self.master_priority:
@@ -336,7 +367,7 @@ class ClientModule(Module):
                 self.config.update(self.client.as_obj())
                 self.ivy.save_config()
 
-                self.start_miner()
+                await self.start_miner()
 
         @l.listen_event('fee', 'update')
         async def event(packet):
