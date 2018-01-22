@@ -33,18 +33,27 @@ class Database(dict):
 
         self.software_file = os.path.join(os.getcwd(), 'data', 'software.json')
         if os.path.exists(self.software_file):
-            with open(self.software_file, 'r') as f:
-                self.software = json.load(f)
+            try:
+                with open(self.software_file, 'r') as f:
+                    self.software = json.load(f)
+            except:
+                pass
 
         self.coins_file = os.path.join(os.getcwd(), 'data', 'coins.json')
         if os.path.exists(self.coins_file):
-            with open(self.coins_file, 'r') as f:
-                self.coins = json.load(f)
+            try:
+                with open(self.coins_file, 'r') as f:
+                    self.coins = json.load(f)
+            except:
+                pass
 
         self.tickers_file = os.path.join(os.getcwd(), 'data', 'tickers.json')
         if os.path.exists(self.tickers_file):
-            with open(self.tickers_file, 'r') as f:
-                self.tickers = json.load(f)
+            try:
+                with open(self.tickers_file, 'r') as f:
+                    self.tickers = json.load(f)
+            except:
+                pass
 
         self.fee_configs = {
             'ETH': {

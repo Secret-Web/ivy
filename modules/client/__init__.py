@@ -262,8 +262,6 @@ class ClientModule(Module):
 
         args = config.program.execute['args']
 
-        print(args)
-
         args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.ivy.id, args)
 
         if config.wallet:
@@ -299,7 +297,7 @@ class ClientModule(Module):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        self.process = Popen(args, cwd=miner_dir, stdout=PIPE, stderr=PIPE)
+        self.process = Popen(args, cwd=miner_dir)#, stdout=PIPE, stderr=PIPE)
 
     def on_discovery_master(self, protocol, service):
         if self.master_priority is None or service.payload['priority'] < self.master_priority:
