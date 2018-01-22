@@ -86,6 +86,7 @@ class StorageModule(Module):
 
                     'groups': ['*'],
                     'machines': ['*'],
+                    'machine': ['*'],
                     'miner': ['*'],
                     'stats': ['query']
                 }
@@ -301,7 +302,7 @@ class StorageModule(Module):
                         wol.send_magic_packet(self.database.machines[id].hardware.mac)
                     continue
 
-                await packet.send('miner', 'action', build_action(id, action), to=id)
+                await packet.send('machine', 'action', build_action(id, action), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
 
         @l.listen_event('machines', 'update')
@@ -317,7 +318,7 @@ class StorageModule(Module):
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
-                    await packet.send('miner', 'action', build_action(id, 'patch'), to=id)
+                    await packet.send('machine', 'action', build_action(id, 'patch'), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id in packet.payload})
 
         @l.listen_event('machines', 'stats')
