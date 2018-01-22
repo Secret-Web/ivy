@@ -91,7 +91,7 @@ class Database(dict):
         self.pools = {k: Pool(**v) for k, v in loaded['pools'].items()} if 'pools' in loaded else {}
         self.wallets = {k: Wallet(**v) for k, v in loaded['wallets'].items()} if 'wallets' in loaded else {}
         self.groups = {k: Group(**v) for k, v in loaded['groups'].items()} if 'groups' in loaded else {}
-        self.miners = {k: Client(**v) for k, v in loaded['miners'].items()} if 'miners' in loaded else {}
+        self.machines = {k: Client(**v) for k, v in loaded['machines'].items()} if 'machines' in loaded else {}
 
         self.stats = {}
 
@@ -114,7 +114,7 @@ class Database(dict):
         obj['pools'] = {k: v.as_obj() for k, v in self.pools.items()}
         obj['wallets'] = {k: v.as_obj() for k, v in self.wallets.items()}
         obj['groups'] = {k: v.as_obj() for k, v in self.groups.items()}
-        obj['miners'] = {k: v.as_obj() for k, v in self.miners.items()}
+        obj['machines'] = {k: v.as_obj() for k, v in self.machines.items()}
 
         if os.path.exists(self.database_file_backup):
             os.remove(self.database_file_backup)
@@ -129,7 +129,7 @@ class Database(dict):
         last_update = 0
 
         while True:
-            # Wait 2 seconds between each save
+            # Wait 5 seconds between each save
             await asyncio.sleep(5)
 
             self.save()
@@ -138,7 +138,7 @@ class Database(dict):
                 self.update_data()
 
             # Update this shit once a day, bby
-            '''if time.time() - self.last_check > 60 * 60 * 24 \
+            if time.time() - self.last_check > 60 * 60 * 24 \
                 or len(self.software) == 0:
                 self.last_check = time.time()
 
@@ -147,7 +147,7 @@ class Database(dict):
                     with open(self.software_file, 'w') as f:
                         json.dump(self.software, f, indent=2)
                 except Exception:
-                    self.logger.exception('\n' + traceback.format_exc())'''
+                    self.logger.exception('\n' + traceback.format_exc())
 
     def update_data(self):
         try:

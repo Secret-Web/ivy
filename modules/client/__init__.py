@@ -290,7 +290,7 @@ class ClientModule(Module):
             self.connector.open(service.ip, service.port, {
                 'Miner-ID': self.ivy.id,
                 'Subscribe': {
-                    'miners': ['action'],
+                    'machines': ['action'],
                     'fee': ['update']
                 }
             })
@@ -298,13 +298,13 @@ class ClientModule(Module):
             self.master_priority = service.payload['priority']
 
     async def event_connection_open(self, packet):
-        await packet.send('miners', 'update', {self.ivy.id: self.client.as_obj()})
+        await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
     async def event_connection_closed(self, packet):
         self.master_priority = None
 
     def register_events(self, l):
-        @l.listen_event('miner', 'action')
+        @l.listen_event('machines', 'action')
         async def event(packet):
             self.logger.info('Action received: %r' % packet.payload)
             if packet.payload['id'] == 'patch':
@@ -315,7 +315,7 @@ class ClientModule(Module):
             if packet.payload['id'] == 'refresh':
                 self.client.update(**packet.payload)
 
-                await packet.send('miners', 'update', {self.ivy.id: self.client.as_obj()})
+                await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
                 self.config.update(self.client.as_obj())
                 self.ivy.save_config()

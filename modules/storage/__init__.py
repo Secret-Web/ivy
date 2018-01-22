@@ -50,14 +50,14 @@ class StorageModule(Module):
                 await self.connector.socket.send('coins', 'data', self.database.coins)
                 await self.connector.socket.send('tickers', 'data', self.database.tickers)
 
-                '''if len(self.miners) > IMMEDIATE_STAT_CUTOFF:
+                '''if len(self.machines) > IMMEDIATE_STAT_CUTOFF:
                     all_stats = {}
 
-                    for id, miner in self.database.miners.items():
+                    for id, miner in self.database.machines.items():
                         all_stats[id] = miner['stats']
 
                     # Batch notify listeners of miner stats
-                    await packet.reply('miners', 'stats', all_stats)'''
+                    await packet.reply('machines', 'stats', all_stats)'''
             except Exception as e:
                 self.logger.exception('\n' + traceback.format_exc())
 
@@ -85,7 +85,7 @@ class StorageModule(Module):
                     'wallets': ['*'],
 
                     'groups': ['*'],
-                    'miners': ['*'],
+                    'machines': ['*'],
                     'miner': ['*'],
                     'stats': ['query']
                 }
@@ -102,7 +102,7 @@ class StorageModule(Module):
         async def event(packet):
             # String ID indicates it's a mining rig.
             if isinstance(packet.sender, str):
-                if packet.sender in self.database.miners:
+                if packet.sender in self.database.machines:
                     self.database.stats[packet.sender] = MinerStats(online=True)
 
         @l.listen_event('connection', 'closed')
@@ -247,22 +247,22 @@ class StorageModule(Module):
 
         @l.listen_event('groups', 'delete')
         async def event(packet):
-            updated_miners = {}
+            updated_machines = {}
 
-            for id, miner in self.database.miners.items():
+            for id, miner in self.database.machines.items():
                 if miner.group.id == packet.payload:
                     miner.group.reset()
-                    updated_miners[id] = miner.as_obj()
+                    updated_machines[id] = miner.as_obj()
 
             group = self.database.groups[packet.payload]
 
             del self.database.groups[packet.payload]
             await packet.send('groups', 'data', {k: v.as_obj() for k, v in self.database.groups.items()})
 
-            if len(updated_miners) > 0:
-                await packet.send('miners', 'patch', updated_miners)
+            if len(updated_machines) > 0:
+                await packet.send('machines', 'patch', updated_machines)
 
-                new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d miners have been ejected!' % (group.name, len(updated_miners))})
+                new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
                 await packet.reply('messages', 'data', [x.as_obj() for x in self.database.messages])
             else:
                 new_message({'level': 'caution', 'text': 'A group was deleted: %s' % group.name})
@@ -270,11 +270,11 @@ class StorageModule(Module):
 
         @l.listen_event('groups', 'action')
         async def event(packet):
-            updated_miners = {}
+            updated_machines = {}
 
             for group_id, action in packet.payload.items():
-                for id, miner in self.database.miners.items():
-                    # * indicates an update to ALL group's miners.
+                for id, miner in self.database.machines.items():
+                    # * indicates an update to ALL group's machines.
                     if group_id == '*' or miner.group.id == group_id:
                         if action == 'wake':
                             wol.send_magic_packet(miner.hardware.mac)
@@ -283,28 +283,28 @@ class StorageModule(Module):
                         await packet.send('miner', 'action', build_action(id, action), to=id)
 
                         if action == 'refresh':
-                            updated_miners[id] = miner.as_obj()
+                            updated_machines[id] = miner.as_obj()
 
-            if len(updated_miners) > 0:
-                await packet.send('miners', 'patch', updated_miners)
+            if len(updated_machines) > 0:
+                await packet.send('machines', 'patch', updated_machines)
 
-        @l.listen_event('miners', 'get')
+        @l.listen_event('machines', 'get')
         async def event(packet):
-            await packet.reply('miners', 'data', {k: v.as_obj() for k, v in self.database.miners.items()})
+            await packet.reply('machines', 'data', {k: v.as_obj() for k, v in self.database.machines.items()})
             await packet.reply('miners', 'stats', {k: v.as_obj() for k, v in self.database.stats.items()})
 
-        @l.listen_event('miners', 'action')
+        @l.listen_event('machines', 'action')
         async def event(packet):
             for id, action in packet.payload.items():
                 if action == 'wake':
-                    if id in self.database.miners:
-                        wol.send_magic_packet(self.database.miners[id].hardware.mac)
+                    if id in self.database.machines:
+                        wol.send_magic_packet(self.database.machines[id].hardware.mac)
                     continue
 
                 await packet.send('miner', 'action', build_action(id, action), to=id)
-            await packet.reply('miners', 'patch', {id: self.database.miners[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
+            await packet.reply('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
 
-        @l.listen_event('miners', 'update')
+        @l.listen_event('machines', 'update')
         async def event(packet):
             for id, data in packet.payload.items():
                 miner = Client(**data)
@@ -313,12 +313,12 @@ class StorageModule(Module):
                 if miner.group.id not in self.database.groups:
                     miner.group.reset()
 
-                self.database.miners[id] = miner
+                self.database.machines[id] = miner
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
                     await packet.send('miner', 'action', build_action(id, 'patch'), to=id)
-            await packet.send('miners', 'patch', {id: self.database.miners[id].as_obj() for id in packet.payload})
+            await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id in packet.payload})
 
         @l.listen_event('miners', 'stats')
         async def event(packet):
@@ -350,7 +350,7 @@ class StorageModule(Module):
             # The 'refresh' action pushes a new configuration for the miner
             # to start mining with.
 
-            miner = self.database.miners[id]
+            miner = self.database.machines[id]
 
             data = {'id': action}
 

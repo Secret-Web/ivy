@@ -12,7 +12,7 @@ from epyphany import Service
 from ivy.net import NetListener
 
 
-# This value defines the maximum amount of miners allowed before
+# This value defines the maximum amount of machines allowed before
 # stat updating on listeners happens in bulk. This helps prevent
 # network lag on large farms.
 IMMEDIATE_STAT_CUTOFF = 1000
@@ -54,7 +54,7 @@ class MasterService(Service):
                     return
 
             # Miner events are a special case. They're sent in bulk if the number
-            # of total miners exceeds 1000.
+            # of total machines exceeds 1000.
             #if packet.event == 'miner':
             #    return
 
