@@ -398,6 +398,8 @@ class StorageModule(Module):
                     if group.program is not None and group.program.id in self.database.software:
                         program = Program(id=group.program.id, **self.database.software[group.program.id]).as_obj()
 
+                        program['execute']['args'] = group.program.execute['args']
+
                         data['program'] = program
 
                     group = group.as_obj()

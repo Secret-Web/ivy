@@ -88,12 +88,13 @@ class ClientModule(Module):
 
     async def ping_miner(self):
         try:
-            version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
-            total_shares = {
-                'invalid': invalids[0],
-                'accepted': eth_totals[1],
-                'rejected': eth_totals[2]
-            }
+            total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+
+            if self.config['dummy']:
+                version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
+                total_shares['invalid'] = invalids[0]
+                total_shares['accepted'] = eth_totals[1]
+                total_shares['rejected'] = eth_totals[2]
 
             if total_shares['invalid'] > 0 or total_shares['accepted'] > 0 \
                 or total_shares['rejected'] > 0:
@@ -290,7 +291,6 @@ class ClientModule(Module):
 
         args = shlex.split(args)
         args.insert(0, './' + config.program.execute['file'])
-        args.extend(['-mport', '3333'])
 
         print(' '.join(args))
 
