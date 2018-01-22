@@ -1,4 +1,5 @@
 epyphany
+psutil
 websockets
 wakeonlan
 urwid

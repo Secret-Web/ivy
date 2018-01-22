@@ -74,6 +74,8 @@ class Hardware:
         self.gpus = [GPU(**data) for data in kwargs['gpus']] if 'gpus' in kwargs else None
         self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else None
 
+        self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
+
         self.overclock = Overclock(**kwargs['overclock'] if 'overclock' in kwargs else {})
 
     def reset(self):
@@ -86,6 +88,8 @@ class Hardware:
         if self.cpus is not None: obj['cpus'] = [x.as_obj() for x in self.cpus]
         if self.gpus is not None: obj['gpus'] = [x.as_obj() for x in self.gpus]
         if self.memory is not None: obj['memory'] = [x.as_obj() for x in self.memory]
+        
+        if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
 
         if self.overclock is not None: obj['overclock'] = self.overclock.as_obj()
 
@@ -147,6 +151,22 @@ class Memory:
         obj = {}
 
         if self.size: obj['size'] = self.size
+
+        return obj
+
+class Storage:
+    def __init__(self, **kwargs):
+        self.device = kwargs['device'] if 'device' in kwargs else None
+        self.fstype = kwargs['fstype'] if 'fstype' in kwargs else None
+        self.space = kwargs['space'] if 'space' in kwargs else {'free': 0, 'used': 0, 'total': 0}
+
+    def as_obj(self):
+        obj = {}
+
+        if self.device is not None: obj['device'] = self.device
+        if self.fstype is not None: obj['fstype'] = self.fstype
+
+        if self.space is not None: obj['space'] = self.space
 
         return obj
 

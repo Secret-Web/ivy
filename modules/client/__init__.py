@@ -5,10 +5,10 @@ import json
 import os
 import time
 import re
-import copy
-import random
 import socket
 import traceback
+
+import psutil
 
 from ivy.module import Module
 from ivy.net import NetConnector
@@ -20,6 +20,21 @@ from ivy.model.stats import MinerStats
 class ClientModule(Module):
     def on_load(self):
         self.config['hardware'] = get_hardware()
+        self.config['hardware']['storage'] = []
+
+        for disk in psutil.disk_partitions():
+            usage = psutil.disk_usage(disk.mountpoint)
+            self.config['hardware']['storage'].append({
+                'device': disk.device,
+                'fstype': disk.fstype,
+                'space': {
+                    'free': usage.free,
+                    'used': usage.used,
+                    'total': usage.total
+                }
+            })
+        print(self.config['hardware']['storage'])
+
         self.client = Client(**self.config)
 
         self.process = None
