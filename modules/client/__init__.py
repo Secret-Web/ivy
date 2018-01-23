@@ -321,10 +321,12 @@ class ClientModule(Module):
 
                 if is_error:
                     logger.critical(line)
-                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.ivy.id})
+                    if self.connector.socket:
+                        await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.ivy.id})
                 elif error:
                     logger.error(line)
-                    await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.ivy.id})
+                    if self.connector.socket:
+                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.ivy.id})
                 else:
                     logger.info(line)
             else:

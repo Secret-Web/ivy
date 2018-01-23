@@ -6,8 +6,6 @@ import sqlite3
 
 def new_query_result():
     return {
-        'snapshots': 0,
-        'machines': set(),
         'gpus': 0,
         'online': 0,
         'offline': 0,
@@ -106,8 +104,10 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         else:
             return []
 
-        stats = []
-        stat = None
+        results = []
+
+        time_stats = None
+        machine_stats = {}
 
         rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ?', (start, end))
         for row in rows:
@@ -134,51 +134,51 @@ CREATE TABLE IF NOT EXISTS `statistics` (
                 row_time += timedelta(days=7 - row_time.day % 7, hours=24 - row_time.hour, minutes=60 - row_time.minute)
 
             # Make a new column if
-            if stat is not None:
-                while row_time - stat[0] > delta:
-                    stat = [stat[0] + delta, None]
-                    stats.append(stat)
-            else:
-                stat = [row_time, None]
-                stats.append(stat)
+            if time_stats is not None:
+                while row_time - time_stats[0] > delta:
+                    if machine_stats is not None:
+                        for id, data in machine_stats.items():
+                            time_stats[1]['online'] += data['online'] / data['snapshots']
+                            time_stats[1]['offline'] += data['offline'] / data['snapshots']
+                            time_stats[1]['gpus'] += data['gpus'] / data['snapshots']
+                            time_stats[1]['rate'] += data['rate'] / data['snapshots']
 
-            if stat[1] is None:
-                stat[1] = new_query_result()
+                    time_stats = [time_stats[0] + delta, None]
+                    machine_stats = {}
+                    results.append(time_stats)
+            else:
+                time_stats = [row_time, None]
+                results.append(time_stats)
+
+            if time_stats[1] is None:
+                time_stats[1] = new_query_result()
 
             data = json.loads(row[2])
 
-            stat[1]['snapshots'] += 1
-            stat[1]['machines'].add(row[0])
+            if row[0] not in machine_stats:
+                machine_stats[row[0]] = new_query_result()
+                machine_stats[row[0]]['snapshots'] = 0
+            stat = machine_stats[row[0]]
+
+            stat['snapshots'] += 1
 
             if 'online' in data and data['online']:
-                stat[1]['online'] += 1
+                stat['online'] += 1
             else:
-                stat[1]['offline'] += 1
+                stat['offline'] += 1
 
             if 'shares' in data:
-                stat[1]['shares']['invalid'] += data['shares']['invalid']
-                stat[1]['shares']['accepted'] += data['shares']['accepted']
-                stat[1]['shares']['rejected'] += data['shares']['rejected']
+                stat['shares']['invalid'] += data['shares']['invalid']
+                stat['shares']['accepted'] += data['shares']['accepted']
+                stat['shares']['rejected'] += data['shares']['rejected']
 
             if 'hardware' in data:
                 if 'gpus' in data['hardware']:
                     for piece in data['hardware']['gpus']:
-                        stat[1]['gpus'] += 1
-                        stat[1]['rate'] += piece['rate']
+                        stat['gpus'] += 1
+                        stat['rate'] += piece['rate']
 
-        # Clean up stats. This removes the temporary 'machines' set, and
-        # averages the stats in large data sets.
-        for stat in stats:
-            stat[0] = '%d-%.2d-%.2d %.2d:%.2d:00' % (stat[0].year, stat[0].month, stat[0].day, stat[0].hour, stat[0].minute)
+        for row in results:
+            row[0] = '%d-%.2d-%.2d %.2d:%.2d:00' % (row[0].year, row[0].month, row[0].day, row[0].hour, row[0].minute)
 
-            if stat[1] is None: continue
-
-            stat[1]['online'] /= stat[1]['snapshots']
-            stat[1]['offline'] /= stat[1]['snapshots']
-            stat[1]['gpus'] /= stat[1]['snapshots']
-            stat[1]['rate'] /= stat[1]['snapshots']
-
-            del stat[1]['machines']
-            del stat[1]['snapshots']
-
-        return stats
+        return results
