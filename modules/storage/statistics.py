@@ -4,6 +4,26 @@ from datetime import datetime, date, timedelta
 import sqlite3
 
 
+class Stats:
+    def __init__(self):
+        self.machines = {}
+
+    def push(self, row):
+        pass
+
+    def result(self):
+        return {
+            'gpus': 0,
+            'online': 0,
+            'offline': 0,
+            'rate': 0,
+            'shares': {
+                'invalid': 0,
+                'accepted': 0,
+                'rejected': 0
+            }
+        }
+
 def new_query_result():
     return {
         'gpus': 0,
@@ -17,14 +37,7 @@ def new_query_result():
         }
     }
 
-class Store:
-    def query(self, start, end, increment):
-        pass
-
-    def statistics(self, data):
-        pass
-
-class FileStore(Store):
+class FileStore:
     def __init__(self):
         self.sql = sqlite3.connect(os.path.join(os.getcwd(), 'data', 'statistics.sql'))
         self.query = self.sql.cursor()
@@ -142,6 +155,10 @@ CREATE TABLE IF NOT EXISTS `statistics` (
                             time_stats[1]['offline'] += data['offline'] / data['snapshots']
                             time_stats[1]['gpus'] += data['gpus'] / data['snapshots']
                             time_stats[1]['rate'] += data['rate'] / data['snapshots']
+
+                            time_stats[1]['shares']['invalid'] += data['shares']['invalid']
+                            time_stats[1]['shares']['accepted'] += data['shares']['accepted']
+                            time_stats[1]['shares']['rejected'] += data['shares']['rejected']
 
                     time_stats = [time_stats[0] + delta, None]
                     machine_stats = {}

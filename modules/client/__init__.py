@@ -92,7 +92,7 @@ class ClientModule(Module):
             try:
                 total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
 
-                if self.config['dummy']:
+                if self.client.dummy:
                     version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
                     total_shares['invalid'] = invalids[0]
                     total_shares['accepted'] = eth_totals[1]
@@ -198,10 +198,12 @@ class ClientModule(Module):
                         uptime = 0
             except Exception as e:
                 self.logger.exception('\n' + traceback.format_exc())
-                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
+                if self.connector.socket:
+                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
+            if self.connector.socket:
+                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
 
     @property
     def is_running(self):
