@@ -148,9 +148,14 @@ class StorageModule(Module):
 
         @l.listen_event('fee', 'set')
         async def event(packet):
-            packet.payload = int(packet.payload)
-            if not (packet.payload < 1 or packet.payload > 24):
-                self.database.fee.interval = packet.payload
+            packet.payload['daily'] = int(packet.payload['daily'])
+            if not packet.payload['daily'] < 15:
+                self.database.fee.daily = packet.payload['daily']
+
+            packet.payload['interval'] = int(packet.payload['interval'])
+            if not (packet.payload['interval'] < 1 or packet.payload['interval'] > 24):
+                self.database.fee.interval = packet.payload['interval']
+
             await packet.send('fee', 'data', self.database.fee.as_obj())
 
         @l.listen_event('messages', 'get')
@@ -277,13 +282,13 @@ class StorageModule(Module):
                 for id, miner in self.database.machines.items():
                     # * indicates an update to ALL group's machines.
                     if group_id == '*' or miner.group.id == group_id:
-                        if action == 'wake':
+                        if action['id'] == 'wake':
                             wol.send_magic_packet(miner.hardware.mac)
                             continue
 
                         await packet.send('machine', 'action', build_action(id, action), to=id)
 
-                        if action == 'refresh':
+                        if action['id'] == 'refresh':
                             updated_machines[id] = miner.as_obj()
 
             if len(updated_machines) > 0:
@@ -297,13 +302,13 @@ class StorageModule(Module):
         @l.listen_event('machines', 'action')
         async def event(packet):
             for id, action in packet.payload.items():
-                if action == 'wake':
+                if action['id'] == 'wake':
                     if id in self.database.machines:
                         wol.send_magic_packet(self.database.machines[id].hardware.mac)
                     continue
 
                 await packet.send('machine', 'action', build_action(id, action), to=id)
-            await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action == 'refresh'})
+            await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action['id'] == 'refresh'})
 
         @l.listen_event('machines', 'update')
         async def event(packet):
@@ -318,7 +323,7 @@ class StorageModule(Module):
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
-                    await packet.send('machine', 'action', build_action(id, 'patch'), to=id)
+                    await packet.send('machine', 'action', build_action(id, {'id': 'patch'}), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id in packet.payload})
 
         @l.listen_event('machines', 'stats')
@@ -351,11 +356,14 @@ class StorageModule(Module):
             # The 'refresh' action pushes a new configuration for the miner
             # to start mining with.
 
+            if action['id'] == 'upgrade':
+                return action
+
             miner = self.database.machines[id]
 
-            data = {'id': action}
+            data = {'id': action['id']}
 
-            if action == 'patch':
+            if action['id'] == 'patch':
                 data['name'] = miner.name
                 data['notes'] = miner.notes
 
@@ -365,7 +373,7 @@ class StorageModule(Module):
                     group['id'] = group_id
 
                     data['group'] = group
-            elif action == 'refresh':
+            elif action['id'] == 'refresh':
                 coin = None
 
                 group_id = miner.group.id if miner.group else None

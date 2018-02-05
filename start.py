@@ -27,5 +27,5 @@ try:
     s.start()
 
     asyncio.get_event_loop().run_forever()
-except KeyboardInterrupt:
+except:
     logger.critical('Shutting down...')

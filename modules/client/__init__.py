@@ -1,6 +1,5 @@
 import asyncio
 import shlex
-from subprocess import Popen, PIPE
 import json
 import os
 import time
@@ -237,7 +236,7 @@ class ClientModule(Module):
 
         install.extend(config.program.install['execute'])
 
-        installer = await asyncio.create_subprocess_exec(*shlex.split(' && '.join(install)), cwd=miner_dir, stdout=PIPE, stderr=PIPE)
+        installer = await asyncio.create_subprocess_exec(*shlex.split(' && '.join(install)), cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await installer.wait()
 
     def stop_miner(self):
@@ -358,12 +357,14 @@ class ClientModule(Module):
         @l.listen_event('machine', 'action')
         async def event(packet):
             self.logger.info('Action received: %r' % packet.payload)
-            if packet.payload['id'] == 'patch':
+            if packet.payload['id'] == 'upgrade':
+                await self.ivy.upgrade_script()
+            elif packet.payload['id'] == 'patch':
                 self.client.update(**packet.payload)
 
                 self.config.update(self.client.as_obj())
                 self.ivy.save_config()
-            if packet.payload['id'] == 'refresh':
+            elif packet.payload['id'] == 'refresh':
                 self.client.update(**packet.payload)
 
                 await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})

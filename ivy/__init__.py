@@ -4,7 +4,9 @@ import time
 import string
 import logging
 import os
+import sys
 import json
+import asyncio
 
 from epyphany import Epyphany
 
@@ -67,3 +69,18 @@ class Ivy:
         self.save_config()
 
         self.epyphany.begin()
+
+    async def upgrade_script(self, version):
+        self.logger.info('Upgrading script...')
+
+        cmd = None
+
+        if version == 'bleeding':
+            cmd = ['git', 'pull']
+        else:
+            cmd = []
+
+        updater = await asyncio.create_subprocess_exec(*cmd, cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        await updater.wait()
+
+        asyncio.get_event_loop().stop()

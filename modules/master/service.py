@@ -38,7 +38,7 @@ class MasterService(Service):
         self.listener.serve('', self.port)
 
     def create_payload(self):
-        return {'id': self.module.ivy.id, 'priority': self.module.config['priority']}
+        return {'id': self.module.ivy.id, 'priority': self.module.config['priority'] if 'priority' in self.module.config else 0}
 
     def register_events(self, l):
         @l.listen_event
