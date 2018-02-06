@@ -142,7 +142,7 @@ class ClientModule(Module):
                             gpu.watts = 0
 
                         if new_offline > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'miner': self.ivy.id})
+                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.ivy.id})
 
                         # If the miner is offline, set it online and force an update
                         if not stats.online:
@@ -198,11 +198,11 @@ class ClientModule(Module):
             except Exception as e:
                 self.logger.exception('\n' + traceback.format_exc())
                 if self.connector.socket:
-                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
+                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.ivy.id})
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
-                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'miner': self.ivy.id})
+                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.ivy.id})
 
     @property
     def is_running(self):

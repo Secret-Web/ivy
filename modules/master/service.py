@@ -55,7 +55,7 @@ class MasterService(Service):
 
             # Miner events are a special case. They're sent in bulk if the number
             # of total machines exceeds 1000.
-            #if packet.event == 'miner':
+            #if packet.event == 'machine':
             #    return
 
             if packet.event in self.subscriptions:
