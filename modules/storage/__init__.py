@@ -5,7 +5,7 @@ import string
 import traceback
 from datetime import datetime, timedelta
 
-from wakeonlan import wol
+from wakeonlan import send_magic_packet
 
 from epyphany import Service
 from ivy.module import Module
@@ -283,7 +283,7 @@ class StorageModule(Module):
                     # * indicates an update to ALL group's machines.
                     if group_id == '*' or miner.group.id == group_id:
                         if action['id'] == 'wake':
-                            wol.send_magic_packet(miner.hardware.mac)
+                            send_magic_packet(miner.hardware.mac)
                             continue
 
                         await packet.send('machine', 'action', build_action(id, action), to=id)
@@ -304,7 +304,7 @@ class StorageModule(Module):
             for id, action in packet.payload.items():
                 if action['id'] == 'wake':
                     if id in self.database.machines:
-                        wol.send_magic_packet(self.database.machines[id].hardware.mac)
+                        send_magic_packet(self.database.machines[id].hardware.mac)
                     continue
 
                 await packet.send('machine', 'action', build_action(id, action), to=id)
