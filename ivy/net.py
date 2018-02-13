@@ -182,6 +182,7 @@ class NetConnector(Net):
             except ConnectionClosed as e:
                 if e.code != 1001 and e.code != 1006:
                     raise e
+                self.logger.warning('Master server closed.')
             except Exception as e:
                 self.logger.critical('Connection closed! %r' % e)
         finally:
