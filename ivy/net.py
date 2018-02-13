@@ -164,35 +164,25 @@ class NetConnector(Net):
         try:
             uri = 'ws://%s:%d/' % (host, port)
 
-            tries = 0
-            while tries < 3:
-                if tries > 0:
-                    self.logger.critical('Attempting to reconnect in 5 seconds...')
-                    await asyncio.sleep(5)
-                else:
-                    self.logger.debug('Connecting to %s...' % uri)
+            self.logger.debug('Connecting to %s...' % uri)
 
-                try:
-                    async with websockets.connect(uri, extra_headers=extra_headers) as ws:
-                        tries = 0
+            try:
+                async with websockets.connect(uri, extra_headers=extra_headers) as ws:
+                    self.socket = SocketWrapper(ws)
 
-                        self.socket = SocketWrapper(ws)
+                    await self.call_event(Packet(self.socket, 'connection', 'open', dummy=True))
 
-                        await self.call_event(Packet(self.socket, 'connection', 'open', dummy=True))
+                    while True:
+                        data = await self.socket.recv()
 
-                        while True:
-                            data = await self.socket.recv()
-
-                            if 'event' in data and 'method' in data:
-                                await self.call_event(Packet(self.socket, **data))
-                            else:
-                                self.logger.warning('Unknown data received: %r' % data)
-                except ConnectionClosed as e:
-                    if e.code != 1001 and e.code != 1006:
-                        raise e
-                    tries += 1
-                except Exception as e:
-                    self.logger.critical('Connection closed! %r' % e)
-                    tries += 1
+                        if 'event' in data and 'method' in data:
+                            await self.call_event(Packet(self.socket, **data))
+                        else:
+                            self.logger.warning('Unknown data received: %r' % data)
+            except ConnectionClosed as e:
+                if e.code != 1001 and e.code != 1006:
+                    raise e
+            except Exception as e:
+                self.logger.critical('Connection closed! %r' % e)
         finally:
             await self.call_event(Packet(self.socket, 'connection', 'closed', dummy=True))

@@ -31,7 +31,7 @@ class StorageModule(Module):
             self.config['type'] = 'file'
 
         self.database = Database(self.logger)
-        self.stats = statistics.FileStore()
+        self.stats = statistics.Store()
 
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
@@ -122,9 +122,9 @@ class StorageModule(Module):
 
         @l.listen_event('stats', 'query')
         async def event(packet):
-            stats = self.stats.statistics(packet.payload['start'] if 'start' in packet.payload else None,
+            stats = self.stats.get_statistics(packet.payload['start'] if 'start' in packet.payload else None,
                                                 packet.payload['end'] if 'end' in packet.payload else datetime.utcnow(),
-                                                increment=packet.payload['increment'] if 'increment' in packet.payload else 0,
+                                                increment=packet.payload['increment'] if 'increment' in packet.payload else None,
                                                 machine=packet.payload['machine'] if 'machine' in packet.payload else None)
             await packet.reply('stats', 'response', payload={'id': packet.payload['id'], 'data': stats})
 
@@ -339,7 +339,7 @@ class StorageModule(Module):
 
             if len(updated_stats) > 0:
                 await packet.send('machines', 'stats', updated_stats)
-                self.new_snapshot(packet.payload)
+                self.new_snapshot(updated_stats)
 
         def new_message(data):
             if isinstance(data, dict):
