@@ -7,7 +7,6 @@ import sqlite3
 
 regex = re.compile(r'^(?:(?P<years>\d+?)yr)?(?:(?P<months>\d+?)mth)?(?:(?P<days>\d+?)d)?(?:(?P<hours>\d+?)hr)?(?:(?P<minutes>\d+?)m)?(?:(?P<seconds>\d+?)s)?$')
 def parse_time(time_str):
-    print(time_str)
     parts = regex.match(time_str)
     if not parts:
         return
