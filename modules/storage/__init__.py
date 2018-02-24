@@ -271,7 +271,7 @@ class StorageModule(Module):
                 new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
                 await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
             else:
-                new_message({'level': 'caution', 'text': 'A group was deleted: %s' % group.name})
+                new_message({'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
                 await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('groups', 'action')
@@ -279,6 +279,14 @@ class StorageModule(Module):
             updated_machines = {}
 
             for group_id, action in packet.payload.items():
+                if action['id'] == 'upgrade':
+                    if group_id == '*':
+                        new_message({'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
+                        await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                    else:
+                        new_message({'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
+                        await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+
                 for id, miner in self.database.machines.items():
                     # * indicates an update to ALL group's machines.
                     if group_id == '*' or miner.group.id == group_id:
@@ -306,6 +314,10 @@ class StorageModule(Module):
                     if id in self.database.machines:
                         send_magic_packet(self.database.machines[id].hardware.mac)
                     continue
+
+                if action['id'] == 'upgrade':
+                    new_message({'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
+                    await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
                 await packet.send('machine', 'action', build_action(id, action), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action['id'] == 'refresh'})

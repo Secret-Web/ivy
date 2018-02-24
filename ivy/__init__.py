@@ -71,16 +71,14 @@ class Ivy:
         self.epyphany.begin()
 
     async def upgrade_script(self, version):
-        self.logger.info('Upgrading script...')
+        self.logger.info('Upgrading script to commit %s...' % version['commit'])
 
         cmd = None
 
-        if version == 'bleeding':
-            cmd = ['git', 'pull']
-        else:
-            cmd = []
+        updater = await asyncio.create_subprocess_exec(*['git', 'pull'], cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        await updater.wait()
 
-        updater = await asyncio.create_subprocess_exec(*cmd, cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        updater = await asyncio.create_subprocess_exec(*['git', 'reset', '--hard', version['commit']], cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await updater.wait()
 
         asyncio.get_event_loop().stop()

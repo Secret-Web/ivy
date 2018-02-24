@@ -358,7 +358,7 @@ class ClientModule(Module):
         async def event(packet):
             self.logger.info('Action received: %r' % packet.payload)
             if packet.payload['id'] == 'upgrade':
-                await self.ivy.upgrade_script()
+                await self.ivy.upgrade_script(packet.payload['version'])
             elif packet.payload['id'] == 'patch':
                 self.client.update(**packet.payload)
 
