@@ -3,4 +3,6 @@ psutil
 websockets
 wakeonlan
 
+urwid
+
 aiohttp
