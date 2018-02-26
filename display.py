@@ -9,7 +9,7 @@ import traceback
 import urwid
 
 
-IP = '192.168.1.90'
+IP = 'localhost'
 
 class Display:
     def __init__(self, loop):
