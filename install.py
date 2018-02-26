@@ -138,8 +138,8 @@ if is_storage:
     data['storage'] = {'type': 'file'}
 
 print('Saving configuration...')
+os.makedirs('data/')
 with open('data/config.json', 'w') as f:
     json.dump(data, f)
 
-print('Done. Booting ivy...')
-os.system('python3 ./start.py')
+print('Done. Ivy has been installed.')
