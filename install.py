@@ -138,7 +138,10 @@ if is_storage:
     data['storage'] = {'type': 'file'}
 
 print('Saving configuration...')
-os.makedirs('data/')
+
+if not os.path.exists('data/'):
+    os.makedirs('data/')
+
 with open('data/config.json', 'w') as f:
     json.dump(data, f)
 
