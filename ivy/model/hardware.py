@@ -49,7 +49,7 @@ def get_hardware():
                 'product': x['product'],
                 'width': x['width'],
                 'clock': x['clock'],
-                'driver': x['configuration']['driver']
+                'driver': None #x['configuration']['driver']
             })
 
     return {
