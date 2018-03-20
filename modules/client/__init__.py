@@ -236,7 +236,7 @@ class ClientModule(Module):
 
         install.extend(config.program.install['execute'])
 
-        installer = await asyncio.create_subprocess_exec(*shlex.split(' && '.join(install)), cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await installer.wait()
 
     def stop_miner(self):
