@@ -245,8 +245,8 @@ class ClientModule(Module):
         if self.is_running:
             self.process.terminate()
             time.sleep(5)
-            if self.process.poll() is None:
-                self.process.kill()
+#            if self.process.poll() is None:
+#                self.process.kill()
 
     async def start_miner(self, config=None):
         if self.client.dummy is not False:

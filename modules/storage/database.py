@@ -158,7 +158,7 @@ class Database(dict):
                 self.last_check = time.time()
 
                 try:
-                    self.software = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/3a2f996c524412c03b12c3f38d87096e/raw/38911b3b9e5077770d2901637c49cc611dbc9af9/software.json'))
+                    self.software = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/3a2f996c524412c03b12c3f38d87096e/raw/software.json'))
                     with open(self.software_file, 'w') as f:
                         json.dump(self.software, f, indent=2)
                 except Exception:
