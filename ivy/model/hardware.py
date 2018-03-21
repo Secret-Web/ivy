@@ -93,9 +93,8 @@ class Hardware:
 
         self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
 
-        if 'overclock' in kwargs:
-            self.overclock_nvidia = Overclock(**kwargs['overclock']['nvidia'] if 'nvidia' in kwargs['overclock'] else {})
-            self.overclock_amd = Overclock(**kwargs['overclock']['amd'] if 'amd' in kwargs['overclock'] else {})
+        self.overclock_nvidia = Overclock(**kwargs['overclock']['nvidia']) if 'nvidia' in kwargs['overclock'] else None
+        self.overclock_amd = Overclock(**kwargs['overclock']['amd']) if 'amd' in kwargs['overclock'] else None
 
     def reset(self):
         self.overclock.reset()
