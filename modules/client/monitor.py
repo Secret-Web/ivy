@@ -35,7 +35,7 @@ class Monitor:
     def as_obj(self):
         return {
             'config': self.process.config.as_obj() if self.process.config is not None else {},
-            'hardware': self.stats.as_obj(),
+            'hardware': self.stats.hardware.as_obj(),
             'shares': self.shares,
             'output': self.output
         }
