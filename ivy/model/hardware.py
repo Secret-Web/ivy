@@ -142,7 +142,7 @@ class CPU:
         return obj
 
 class GPU:
-    def __init__(self, i, **kwargs):
+    def __init__(self, **kwargs):
         self.bus_id = kwargs['bus_id'] if 'bus_id' in kwargs else None
         self.width = kwargs['width'] if 'width' in kwargs else None
 
