@@ -2,6 +2,7 @@ import asyncio
 
 
 async def run_cmd(cmd):
+    print(cmd)
     proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     await proc.wait()
 
