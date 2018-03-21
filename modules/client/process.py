@@ -97,7 +97,7 @@ class Process:
 
         args = config.program.execute['args']
 
-        args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.ivy.id, args)
+        args = re.sub('(-[^-\s]+) {miner\.id}', '\\1 %s' % self.client.worker_id, args)
 
         if config.wallet:
             args = re.sub('(-[^-\s]+) {user}', '\\1 %s' % config.wallet.address, args)
@@ -108,7 +108,7 @@ class Process:
 
             args = re.sub('(-[^-\s]+) {user}', '' if not config.pool.endpoint.username else '\\1 %s' % config.pool.endpoint.username, args)
 
-        args = re.sub('{miner\.id}', self.ivy.id, args)
+        args = re.sub('{miner\.id}', self.client.worker_id, args)
 
         args = shlex.split(args)
         args.insert(0, './' + config.program.execute['file'])
@@ -139,11 +139,11 @@ class Process:
                 if is_error:
                     logger.critical(line)
                     if self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.ivy.id})
+                        await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
                 elif error:
                     logger.error(line)
                     if self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.ivy.id})
+                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.client.machine_id})
                 else:
                     logger.info(line)
 

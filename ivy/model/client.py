@@ -11,6 +11,9 @@ class Client:
         self.update(init=True, **kwargs)
 
     def update(self, init=False, **kwargs):
+        if 'machine_id' in kwargs or init: self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
+        if 'worker_id' in kwargs or init: self.worker_id = kwargs['worker_id'] if 'worker_id' in kwargs else None
+
         if 'dummy' in kwargs or init: self.dummy = kwargs['dummy'] if 'dummy' in kwargs else False
         if 'name' in kwargs or init: self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
         if 'notes' in kwargs or init: self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
@@ -31,6 +34,8 @@ class Client:
 
     def as_obj(self):
         obj = {}
+
+        if self.worker_id is not None: obj['worker_id'] = self.worker_id
 
         if self.dummy is not None: obj['dummy'] = self.dummy
         if self.name is not None: obj['name'] = self.name
