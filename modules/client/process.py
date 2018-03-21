@@ -1,5 +1,9 @@
+import os
+import re
 import asyncio
+import shlex
 
+from . import gpu_control
 from .monitor import Monitor
 
 
@@ -16,6 +20,13 @@ class Process:
         asyncio.ensure_future(self.start())
 
     @property
+    def miner_dir(self):
+        cwd = os.path.join(os.getcwd(), 'data', 'miners')
+        if not os.path.exists(cwd):
+            os.mkdir(cwd)
+        return cwd
+
+    @property
     def is_running(self):
         return self.process and self.process.returncode is None
 
@@ -28,7 +39,7 @@ class Process:
             self.logger.error('Configured program is not valid.')
             return
 
-        miner_dir = os.path.join(self.client.miner_dir, config.program.name)
+        miner_dir = os.path.join(self.miner_dir, config.program.name)
         if os.path.exists(miner_dir): return
         os.mkdir(miner_dir)
 
@@ -58,7 +69,7 @@ class Process:
 
             gpu_control.revert(self.client.hardware)
 
-            time.sleep(5)
+            await asyncio.sleep(5)
 #            if self.process.poll() is None:
 #                self.process.kill()
 
@@ -104,7 +115,7 @@ class Process:
 
         print(' '.join(args))
 
-        miner_dir = os.path.join(self.client.miner_dir, config.program.name)
+        miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         gpu_control.apply(self.client.hardware)
@@ -136,8 +147,8 @@ class Process:
                 else:
                     logger.info(line)
 
-                self.monitor['output'].append(line)
+                self.monitor.output.append(line)
 
-                del self.monitor['output'][:-128]
+                del self.monitor.output[:-128]
             else:
                 break

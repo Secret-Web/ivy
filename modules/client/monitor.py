@@ -1,4 +1,7 @@
 import asyncio
+import traceback
+import json
+import socket
 
 
 class Monitor:
@@ -12,6 +15,10 @@ class Monitor:
         self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
 
         asyncio.ensure_future(self.ping_miner())
+
+    @property
+    def uptime_path(self):
+        return os.path.join('/tmp/.ivy-uptime')
 
     def as_obj(self):
         return {

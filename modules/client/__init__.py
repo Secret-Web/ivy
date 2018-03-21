@@ -1,14 +1,4 @@
 import asyncio
-import shlex
-import json
-import os
-import time
-import re
-import socket
-import traceback
-import logging
-
-import psutil
 
 from ivy.module import Module
 from ivy.net import NetConnector
@@ -17,26 +7,12 @@ from ivy.model.hardware import get_hardware
 from ivy.model.stats import MinerStats
 
 from . import api_server
-from . import gpu_control
 from .process import Process
 
 
 class ClientModule(Module):
     def on_load(self):
         self.config['hardware'] = get_hardware()
-        self.config['hardware']['storage'] = []
-
-        for disk in psutil.disk_partitions():
-            usage = psutil.disk_usage(disk.mountpoint)
-            self.config['hardware']['storage'].append({
-                'mount': disk.device,
-                'fstype': disk.fstype,
-                'space': {
-                    'free': usage.free,
-                    'used': usage.used,
-                    'total': usage.total
-                }
-            })
 
         self.client = Client(**self.config)
 
@@ -51,17 +27,6 @@ class ClientModule(Module):
         self.register_events(self.connector)
 
         asyncio.ensure_future(api_server.start(self))
-
-    @property
-    def uptime_path(self):
-        return os.path.join('/tmp/.ivy-uptime')
-
-    @property
-    def miner_dir(self):
-        cwd = os.path.join(os.getcwd(), 'data', 'miners')
-        if not os.path.exists(cwd):
-            os.mkdir(cwd)
-        return cwd
 
     def on_discovery_master(self, protocol, service):
         if self.master_priority is None or service.payload['priority'] < self.master_priority:

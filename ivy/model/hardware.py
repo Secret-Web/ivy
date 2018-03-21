@@ -2,6 +2,8 @@ import shlex
 import json
 from subprocess import Popen, PIPE
 
+import psutil
+
 from ivy import get_mac
 
 
@@ -52,11 +54,26 @@ def get_hardware():
                 'driver': None #x['configuration']['driver']
             })
 
+    storage = []
+
+    for disk in psutil.disk_partitions():
+        usage = psutil.disk_usage(disk.mountpoint)
+        storage.append({
+            'mount': disk.device,
+            'fstype': disk.fstype,
+            'space': {
+                'free': usage.free,
+                'used': usage.used,
+                'total': usage.total
+            }
+        })
+
     return {
         'mac': get_mac(),
         'cpus': cpus,
         'memory': memory,
-        'gpus': gpus
+        'gpus': gpus,
+        'storage': storage
     }
 
 def search_hw(hardware):
