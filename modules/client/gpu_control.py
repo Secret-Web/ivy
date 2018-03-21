@@ -2,7 +2,7 @@ import asyncio
 
 
 async def run_cmd(cmd):
-    proc = await asyncio.create_subprocess_shell(cmd, cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     await proc.wait()
 
 async def setup():
