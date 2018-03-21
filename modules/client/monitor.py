@@ -3,6 +3,7 @@ import asyncio
 import traceback
 import json
 import socket
+import time
 
 from ivy.model.stats import MinerStats
 

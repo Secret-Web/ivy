@@ -18,7 +18,7 @@ async def start(client_instance):
     global client
     client = client_instance
 
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     site = web.TCPSite(runner, 'localhost', 29205)
     await site.start()
