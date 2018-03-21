@@ -8,7 +8,7 @@ from aiohttp import web
 client = None
 
 async def index(request):
-    return web.Response(text=json.dumps(client.monitor.as_obj()), content_type='text/html')
+    return web.Response(text=json.dumps(client.process.monitor.as_obj()), content_type='text/html')
 
 app = web.Application()
 
