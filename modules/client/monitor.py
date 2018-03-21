@@ -4,6 +4,8 @@ import traceback
 import json
 import socket
 
+from ivy.model.stats import MinerStats
+
 
 class Monitor:
     def __init__(self, logger, client, connector, process):

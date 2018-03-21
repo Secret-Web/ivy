@@ -4,7 +4,6 @@ from ivy.module import Module
 from ivy.net import NetConnector
 from ivy.model.client import Client
 from ivy.model.hardware import get_hardware
-from ivy.model.stats import MinerStats
 
 from . import api_server
 from .process import Process
