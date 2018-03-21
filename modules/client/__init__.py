@@ -14,10 +14,12 @@ class ClientModule(Module):
         if 'worker_id' not in self.config:
             self.config['worker_id'] = self.ivy.id
 
-        if 'hardware' not in self.config:
-            self.config['hardware'] = get_hardware()
+        hardware = get_hardware()
 
-        self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
+        if 'hardware' in self.config:
+            hardware.update(self.config['hardware'])
+
+        self.client = Client(**dict({'machine_id': self.ivy.id, 'hardware': hardware}, **self.config))
 
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
