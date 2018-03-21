@@ -94,6 +94,9 @@ class Process:
 
         await self.stop()
 
+        print(self.config)
+        print(config)
+
         self.config = config
 
         await self.install(config=config)
@@ -121,7 +124,7 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        await gpu_control.apply(self.client.hardware)
+        await gpu_control.apply(config.hardware)
 
         logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,

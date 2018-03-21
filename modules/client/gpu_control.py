@@ -11,7 +11,6 @@ async def setup():
     await AMD.apply()
 
 async def apply(hardware):
-    print(hardware.as_obj())
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
             await NVIDIA.apply(i, gpu, hardware.overclock_nvidia)
