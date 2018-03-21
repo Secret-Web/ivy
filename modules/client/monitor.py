@@ -156,14 +156,14 @@ class Monitor:
                     interval = self.client.fee.interval / 24 * self.client.fee.daily
                     self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
-                    await self.start(config=client.fee.config)
+                    await self.process.start(config=client.fee.config)
 
                     # Mine for 5 minutes
                     await asyncio.sleep(interval)
 
                     self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
 
-                    await self.start_miner()
+                    await self.process.start()
 
                     self.uptime = 0
         except Exception as e:

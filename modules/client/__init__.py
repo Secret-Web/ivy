@@ -68,7 +68,7 @@ class ClientModule(Module):
                 self.config.update(self.client.as_obj())
                 self.ivy.save_config()
 
-                await self.start_miner()
+                await self.process.start()
 
         @l.listen_event('fee', 'update')
         async def event(packet):
