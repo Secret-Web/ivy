@@ -11,6 +11,7 @@ async def setup():
     await AMD.apply()
 
 async def apply(hardware):
+    print(hardware.as_obj())
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
             await NVIDIA.apply(i, gpu, hardware.overclock_nvidia)
@@ -54,7 +55,7 @@ class NVIDIA:
             '[gpu:%d]/GPUGraphicsClockOffset[3]=0',
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0'
         ]
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a ' + '-a '.join(applies))
+        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a ' + ' -a '.join(applies))
 
 class AMD:
     async def apply(i, gpu):
