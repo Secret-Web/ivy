@@ -113,7 +113,7 @@ class Monitor:
                         self.shares['invalid'] = stats.shares['invalid'] + total_shares['invalid']
 
                         if new_offline > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.ivy.id})
+                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
                         # If the miner is offline, set it online and force an update
                         if not stats.online:
@@ -129,7 +129,7 @@ class Monitor:
 
                     if update:
                         if self.connector.socket:
-                            await self.connector.socket.send('machines', 'stats', {self.ivy.id: stats.as_obj()})
+                            await self.connector.socket.send('machines', 'stats', {self.client.machine_id: stats.as_obj()})
                         else:
                             self.logger.warning('Not connected to any MASTER SERVER.')
 
@@ -169,8 +169,8 @@ class Monitor:
             except Exception as e:
                 self.logger.exception('\n' + traceback.format_exc())
                 if self.connector.socket:
-                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.ivy.id})
+                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
-                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.ivy.id})
+                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
