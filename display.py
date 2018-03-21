@@ -5,17 +5,44 @@ import os
 import socket
 import json
 import traceback
+import urllib.request
 
 import urwid
 
 
 IP = 'localhost'
 
+palette = [
+    ('gpus', '', '', '', '', '#333'),
+
+    ('good', '', '', '', '', '#080'),
+    ('bad', '', '', '', '', '#800'),
+    ('bg-sidebar', '', '', '', '', '#000'),
+    ('bg', '', '', '', '#fff', '#000'),]
+
+def url_content(url):
+    response = urllib.request.urlopen(urllib.request.Request(
+        url,
+        data=None,
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+        }
+    ))
+    return response.read().decode('utf-8')
+
 class Display:
     def __init__(self, loop):
-        self.output = urwid.Text('')
+        self.output_lines = urwid.SimpleListWalker([urwid.Text('Loading...')])
+        self.output = urwid.ListBox(self.output_lines)
 
-        self.pool = urwid.Text('Loading data...')
+        self.name = urwid.Text('Loading data...', align='center')
+
+        self.wallet_crypto = urwid.Text('Loading data...', align='center')
+        self.wallet_name = urwid.Text('Loading data...', align='center')
+        self.wallet_address = urwid.Text('Loading data...', align='center')
+
+        self.pool_name = urwid.Text('Loading data...', align='center')
+        self.pool_url = urwid.Text('Loading data...', align='center')
 
         self.accepted = urwid.Text('Loading data...')
         self.rejected = urwid.Text('Loading data...')
@@ -24,40 +51,62 @@ class Display:
         self.gpus_names = urwid.Text('Loading data...')
         self.gpus_temps = urwid.Text('Loading data...')
         self.gpus_fans = urwid.Text('Loading data...')
+        self.gpus_rate = urwid.Text('Loading data...')
 
         self.urwid = urwid.MainLoop(
-            urwid.Columns([
-                urwid.LineBox(
-                    urwid.Filler(self.output, valign='bottom'),
-                    title='Output'
-                ), ('fixed', 40, urwid.LineBox(
-                    urwid.Filler(
-                        urwid.Padding(
-                            urwid.Pile([
-                                self.pool,
+            urwid.AttrMap(
+                urwid.Columns([
+                    urwid.LineBox(
+                        self.output,
+                        title='Output'
+                    ), ('fixed', 48,
+                        urwid.AttrMap(urwid.Filler(
+                            urwid.Padding(
+                                urwid.Pile([
+                                    urwid.LineBox(urwid.Pile([
+                                        self.name,
+                                        self.wallet_crypto,
 
-                                urwid.Divider(),
+                                        urwid.Divider(),
 
-                                self.accepted,
-                                self.rejected,
-                                self.invalid,
+                                        self.pool_name,
+                                        self.pool_url,
 
-                                urwid.Divider(),
+                                        urwid.Divider(),
 
-                                urwid.Columns([
-                                    self.gpus_names,
-                                    self.gpus_temps,
-                                    self.gpus_fans
-                                ])
-                            ]), right=1, left=1
-                        ), valign='top'
-                    ),
-                    title='System'
-                ))
-            ], focus_column=1),
+                                        self.wallet_name,
+                                        self.wallet_address
+                                    ])),
+
+                                    urwid.Divider(),
+
+                                    urwid.LineBox(urwid.Pile([
+                                        urwid.AttrMap(self.accepted, 'good'),
+                                        urwid.AttrMap(self.rejected, 'bad'),
+                                        urwid.AttrMap(self.invalid, 'bad')
+                                    ]), title='Shares'),
+
+                                    urwid.Divider(),
+
+                                    urwid.AttrMap(
+                                        urwid.LineBox(urwid.Columns([
+                                            self.gpus_names,
+                                            self.gpus_temps,
+                                            self.gpus_fans,
+                                            self.gpus_rate
+                                        ]), title='GPUs')
+                                    , 'gpus')
+                                ]), right=1, left=1
+                            ), valign='top'
+                    ), 'bg-sidebar'))
+                ], focus_column=1)
+            , 'bg'),
+            palette,
             unhandled_input=self.on_key,
             event_loop=urwid.AsyncioEventLoop(loop=loop),
         )
+
+        self.urwid.screen.set_terminal_properties(colors=256)
 
     def run(self):
         self.urwid.run()
@@ -72,47 +121,41 @@ loop = asyncio.get_event_loop()
 
 display = Display(loop=loop)
 
-def get_stats():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((IP, 3333))
-    s.send('{"id": 0, "jsonrpc": "2.0", "method": "miner_getstat1"}'.encode("utf-8"))
-    data = json.loads(s.recv(2048).decode("utf-8"))
-    s.close()
-
-    version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = data['result']
-
-    runtime = int(runtime)
-
-    eth_totals = [int(x) for x in eth_totals.split(';')]
-    eth_hashrates = [int(x) for x in eth_hashrates.split(';')]
-
-    stats = stats.split(';')
-    stats = [[273.15 + float(stats[i * 2]), int(stats[i * 2 + 1])] for i in range(int(len(stats) / 2))]
-
-    invalids = [int(x) for x in invalids.split(';')]
-
-    return version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids
-
 async def update_stats():
     while True:
         try:
-            version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = get_stats()
+            data = json.loads(url_content('http://' + IP + ':29205'))
 
-            display.pool.set_text(pools)
+            display.name.set_text(data['config']['name'])
 
-            display.accepted.set_text('Accepted: %d shares' % eth_totals[1])
-            display.rejected.set_text('Rejected: %d shares' % eth_totals[2])
-            display.invalid.set_text('Invalid : %d shares' % invalids[0])
+            display.wallet_name.set_text('Wallet: ' + data['config']['wallet']['name'])
+            display.wallet_address.set_text(data['config']['wallet']['address'])
+            display.wallet_crypto.set_text('- ' + data['config']['wallet']['crypto'] + ' -')
 
+            display.pool_name.set_text('Pool: ' + data['config']['pool']['endpoint']['name'])
+            display.pool_url.set_text(data['config']['pool']['endpoint']['url'])
+
+            display.accepted.set_text('Accepted: %d shares' % data['shares']['accepted'])
+            display.rejected.set_text('Rejected: %d shares' % data['shares']['rejected'])
+            display.invalid.set_text('Invalid : %d shares' % data['shares']['rejected'])
+
+            stats = data['hardware']['gpus']
             display.gpus_names.set_text('\n' + '\n'.join(['GPU%d' % i for i in range(len(stats))]))
-            display.gpus_temps.set_text('Temp\n' + '\n'.join(['%dK' % stats[i][0] for i in range(len(stats))]))
-            display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d%%' % stats[i][1] for i in range(len(stats))]))
-        except Exception as e:
-            display.output.set_text(display.output.text + traceback.format_exc())
+            display.gpus_temps.set_text('Temp\n' + '\n'.join(['%dK' % stats[i]['temp'] for i in range(len(stats))]))
+            display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d%%' % stats[i]['fan'] for i in range(len(stats))]))
+            display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f/s' % (stats[i]['rate'] / 1000) for i in range(len(stats))]))
 
-        await asyncio.sleep(5)
+            if len(data['output']) > 0:
+                display.output_lines.clear()
+                for line in data['output']:
+                    display.output_lines.append(urwid.Text(line))
+                display.output_lines.set_focus(len(data['output']) - 1)
+        except Exception as e:
+            display.output_lines.append(urwid.Text(traceback.format_exc()))
+
+        await asyncio.sleep(.5)
 
 loop.create_task(update_stats())
 
 display.run()
-#loop.run_forever()
+

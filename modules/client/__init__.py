@@ -16,6 +16,8 @@ from ivy.model.client import Client
 from ivy.model.hardware import get_hardware
 from ivy.model.stats import MinerStats
 
+from . import api_server
+
 
 class ClientModule(Module):
     def on_load(self):
@@ -38,6 +40,13 @@ class ClientModule(Module):
 
         self.process = None
 
+        self.monitor = {
+            'config': {},
+            'shares': {'accepted': 0, 'rejected': 0, 'invalid': 0},
+            'hardware': {'gpus': []},
+            'output': []
+        }
+
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
         self.connector.listen_event('connection', 'open')(self.event_connection_open)
@@ -49,6 +58,7 @@ class ClientModule(Module):
         self.task = asyncio.ensure_future(self.ping_miner())
 
         asyncio.ensure_future(self.start_miner())
+        asyncio.ensure_future(api_server.start(self))
 
     @property
     def fee_path(self):
@@ -94,8 +104,8 @@ class ClientModule(Module):
                 if self.client.dummy:
                     version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
                     total_shares['invalid'] = invalids[0]
-                    total_shares['accepted'] = eth_totals[1]
-                    total_shares['rejected'] = eth_totals[2]
+                    total_shares['shares']['accepted'] = eth_totals[1]
+                    total_shares['shares']['rejected'] = eth_totals[2]
 
                 if total_shares['invalid'] > 0 or total_shares['accepted'] > 0 \
                     or total_shares['rejected'] > 0:
@@ -123,9 +133,9 @@ class ClientModule(Module):
 
                         # This data should only contain the amount of change in share data
                         # since the last update for statistics purposes.
-                        stats.shares['invalid'] = invalids[0] - total_shares['invalid']
                         stats.shares['accepted'] = eth_totals[1] - total_shares['accepted']
-                        stats.shares['rejected'] =  eth_totals[2] - total_shares['rejected']
+                        stats.shares['rejected'] = eth_totals[2] - total_shares['rejected']
+                        stats.shares['invalid'] = invalids[0] - total_shares['invalid']
 
                         new_offline = 0
                         for i in range(min(len(eth_hashrates), len(stats.hardware.gpus))):
@@ -140,6 +150,12 @@ class ClientModule(Module):
                             gpu.temp = gpu_stats[i][0]
                             gpu.fan = gpu_stats[i][1]
                             gpu.watts = 0
+
+                        self.monitor['shares']['accepted'] = stats.shares['accepted'] + total_shares['accepted']
+                        self.monitor['shares']['rejected'] = stats.shares['rejected'] + total_shares['rejected']
+                        self.monitor['shares']['invalid'] = stats.shares['invalid'] + total_shares['invalid']
+
+                        self.monitor['hardware'] = stats.hardware.as_obj()
 
                         if new_offline > 0 and self.connector.socket:
                             await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.ivy.id})
@@ -266,6 +282,8 @@ class ClientModule(Module):
 
         self.stop_miner()
 
+        self.monitor['config'] = config.as_obj()
+
         await self.install_miner(config=config)
 
         args = config.program.execute['args']
@@ -330,6 +348,10 @@ class ClientModule(Module):
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.ivy.id})
                 else:
                     logger.info(line)
+
+                self.monitor['output'].append(line)
+
+                del self.monitor['output'][:-128]
             else:
                 break
 
