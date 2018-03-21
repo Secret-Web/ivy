@@ -96,6 +96,7 @@ class Hardware:
         self.update(**kwargs)
 
     def update(self, **kwargs):
+        print(kwargs)
         self.overclock_nvidia = Overclock(**kwargs['overclock']['nvidia'] if 'overclock' in kwargs and 'nvidia' in kwargs['overclock'] else {})
         self.overclock_amd = Overclock(**kwargs['overclock']['amd'] if 'overclock' in kwargs and 'amd' in kwargs['overclock'] else {})
 
