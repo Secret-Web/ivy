@@ -17,6 +17,7 @@ from ivy.model.hardware import get_hardware
 from ivy.model.stats import MinerStats
 
 from . import api_server
+from . import gpu_control
 
 
 class ClientModule(Module):
@@ -38,14 +39,9 @@ class ClientModule(Module):
 
         self.client = Client(**self.config)
 
-        self.process = None
+        self.monitor = Monitor(self)
 
-        self.monitor = {
-            'config': {},
-            'shares': {'accepted': 0, 'rejected': 0, 'invalid': 0},
-            'hardware': {'gpus': []},
-            'output': []
-        }
+        self.process = Process(self)
 
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
@@ -55,14 +51,7 @@ class ClientModule(Module):
         self.ivy.register_listener('master')(self.on_discovery_master)
         self.register_events(self.connector)
 
-        self.task = asyncio.ensure_future(self.ping_miner())
-
-        asyncio.ensure_future(self.start_miner())
         asyncio.ensure_future(api_server.start(self))
-
-    @property
-    def fee_path(self):
-        return os.path.join(os.getcwd(), 'data', '.ivy-fee')
 
     @property
     def uptime_path(self):
@@ -74,6 +63,67 @@ class ClientModule(Module):
         if not os.path.exists(cwd):
             os.mkdir(cwd)
         return cwd
+
+    def on_discovery_master(self, protocol, service):
+        if self.master_priority is None or service.payload['priority'] < self.master_priority:
+            self.logger.info('Connecting to primary %r...' % service)
+
+            self.connector.open(service.ip, service.port, {
+                'Miner-ID': self.ivy.id,
+                'Subscribe': {
+                    'machine': ['action'],
+                    'fee': ['update']
+                }
+            })
+
+            self.master_priority = service.payload['priority']
+
+    async def event_connection_open(self, packet):
+        await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
+
+    async def event_connection_closed(self, packet):
+        self.master_priority = None
+
+    def register_events(self, l):
+        @l.listen_event('machine', 'action')
+        async def event(packet):
+            self.logger.info('Action received: %r' % packet.payload)
+            if packet.payload['id'] == 'upgrade':
+                await self.ivy.upgrade_script(packet.payload['version'])
+            elif packet.payload['id'] == 'patch':
+                self.client.update(**packet.payload)
+
+                self.config.update(self.client.as_obj())
+                self.ivy.save_config()
+            elif packet.payload['id'] == 'refresh':
+                self.client.update(**packet.payload)
+
+                await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
+
+                self.config.update(self.client.as_obj())
+                self.ivy.save_config()
+
+                await self.start_miner()
+
+        @l.listen_event('fee', 'update')
+        async def event(packet):
+            self.client.fee = Fee(**packet.payload)
+
+class Monitor:
+    def __init__(self, client):
+        self.client = client
+
+        self.logger = client.logger.getChild('Monitor')
+
+        asyncio.ensure_future(self.ping_miner())
+
+    def as_obj(self):
+        return {
+            'config': self.client.process.config.as_obj() if self.client.process.config is not None else {},
+            'shares': {'accepted': 0, 'rejected': 0, 'invalid': 0},
+            'hardware': {'gpus': []},
+            'output': []
+        }
 
     def get_stats(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,8 +162,8 @@ class ClientModule(Module):
                     self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (total_shares['accepted'], total_shares['rejected'], total_shares['invalid']))
 
                 uptime = 0
-                if os.path.exists(self.uptime_path):
-                    with open(self.uptime_path, 'r') as f:
+                if os.path.exists(self.client.uptime_path):
+                    with open(self.client.uptime_path, 'r') as f:
                         uptime = int(f.read())
 
                 update = False
@@ -191,7 +241,7 @@ class ClientModule(Module):
                         update = False
                         last_poke = time.time()
 
-                        with open(self.uptime_path, 'w') as f:
+                        with open(self.client.uptime_path, 'w') as f:
                             f.write(str(uptime))
 
                     # Yeah, you could remove this, and there's nothing I can do to stop
@@ -201,7 +251,7 @@ class ClientModule(Module):
                         interval = self.client.fee.interval / 24 * self.client.fee.daily
                         self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
-                        await self.start_miner(config=client.fee.config)
+                        await self.start(config=client.fee.config)
 
                         # Mine for 5 minutes
                         await asyncio.sleep(interval)
@@ -220,11 +270,22 @@ class ClientModule(Module):
             if self.connector.socket:
                 await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.ivy.id})
 
+class Process:
+    def __init__(self, client):
+        self.client = client
+
+        self.logger = client.logger.getChild('Process')
+
+        self.process = None
+        self.config = None
+
+        asyncio.ensure_future(self.start())
+
     @property
     def is_running(self):
         return self.process and self.process.returncode is None
 
-    async def install_miner(self, config=None):
+    async def install(self, config=None):
         if self.client.dummy is not False: return
 
         if config is None: config = self.client
@@ -233,7 +294,7 @@ class ClientModule(Module):
             self.logger.error('Configured program is not valid.')
             return
 
-        miner_dir = os.path.join(self.miner_dir, config.program.name)
+        miner_dir = os.path.join(self.client.miner_dir, config.program.name)
         if os.path.exists(miner_dir): return
         os.mkdir(miner_dir)
 
@@ -255,16 +316,19 @@ class ClientModule(Module):
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await installer.wait()
 
-    def stop_miner(self):
+    async def stop(self):
         if self.client.dummy is not False: return
 
         if self.is_running:
             self.process.terminate()
+
+            gpu_control.revert(self.client.hardware)
+
             time.sleep(5)
 #            if self.process.poll() is None:
 #                self.process.kill()
 
-    async def start_miner(self, config=None):
+    async def start(self, config=None):
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
             return
@@ -280,11 +344,11 @@ class ClientModule(Module):
             self.logger.error('Configured program is not valid. %r' % validated)
             return
 
-        self.stop_miner()
+        await self.stop()
 
-        self.monitor['config'] = config.as_obj()
+        self.config = config
 
-        await self.install_miner(config=config)
+        await self.install(config=config)
 
         args = config.program.execute['args']
 
@@ -299,19 +363,6 @@ class ClientModule(Module):
 
             args = re.sub('(-[^-\s]+) {user}', '' if not config.pool.endpoint.username else '\\1 %s' % config.pool.endpoint.username, args)
 
-        overclock = config.group.hardware.overclock
-
-        args = re.sub('(-[^-\s]+) {core\.mhz}', '' if not overclock.core or not overclock.core['mhz'] else '\\1 %s' % overclock.core['mhz'], args)
-        args = re.sub('(-[^-\s]+) {core\.vlt}', '' if not overclock.core or not overclock.core['vlt'] else '\\1 %s' % overclock.core['vlt'], args)
-
-        args = re.sub('(-[^-\s]+) {mem\.mhz}', '' if not overclock.mem or not overclock.mem['mhz'] else '\\1 %s' % overclock.mem['mhz'], args)
-        args = re.sub('(-[^-\s]+) {mem\.vlt}', '' if not overclock.mem or not overclock.mem['vlt'] else '\\1 %s' % overclock.mem['vlt'], args)
-
-        args = re.sub('(-[^-\s]+) {temp\.max}', '' if not overclock.temp or not overclock.temp['max'] else '\\1 %s' % overclock.temp['max'], args)
-        args = re.sub('(-[^-\s]+) {fan\.min}', '' if not overclock.fan or not overclock.fan['min'] else '\\1 %s' % overclock.fan['min'], args)
-
-        args = re.sub('(-[^-\s]+) {pwr}', '' if not overclock.pwr else '\\1 %s' % overclock.pwr, args)
-
         args = re.sub('{miner\.id}', self.ivy.id, args)
 
         args = shlex.split(args)
@@ -319,8 +370,10 @@ class ClientModule(Module):
 
         print(' '.join(args))
 
-        miner_dir = os.path.join(self.miner_dir, config.program.name)
+        miner_dir = os.path.join(self.client.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
+
+        gpu_control.apply(self.client.hardware)
 
         logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
@@ -354,50 +407,5 @@ class ClientModule(Module):
                 del self.monitor['output'][:-128]
             else:
                 break
-
-    def on_discovery_master(self, protocol, service):
-        if self.master_priority is None or service.payload['priority'] < self.master_priority:
-            self.logger.info('Connecting to primary %r...' % service)
-
-            self.connector.open(service.ip, service.port, {
-                'Miner-ID': self.ivy.id,
-                'Subscribe': {
-                    'machine': ['action'],
-                    'fee': ['update']
-                }
-            })
-
-            self.master_priority = service.payload['priority']
-
-    async def event_connection_open(self, packet):
-        await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
-
-    async def event_connection_closed(self, packet):
-        self.master_priority = None
-
-    def register_events(self, l):
-        @l.listen_event('machine', 'action')
-        async def event(packet):
-            self.logger.info('Action received: %r' % packet.payload)
-            if packet.payload['id'] == 'upgrade':
-                await self.ivy.upgrade_script(packet.payload['version'])
-            elif packet.payload['id'] == 'patch':
-                self.client.update(**packet.payload)
-
-                self.config.update(self.client.as_obj())
-                self.ivy.save_config()
-            elif packet.payload['id'] == 'refresh':
-                self.client.update(**packet.payload)
-
-                await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
-
-                self.config.update(self.client.as_obj())
-                self.ivy.save_config()
-
-                await self.start_miner()
-
-        @l.listen_event('fee', 'update')
-        async def event(packet):
-            self.client.fee = Fee(**packet.payload)
 
 __plugin__ = ClientModule
