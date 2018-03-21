@@ -2,11 +2,11 @@ import asyncio
 
 
 class Monitor:
-    def __init__(self, client, process):
+    def __init__(self, logger, client, process):
         self.client = client
         self.process = process
 
-        self.logger = client.logger.getChild('Monitor')
+        self.logger = logger.getChild('Monitor')
 
         self.output = []
         self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}

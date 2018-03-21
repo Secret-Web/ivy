@@ -40,7 +40,7 @@ class ClientModule(Module):
 
         self.client = Client(**self.config)
 
-        self.process = Process(self.client)
+        self.process = Process(self.logger, self.client)
 
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))

@@ -4,11 +4,11 @@ from .monitor import Monitor
 
 
 class Process:
-    def __init__(self, client):
+    def __init__(self, logger, client):
         self.client = client
-        self.monitor = Monitor(client, self)
+        self.monitor = Monitor(logger, client, self)
 
-        self.logger = client.logger.getChild('Process')
+        self.logger = logger.getChild('Process')
 
         self.process = None
         self.config = None
