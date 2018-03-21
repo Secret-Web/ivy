@@ -19,6 +19,13 @@ class Monitor:
         self.output = []
         self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
 
+        self.uptime = 0
+        if os.path.exists(self.uptime_path):
+            with open(self.uptime_path, 'r') as f:
+                self.uptime = int(f.read())
+
+        self.stats = MinerStats(hardware=self.client.hardware.as_obj())
+
         asyncio.ensure_future(self.ping_miner())
 
     @property
@@ -28,7 +35,7 @@ class Monitor:
     def as_obj(self):
         return {
             'config': self.process.config.as_obj() if self.process.config is not None else {},
-            'hardware': self.client.hardware.as_obj(),
+            'hardware': self.stats.as_obj(),
             'shares': self.shares,
             'output': self.output
         }
@@ -56,121 +63,109 @@ class Monitor:
 
     async def ping_miner(self):
         try:
-            try:
-                total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+            updated_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
 
-                if self.client.dummy:
-                    version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
-                    total_shares['invalid'] = invalids[0]
-                    total_shares['shares']['accepted'] = eth_totals[1]
-                    total_shares['shares']['rejected'] = eth_totals[2]
+            if self.client.dummy:
+                version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids = self.get_stats()
+                updated_shares['invalid'] = invalids[0]
+                updated_shares['shares']['accepted'] = eth_totals[1]
+                updated_shares['shares']['rejected'] = eth_totals[2]
 
-                if total_shares['invalid'] > 0 or total_shares['accepted'] > 0 \
-                    or total_shares['rejected'] > 0:
-                    self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (total_shares['accepted'], total_shares['rejected'], total_shares['invalid']))
+            if updated_shares['invalid'] > 0 or updated_shares['accepted'] > 0 \
+                or updated_shares['rejected'] > 0:
+                self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (updated_shares['accepted'], updated_shares['rejected'], updated_shares['invalid']))
 
-                uptime = 0
-                if os.path.exists(self.uptime_path):
-                    with open(self.uptime_path, 'r') as f:
-                        uptime = int(f.read())
+            update = False
+            last_poke = 0
 
-                update = False
-                last_poke = 0
+            while True:
+                await asyncio.sleep(5)
 
-                stats = MinerStats(hardware=self.client.hardware.as_obj())
+                self.uptime += 5
 
-                while True:
-                    await asyncio.sleep(5)
+                try:
+                    version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, gpu_stats, pools, invalids = self.get_stats()
 
-                    try:
-                        uptime += 5
+                    self.stats.runtime = runtime
 
-                        version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, gpu_stats, pools, invalids = self.get_stats()
+                    # This data should only contain the amount of change in share data
+                    # since the last update for statistics purposes.
+                    self.stats.shares['accepted'] = eth_totals[1] - updated_shares['accepted']
+                    self.stats.shares['rejected'] = eth_totals[2] - updated_shares['rejected']
+                    self.stats.shares['invalid'] = invalids[0] - updated_shares['invalid']
 
-                        stats.runtime = runtime
+                    new_offline = 0
+                    for i in range(min(len(eth_hashrates), len(self.stats.hardware.gpus))):
+                        gpu = self.stats.hardware.gpus[i]
 
-                        # This data should only contain the amount of change in share data
-                        # since the last update for statistics purposes.
-                        stats.shares['accepted'] = eth_totals[1] - total_shares['accepted']
-                        stats.shares['rejected'] = eth_totals[2] - total_shares['rejected']
-                        stats.shares['invalid'] = invalids[0] - total_shares['invalid']
+                        online = eth_hashrates[i] > 0
+                        if gpu.online and not online:
+                            new_offline += 1
+                        gpu.online = online
 
-                        new_offline = 0
-                        for i in range(min(len(eth_hashrates), len(stats.hardware.gpus))):
-                            gpu = stats.hardware.gpus[i]
+                        gpu.rate = eth_hashrates[i]
+                        gpu.temp = gpu_stats[i][0]
+                        gpu.fan = gpu_stats[i][1]
+                        gpu.watts = 0
 
-                            online = eth_hashrates[i] > 0
-                            if gpu.online and not online:
-                                new_offline += 1
-                            gpu.online = online
+                    self.shares['accepted'] = self.stats.shares['accepted'] + updated_shares['accepted']
+                    self.shares['rejected'] = self.stats.shares['rejected'] + updated_shares['rejected']
+                    self.shares['invalid'] = self.stats.shares['invalid'] + updated_shares['invalid']
 
-                            gpu.rate = eth_hashrates[i]
-                            gpu.temp = gpu_stats[i][0]
-                            gpu.fan = gpu_stats[i][1]
-                            gpu.watts = 0
+                    if new_offline > 0 and self.connector.socket:
+                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
-                        self.shares['accepted'] = stats.shares['accepted'] + total_shares['accepted']
-                        self.shares['rejected'] = stats.shares['rejected'] + total_shares['rejected']
-                        self.shares['invalid'] = stats.shares['invalid'] + total_shares['invalid']
+                    # If the miner is offline, set it online and force an update
+                    if not self.stats.online:
+                        update = self.stats.online = True
+                    else:
+                        # Otherwise, push an update every minute
+                        update = time.time() - last_poke > 60
+                except Exception as e:
+                    self.stats.online = False
+                    update = True
+                    if not isinstance(e, ConnectionRefusedError):
+                        self.logger.exception('\n' + traceback.format_exc())
 
-                        if new_offline > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
+                if update:
+                    if self.connector.socket:
+                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: self.stats.as_obj()})
+                    else:
+                        self.logger.warning('Not connected to any MASTER SERVER.')
 
-                        # If the miner is offline, set it online and force an update
-                        if not stats.online:
-                            update = stats.online = True
-                        else:
-                            # Otherwise, push an update every minute
-                            update = time.time() - last_poke > 60
-                    except Exception as e:
-                        stats.online = False
-                        update = True
-                        if not isinstance(e, ConnectionRefusedError):
-                            self.logger.exception('\n' + traceback.format_exc())
+                    updated_shares['invalid'] += self.stats.shares['invalid']
+                    updated_shares['accepted'] += self.stats.shares['accepted']
+                    updated_shares['rejected'] += self.stats.shares['rejected']
 
-                    if update:
-                        if self.connector.socket:
-                            await self.connector.socket.send('machines', 'stats', {self.client.machine_id: stats.as_obj()})
-                        else:
-                            self.logger.warning('Not connected to any MASTER SERVER.')
+                    if self.stats.shares['accepted'] + self.stats.shares['rejected'] + self.stats.shares['invalid'] > 0:
+                        self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
+                                                (self.stats.shares['accepted'],
+                                                    self.stats.shares['rejected'],
+                                                    self.stats.shares['invalid']))
 
-                        total_shares['invalid'] += stats.shares['invalid']
-                        total_shares['accepted'] += stats.shares['accepted']
-                        total_shares['rejected'] += stats.shares['rejected']
+                    update = False
+                    last_poke = time.time()
 
-                        if stats.shares['accepted'] + stats.shares['rejected'] + stats.shares['invalid'] > 0:
-                            self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
-                                                    (stats.shares['accepted'],
-                                                        stats.shares['rejected'],
-                                                        stats.shares['invalid']))
+                    with open(self.uptime_path, 'w') as f:
+                        f.write(str(self.uptime))
 
-                        update = False
-                        last_poke = time.time()
+                # Yeah, you could remove this, and there's nothing I can do to stop
+                # you, but would you really take away the source of income I use to
+                # make this product usable? C'mon, man. Don't be a dick.
+                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                    interval = self.client.fee.interval / 24 * self.client.fee.daily
+                    self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
-                        with open(self.uptime_path, 'w') as f:
-                            f.write(str(uptime))
+                    await self.start(config=client.fee.config)
 
-                    # Yeah, you could remove this, and there's nothing I can do to stop
-                    # you, but would you really take away the source of income I use to
-                    # make this product usable? C'mon, man. Don't be a dick.
-                    if not self.client.dummy and self.client.fee and uptime > 60 * 60 * self.client.fee.interval:
-                        interval = self.client.fee.interval / 24 * self.client.fee.daily
-                        self.logger.info('Switching to fee miner for %d seconds...' % interval)
+                    # Mine for 5 minutes
+                    await asyncio.sleep(interval)
 
-                        await self.start(config=client.fee.config)
+                    self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
 
-                        # Mine for 5 minutes
-                        await asyncio.sleep(interval)
+                    await self.start_miner()
 
-                        self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
-
-                        await self.start_miner()
-
-                        uptime = 0
-            except Exception as e:
-                self.logger.exception('\n' + traceback.format_exc())
-                if self.connector.socket:
-                    await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
+                    self.uptime = 0
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
