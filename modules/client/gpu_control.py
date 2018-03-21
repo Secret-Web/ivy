@@ -40,7 +40,8 @@ class NVIDIA:
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0'
         ]
 
-        if overclock.fan['min']:
+        print(overclock.fan['min'])
+        if overclock.fan['min'] is not None:
             applies.append('[gpu:%d]/GPUFanControlState=1' % i)
             applies.append('[gpu:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min']))
 
