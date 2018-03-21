@@ -20,8 +20,6 @@ class Process:
         self.process = None
         self.config = None
 
-        asyncio.ensure_future(self.start())
-
     @property
     def miner_dir(self):
         cwd = os.path.join(os.getcwd(), 'data', 'miners')
@@ -33,9 +31,7 @@ class Process:
     def is_running(self):
         return self.process and self.process.returncode is None
 
-    async def install(self, config=None):
-        if self.client.dummy is not False: return
-
+    async def install(self, config):
         if config is None: config = self.client
 
         if not config.program.is_valid():
@@ -65,8 +61,6 @@ class Process:
         await installer.wait()
 
     async def stop(self):
-        if self.client.dummy is not False: return
-
         if self.is_running:
             self.process.terminate()
 
@@ -76,13 +70,7 @@ class Process:
 #            if self.process.poll() is None:
 #                self.process.kill()
 
-    async def start(self, config=None):
-        if self.client.dummy is not False:
-            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
-            return
-
-        if config is None: config = self.client
-
+    async def start(self, config):
         if not config.program:
             self.logger.error('No program configured.')
             return

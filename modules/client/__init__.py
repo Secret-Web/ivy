@@ -13,9 +13,7 @@ class ClientModule(Module):
     def on_load(self):
         if 'worker_id' not in self.config:
             self.config['worker_id'] = self.ivy.id
-
-        if 'hardware' not in self.config:
-            self.config['hardware'] = get_hardware()
+        self.config['hardware'] = get_hardware()
 
         self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
 
@@ -25,6 +23,10 @@ class ClientModule(Module):
         self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
 
         self.process = Process(self.logger, self.client, self.connector)
+        if self.client.dummy is not False:
+            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
+        else:
+            asyncio.ensure_future(self.process.start(self.client.group))
 
         self.ivy.register_listener('master')(self.on_discovery_master)
         self.register_events(self.connector)
