@@ -1,7 +1,8 @@
 import os
 import re
-import asyncio
 import shlex
+import logging
+import asyncio
 
 from . import gpu_control
 from .monitor import Monitor
