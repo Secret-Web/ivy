@@ -9,11 +9,13 @@ from .monitor import Monitor
 
 
 class Process:
-    def __init__(self, logger, client):
+    def __init__(self, logger, client, connector):
         self.client = client
-        self.monitor = Monitor(logger, client, self)
+        self.connector = connector
 
         self.logger = logger.getChild('Process')
+
+        self.monitor = Monitor(self.logger, client, connector, self)
 
         self.process = None
         self.config = None

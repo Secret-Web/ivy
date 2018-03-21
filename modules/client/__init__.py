@@ -18,12 +18,12 @@ class ClientModule(Module):
 
         self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
 
-        self.process = Process(self.logger, self.client)
-
         self.master_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
         self.connector.listen_event('connection', 'open')(self.event_connection_open)
         self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
+
+        self.process = Process(self.logger, self.client, self.connector)
 
         self.ivy.register_listener('master')(self.on_discovery_master)
         self.register_events(self.connector)

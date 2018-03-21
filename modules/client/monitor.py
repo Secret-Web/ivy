@@ -5,8 +5,9 @@ import socket
 
 
 class Monitor:
-    def __init__(self, logger, client, process):
+    def __init__(self, logger, client, connector, process):
         self.client = client
+        self.connector = connector
         self.process = process
 
         self.logger = logger.getChild('Monitor')
