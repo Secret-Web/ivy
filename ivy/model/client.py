@@ -31,12 +31,6 @@ class Client:
 
         if 'fee' in kwargs or init: self.fee = Fee(**kwargs['fee']) if 'fee' in kwargs else None
 
-    def is_valid(self):
-        if not self.group: return False
-        if not self.pool: return False
-        if not self.program: return False
-        return True
-
     def as_obj(self):
         obj = {}
 
@@ -45,6 +39,7 @@ class Client:
         if self.dummy is not None: obj['dummy'] = self.dummy
         if self.name is not None: obj['name'] = self.name
         if self.notes is not None: obj['notes'] = self.notes
+
         if self.hardware is not None: obj['hardware'] = self.hardware.as_obj()
 
         if self.group is not None: obj['group'] = self.group.as_obj()

@@ -13,7 +13,7 @@ class Group:
         self.wallet = kwargs['wallet'] if 'wallet' in kwargs else None
         self.program = GroupProgram(**kwargs['program'] if 'program' in kwargs else {})
 
-        self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
+        self.hardware = GroupHardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
 
     def reset(self):
         self.update()
@@ -61,5 +61,52 @@ class GroupProgram:
 
         if self.id is not None: obj['id'] = self.id
         if self.execute is not None: obj['execute'] = self.execute
+
+        return obj
+
+class GroupHardware:
+    def __init__(self, **kwargs):
+        self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs else {})
+
+    def as_obj(self):
+        obj = {}
+
+        if self.overclock is not None: obj['overclock'] = overclock.as_obj()
+
+        return obj
+
+class Overclocks:
+    def __init__(self, **kwargs):
+        self.nvidia = Overclocks(**kwargs['nvidia'] if 'nvidia' in kwargs else {})
+        self.amd = Overclocks(**kwargs['amd'] if 'amd' in kwargs else {})
+
+    def as_obj(self):
+        obj = {}
+
+        if self.nvidia is not None: obj['nvidia'] = self.nvidia.as_obj()
+        if self.amd is not None: obj['amd'] = self.amd.as_obj()
+
+        return obj
+
+class Overclock:
+    def __init__(self, **kwargs):
+        self.core = kwargs['core'] if 'core' in kwargs else {'mhz': None, 'vlt': None}
+        self.mem = kwargs['mem'] if 'mem' in kwargs else {'mhz': None, 'vlt': None}
+
+        self.fan = kwargs['fan'] if 'fan' in kwargs else {'min': None}
+        self.temp = kwargs['temp'] if 'temp' in kwargs else {'max': None}
+
+        self.pwr = kwargs['pwr'] if 'pwr' in kwargs else None
+
+    def as_obj(self):
+        obj = {}
+
+        if self.core is not None: obj['core'] = self.core
+        if self.mem is not None: obj['mem'] = self.mem
+
+        if self.fan is not None: obj['fan'] = self.fan
+        if self.temp is not None: obj['temp'] = self.temp
+
+        if self.pwr is not None: obj['pwr'] = self.pwr
 
         return obj

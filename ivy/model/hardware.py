@@ -90,17 +90,7 @@ class Hardware:
         self.cpus = [CPU(**data) for data in kwargs['cpus']] if 'cpus' in kwargs else None
         self.gpus = [GPU(**data) for data in kwargs['gpus']] if 'gpus' in kwargs else None
         self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else None
-
         self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
-
-        self.update(**kwargs)
-
-    def update(self, **kwargs):
-        self.overclock_nvidia = Overclock(**kwargs['overclock']['nvidia'] if 'overclock' in kwargs and 'nvidia' in kwargs['overclock'] else {})
-        self.overclock_amd = Overclock(**kwargs['overclock']['amd'] if 'overclock' in kwargs and 'amd' in kwargs['overclock'] else {})
-
-    def reset(self):
-        self.overclock.reset()
 
     def as_obj(self):
         obj = {}
@@ -109,12 +99,7 @@ class Hardware:
         if self.cpus is not None: obj['cpus'] = [x.as_obj() for x in self.cpus]
         if self.gpus is not None: obj['gpus'] = [x.as_obj() for x in self.gpus]
         if self.memory is not None: obj['memory'] = [x.as_obj() for x in self.memory]
-
         if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
-
-        obj['overclock'] = {}
-        if self.overclock_nvidia is not None: obj['overclock']['nvidia'] = self.overclock_nvidia.as_obj()
-        if self.overclock_amd is not None: obj['overclock']['amd'] = self.overclock_amd.as_obj()
 
         return obj
 
@@ -190,37 +175,5 @@ class Storage:
         if self.fstype is not None: obj['fstype'] = self.fstype
 
         if self.space is not None: obj['space'] = self.space
-
-        return obj
-
-class Overclock:
-    def __init__(self, **kwargs):
-        self.core = kwargs['core'] if 'core' in kwargs else {'mhz': None, 'vlt': None}
-        self.mem = kwargs['mem'] if 'mem' in kwargs else {'mhz': None, 'vlt': None}
-
-        self.fan = kwargs['fan'] if 'fan' in kwargs else {'min': None}
-        self.temp = kwargs['temp'] if 'temp' in kwargs else {'max': None}
-
-        self.pwr = kwargs['pwr'] if 'pwr' in kwargs else None
-
-    def reset(self):
-        self.core = None
-        self.mem = None
-
-        self.fan = None
-        self.temp = None
-
-        self.pwr = None
-
-    def as_obj(self):
-        obj = {}
-
-        if self.core is not None: obj['core'] = self.core
-        if self.mem is not None: obj['mem'] = self.mem
-
-        if self.fan is not None: obj['fan'] = self.fan
-        if self.temp is not None: obj['temp'] = self.temp
-
-        if self.pwr is not None: obj['pwr'] = self.pwr
 
         return obj

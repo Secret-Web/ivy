@@ -13,13 +13,6 @@ class Program:
         self.execute = kwargs['execute'] if 'execute' in kwargs else {'file': None, 'args': None}
         self.install = kwargs['install'] if 'install' in kwargs else {'url': None, 'execute': None}
 
-    def is_valid(self):
-        if not self.url: return 'URL is not valid.'
-        if not self.execute: return 'No execute operations defined.'
-        if not self.execute['args']: return 'No arguments defined for execution.'
-        if not self.install: return 'No install instructions defined.'
-        return True
-
     def as_obj(self):
         obj = {}
 

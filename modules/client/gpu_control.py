@@ -10,12 +10,12 @@ async def setup():
     await NVIDIA.apply()
     await AMD.apply()
 
-async def apply(hardware):
+async def apply(hardware, overclock):
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
-            await NVIDIA.apply(i, gpu, hardware.overclock_nvidia)
+            await NVIDIA.apply(i, gpu, overclock.nvidia)
         elif 'AMD' in gpu.vendor:
-            await AMD.apply(i, gpu, hardware.overclock_amd)
+            await AMD.apply(i, gpu, overclock.amd)
         else:
             print('Unknown GPU[%d] Vendor:' % i)
             print(gpu.as_obj())

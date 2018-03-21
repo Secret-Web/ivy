@@ -112,7 +112,7 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        await gpu_control.apply(config.hardware)
+        await gpu_control.apply(config.hardware, self.client.group.hardware)
 
         logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
