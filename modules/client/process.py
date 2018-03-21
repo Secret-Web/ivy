@@ -70,7 +70,7 @@ class Process:
         if self.is_running:
             self.process.terminate()
 
-            gpu_control.revert(self.client.hardware)
+            await gpu_control.revert(self.client.hardware)
 
             await asyncio.sleep(5)
 #            if self.process.poll() is None:
@@ -121,7 +121,7 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        gpu_control.apply(self.client.hardware)
+        await gpu_control.apply(self.client.hardware)
 
         logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
