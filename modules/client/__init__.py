@@ -13,7 +13,9 @@ class ClientModule(Module):
     def on_load(self):
         if 'worker_id' not in self.config:
             self.config['worker_id'] = self.ivy.id
-        self.config['hardware'] = get_hardware()
+
+        if 'hardware' not in self.config:
+            self.config['hardware'] = get_hardware()
 
         self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
 
