@@ -1,5 +1,7 @@
-def apply(gpu):
-    print(gpu)
+def apply(hardware):
+    for gpu in hardware.gpus:
+        print(gpu.as_obj())
 
-def revert(gpu):
-    print(gpu)
+def revert(hardware):
+    for gpu in hardware.gpus:
+        print(gpu.as_obj())
