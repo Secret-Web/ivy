@@ -109,7 +109,10 @@ class MasterService(Service):
 
             if subscribe is not None:
                 subscribe = subscribe.replace('\'', '"')
-                self.connections[packet.socket.id]['subscriptions'] = json.loads(subscribe)
+                try:
+                    self.connections[packet.socket.id]['subscriptions'] = json.loads(subscribe)
+                except:
+                    self.module.logger.warning('Failed to load Subscribe: %s' % subscribe)
 
             for event, methods in self.connections[packet.socket.id]['subscriptions'].items():
                 if event not in self.subscriptions: self.subscriptions[event] = {}

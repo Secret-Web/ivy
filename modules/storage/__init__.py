@@ -21,6 +21,7 @@ from ivy.model.message import Message
 from .database import Database
 from . import database, statistics
 
+# TODO: Currently, 'patch'es aren't consumed by secondary storage services. This needs to be fixed.
 
 def new_id():
     return ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for i in range(8))
@@ -164,8 +165,7 @@ class StorageModule(Module):
 
         @l.listen_event('messages', 'new')
         async def event(packet):
-            new_message(packet.payload)
-            await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+            await new_message(packet, packet.payload)
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
@@ -175,7 +175,6 @@ class StorageModule(Module):
         @l.listen_event('messages', 'data')
         async def event(packet):
             self.database.messages = packet.payload
-
 
         @l.listen_event('wallets', 'get')
         async def event(packet):
@@ -242,8 +241,7 @@ class StorageModule(Module):
             self.database.groups[id] = group
             await packet.send('groups', 'patch', {id: group.as_obj()})
 
-            new_message({'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
-            await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+            await new_message(packet, {'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
 
         @l.listen_event('groups', 'update')
         async def event(packet):
@@ -268,11 +266,9 @@ class StorageModule(Module):
             if len(updated_machines) > 0:
                 await packet.send('machines', 'patch', updated_machines)
 
-                new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
-                await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                await new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
             else:
-                new_message({'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
-                await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                await new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
 
         @l.listen_event('groups', 'action')
         async def event(packet):
@@ -281,11 +277,9 @@ class StorageModule(Module):
             for group_id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
                     if group_id == '*':
-                        new_message({'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
-                        await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                        await new_message(packet, {'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
                     else:
-                        new_message({'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
-                        await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                        await new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
 
                 for id, miner in self.database.machines.items():
                     # * indicates an update to ALL group's machines.
@@ -316,8 +310,7 @@ class StorageModule(Module):
                     continue
 
                 if action['id'] == 'upgrade':
-                    new_message({'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
-                    await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
+                    await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
                 await packet.send('machine', 'action', build_action(id, action), to=id)
             await packet.send('machines', 'patch', {id: self.database.machines[id].as_obj() for id, action in packet.payload.items() if action['id'] == 'refresh'})
@@ -353,12 +346,14 @@ class StorageModule(Module):
                 await packet.send('machines', 'stats', updated_stats)
                 self.new_snapshot(updated_stats)
 
-        def new_message(data):
+        async def new_message(packet, data):
             if isinstance(data, dict):
-                self.database.messages.insert(0, Message(**data))
+                msg = Message(**data)
+                self.database.messages.insert(0, msg)
+                await packet.send('messages', 'patch', [msg.as_obj()])
             elif isinstance(data, list):
                 for d in data:
-                    new_message(d)
+                    new_message(packet, d)
 
         def build_action(id, action):
             # The 'patch' action alters miner configuration without restarting
