@@ -39,9 +39,9 @@ class NVIDIA:
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0'
         ]
 
-        if overclock.fan.min:
+        if overclock.fan['min']:
             applies.append('[gpu:%d]/GPUFanControlState=1' % i)
-            applies.append('[gpu:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan.min))
+            applies.append('[gpu:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min']))
 
         await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a ' + '-a '.join(applies))
 
