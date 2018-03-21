@@ -110,11 +110,9 @@ class Hardware:
 
         if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
 
-        if self.overclock_nvidia or self.overclock_amd:
-            obj['overclock'] = {}
-
-            if self.overclock_nvidia is not None: obj['overclock']['nvidia'] = self.overclock_nvidia.as_obj()
-            if self.overclock_amd is not None: obj['overclock']['amd'] = self.overclock_amd.as_obj()
+        obj['overclock'] = {}
+        if self.overclock_nvidia is not None: obj['overclock']['nvidia'] = self.overclock_nvidia.as_obj()
+        if self.overclock_amd is not None: obj['overclock']['amd'] = self.overclock_amd.as_obj()
 
         return obj
 
