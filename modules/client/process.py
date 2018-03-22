@@ -79,7 +79,7 @@ class Process:
 
         self.logger.info('Starting miner...')
 
-        self.process = await asyncio.create_subprocess_exec(args, cwd=miner_dir,
+        self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         logger = logging.getLogger(config.program.name)
