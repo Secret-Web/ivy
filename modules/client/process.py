@@ -1,7 +1,7 @@
 import os
 import re
 import shlex
-import logger
+import logging
 import asyncio
 
 from . import gpu_control
