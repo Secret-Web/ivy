@@ -20,7 +20,7 @@ app.router.add_static('/static/', path=os.path.join(dist_folder, 'static'), name
 
 
 async def start():
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     site = web.TCPSite(runner, '', 80)
     await site.start()

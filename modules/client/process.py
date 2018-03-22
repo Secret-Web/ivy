@@ -142,4 +142,5 @@ class Process:
 
                 del self.monitor.output[:-128]
             else:
+                print('ono')
                 break
