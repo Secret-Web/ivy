@@ -46,7 +46,7 @@ async def revert(hardware):
 
 class NVIDIA:
     async def setup():
-        await run_cmd('nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
+        await run_cmd('nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     def apply(i, gpu, overclock):
         yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
