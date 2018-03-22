@@ -25,7 +25,7 @@ async def apply(hardware, overclock):
             print(gpu.as_obj())
 
     if len(nvidia) > 0:
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+        await run_cmd('/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
 async def revert(hardware):
     nvidia = []
@@ -42,15 +42,15 @@ async def revert(hardware):
             print(gpu.as_obj())
 
     if len(nvidia) > 0:
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+        await run_cmd('/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
 class NVIDIA:
     async def setup():
         await run_cmd('nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     def apply(i, gpu, overclock):
-        #yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
-        #yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
+        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=%d' % (i, overclock.core.mhz)
+        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=%d' % (i, overclock.mem.mhz)
 
         if overclock.fan['min'] is not None:
             yield '[gpu:%d]/GPUFanControlState=1' % i
@@ -59,8 +59,8 @@ class NVIDIA:
     def revert(i, gpu):
         yield '[gpu:%d]/GPUFanControlState=0' % i
         yield '[fan:%d]/GPUTargetFanSpeed=50' % i
-        #yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
-        #yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
+        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
+        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
 class AMD:
     async def setup():
