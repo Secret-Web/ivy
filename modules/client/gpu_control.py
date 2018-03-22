@@ -75,11 +75,13 @@ async def run_cmd(cmd):
     print(cmd)
     proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-    logger = logging.getLogger('GPU')
+    logger = logging.getLogger('CMD')
     asyncio.ensure_future(_read_stream(logger, proc.stdout, error=False))
     asyncio.ensure_future(_read_stream(logger, proc.stderr, error=True))
 
     await proc.wait()
+
+    logger.info('done')
 
 async def _read_stream(logger, stream, error):
     while True:
