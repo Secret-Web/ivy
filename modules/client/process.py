@@ -98,6 +98,7 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
+        await gpu_control.setup()
         await gpu_control.apply(config.hardware, self.client.group.hardware.overclock)
 
         logger = logging.getLogger(config.program.name)
