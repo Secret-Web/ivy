@@ -71,7 +71,7 @@ class GroupHardware:
     def as_obj(self):
         obj = {}
 
-        if self.overclock is not None: obj['overclock'] = overclock.as_obj()
+        if self.overclock is not None: obj['overclock'] = self.overclock.as_obj()
 
         return obj
 
