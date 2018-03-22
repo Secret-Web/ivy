@@ -1,7 +1,7 @@
 import os
 import re
 import shlex
-import logging
+import logger
 import asyncio
 
 from . import gpu_control
@@ -77,7 +77,7 @@ class Process:
         await gpu_control.setup()
         await gpu_control.apply(config.hardware, self.client.group.hardware.overclock)
 
-        self.logging.info('Starting miner...')
+        self.logger.info('Starting miner...')
 
         self.process = await asyncio.create_subprocess_shell(' '.join(args), cwd=miner_dir, bufsize=0,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -112,7 +112,7 @@ class Process:
 
     async def stop(self):
         if self.is_running:
-            self.logging.info('Stopping miner...')
+            self.logger.info('Stopping miner...')
 
             self.process.terminate()
 
