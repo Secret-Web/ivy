@@ -32,12 +32,6 @@ class Process:
         return self.process and self.process.returncode is None
 
     async def install(self, config):
-        if config is None: config = self.client
-
-        if not config.program.is_valid():
-            self.logger.error('Configured program is not valid.')
-            return
-
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if os.path.exists(miner_dir): return
         os.mkdir(miner_dir)
