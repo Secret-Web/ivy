@@ -130,7 +130,7 @@ class Process:
                 line = line.decode('UTF-8', errors='ignore').strip()
                 line = re.sub('\033\[.+?m', '', line)
 
-                self.monitor.output.append(line.decode('UTF-8').strip())
+                self.monitor.output.append(line)
                 del self.monitor.output[:-128]
 
                 if len(line) == 0: continue
