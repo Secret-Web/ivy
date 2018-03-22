@@ -51,7 +51,8 @@ class Process:
 
         install.extend(config.program.install['execute'])
 
-        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir, bufsize=0,
+                        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await installer.wait()
 
     async def stop(self):
@@ -109,10 +110,8 @@ class Process:
         await gpu_control.setup()
         await gpu_control.apply(config.hardware, self.client.group.hardware.overclock)
 
-        print(' '.join(args))
-
         logger = logging.getLogger(config.program.name)
-        self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir, env={'PYTHONUNBUFFERED': '1'},
+        self.process = await asyncio.create_subprocess_shell(' '.join(args), cwd=miner_dir, bufsize=0,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         asyncio.ensure_future(self._read_stream(logger, self.process.stdout, error=False))
         asyncio.ensure_future(self._read_stream(logger, self.process.stderr, error=True))
