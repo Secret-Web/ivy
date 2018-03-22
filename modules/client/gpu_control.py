@@ -7,8 +7,8 @@ async def run_cmd(cmd):
     await proc.wait()
 
 async def setup():
-    await NVIDIA.apply()
-    await AMD.apply()
+    await NVIDIA.setup()
+    await AMD.setup()
 
 async def apply(hardware, overclock):
     nvidia = []
