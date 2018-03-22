@@ -44,7 +44,7 @@ class NVIDIA:
             applies.append('[gpu:%d]/GPUFanControlState=1' % i)
             applies.append('[fan:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min']))
 
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a ' + ' -a '.join(applies))
+        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(applies))
 
     async def revert(i, gpu):
         applies = [
@@ -53,7 +53,7 @@ class NVIDIA:
             '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
         ]
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a ' + ' -a '.join(applies))
+        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(applies))
 
 class AMD:
     async def apply(i, gpu):
