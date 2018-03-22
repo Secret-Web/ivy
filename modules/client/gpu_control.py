@@ -46,7 +46,7 @@ class NVIDIA:
     async def setup():
         await run_cmd('nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
-    async def apply(i, gpu, overclock):
+    def apply(i, gpu, overclock):
         applies = [
             '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
@@ -58,18 +58,18 @@ class NVIDIA:
 
         return applies
 
-    async def revert(i, gpu):
+    def revert(i, gpu):
         applies = [
             '[gpu:%d]/GPUFanControlState=0' % i,
             '[fan:%d]/GPUTargetFanSpeed=50' % i,
             '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
             '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
         ]
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(applies))
+        return applies
 
 class AMD:
-    async def apply(i, gpu):
+    def apply(i, gpu):
         pass
 
-    async def revert(i, gpu):
+    def revert(i, gpu):
         pass
