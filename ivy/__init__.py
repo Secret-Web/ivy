@@ -75,10 +75,12 @@ class Ivy:
 
         cmd = None
 
-        updater = await asyncio.create_subprocess_exec(*['git', 'pull'], cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        updater = await asyncio.create_subprocess_exec(*['git', 'pull'], cwd=os.getcwd(),
+                    stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await updater.wait()
 
-        updater = await asyncio.create_subprocess_exec(*['git', 'reset', '--hard', version['commit']], cwd=os.getcwd(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        updater = await asyncio.create_subprocess_exec(*['git', 'reset', '--hard', version['commit']], cwd=os.getcwd(),
+                    stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await updater.wait()
 
         asyncio.get_event_loop().stop()
