@@ -16,7 +16,8 @@ async def apply(hardware, overclock):
 
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
-            nvidia.append(*NVIDIA.apply(i, gpu, overclock.nvidia))
+            for arg in NVIDIA.apply(i, gpu, overclock.nvidia):
+                nvidia.append(arg)
         elif 'AMD' in gpu.vendor:
             amd.append(*AMD.apply(i, gpu, overclock.amd))
         else:
