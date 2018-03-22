@@ -13,12 +13,21 @@ import urwid
 IP = 'localhost'
 
 palette = [
-    ('gpus', '', '', '', '', '#333'),
+    ('background', '', '', '', '#FFF', '#000'),
 
-    ('good', '', '', '', '', '#080'),
-    ('bad', '', '', '', '', '#800'),
-    ('bg-sidebar', '', '', '', '', '#000'),
-    ('bg', '', '', '', '#fff', '#000'),]
+    ('pool_header', '', '', '', '#0FF', '#000'),
+    ('wallet_header', '', '', '', '#0FF', '#000'),
+
+    ('shares_good', '', '', '', '#0F0', '#000'),
+    ('shares_bad', '', '', '', '#F7E', '#000'),
+
+    ('gpus_header', '', '', '', '#999', '#000'),
+    ('gpus_item', '', '', '', '#FF0', '#000'),
+
+    ('graph_bg', '', '', '', '', '#000'),
+    ('graph_1', '', '', '', '', '#FF0'),
+    ('graph_2', '', '', '', '', '#FF0')
+]
 
 def url_content(url):
     response = urllib.request.urlopen(urllib.request.Request(
@@ -53,60 +62,90 @@ class Display:
         self.gpus_fans = urwid.Text('Loading data...')
         self.gpus_rate = urwid.Text('Loading data...')
 
+        self.hashrate = urwid.Text('Loading data...', align='center')
+        self.hash_graph = urwid.BarGraph(['graph_bg', 'graph_1', 'graph_2'])
+        self.hash_graph_length = 60
+        self.hash_graph_data = []
+
         self.urwid = urwid.MainLoop(
-            urwid.AttrMap(
-                urwid.Columns([
-                    urwid.LineBox(
-                        self.output,
-                        title='Output'
-                    ), ('fixed', 48,
-                        urwid.AttrMap(urwid.Filler(
-                            urwid.Padding(
-                                urwid.Pile([
-                                    urwid.LineBox(urwid.Pile([
-                                        self.name,
-                                        self.wallet_crypto,
-
-                                        urwid.Divider(),
-
-                                        self.pool_name,
-                                        self.pool_url,
-
-                                        urwid.Divider(),
-
-                                        self.wallet_name,
-                                        self.wallet_address
-                                    ])),
+            urwid.AttrMap(urwid.Columns([
+                urwid.LineBox(
+                    self.output,
+                    title='Output'
+                ), ('fixed', 48,
+                    urwid.Filler(
+                        urwid.Padding(
+                            urwid.Pile([
+                                urwid.LineBox(urwid.Pile([
+                                    self.name,
+                                    self.wallet_crypto,
 
                                     urwid.Divider(),
 
-                                    urwid.LineBox(urwid.Pile([
-                                        urwid.AttrMap(self.accepted, 'good'),
-                                        urwid.AttrMap(self.rejected, 'bad'),
-                                        urwid.AttrMap(self.invalid, 'bad')
-                                    ]), title='Shares'),
+                                    urwid.AttrMap(self.pool_name, 'pool_header'),
+                                    self.pool_url,
 
                                     urwid.Divider(),
 
-                                    urwid.AttrMap(
-                                        urwid.LineBox(urwid.Columns([
-                                            self.gpus_names,
-                                            self.gpus_temps,
-                                            self.gpus_fans,
-                                            self.gpus_rate
-                                        ]), title='GPUs')
-                                    , 'gpus')
-                                ]), right=1, left=1
-                            ), valign='top'
-                    ), 'bg-sidebar'))
-                ], focus_column=1)
-            , 'bg'),
+                                    urwid.AttrMap(self.wallet_name, 'wallet_header'),
+                                    self.wallet_address
+                                ])),
+
+                                urwid.Divider(),
+
+                                urwid.LineBox(urwid.Pile([
+                                    urwid.AttrMap(self.accepted, 'shares_good'),
+                                    urwid.AttrMap(self.rejected, 'shares_bad'),
+                                    urwid.AttrMap(self.invalid, 'shares_bad')
+                                ]), title='Shares'),
+
+                                urwid.Divider(),
+
+                                urwid.LineBox(urwid.Columns([
+                                    urwid.AttrMap(self.gpus_names, 'gpus_header'),
+                                    urwid.AttrMap(self.gpus_temps, 'gpus_item'),
+                                    urwid.AttrMap(self.gpus_fans, 'gpus_item'),
+                                    urwid.AttrMap(self.gpus_rate, 'gpus_item')
+                                ]), title='GPUs'),
+
+                                urwid.Divider(),
+
+                                urwid.LineBox(urwid.Pile([
+                                    self.hashrate,
+
+                                    urwid.Divider(),
+
+                                    urwid.BoxAdapter(self.hash_graph, height=15)
+                                ]), title='Hashrate')
+                            ]),
+                        right=1, left=1),
+                    valign='top')
+                )
+            ], focus_column=1), 'background'),
             palette,
             unhandled_input=self.on_key,
             event_loop=urwid.AsyncioEventLoop(loop=loop),
         )
 
         self.urwid.screen.set_terminal_properties(colors=256)
+
+    def add_hash_data(self, value):
+        self.hash_graph_data.append(value)
+
+        del self.hash_graph_data[:-self.hash_graph_length]
+
+        minrate = min(self.hash_graph_data)
+        maxrate = max(self.hash_graph_data)
+
+        if minrate == maxrate: minrate -= 1
+
+        diff = maxrate - minrate
+
+        data = []
+        for value in self.hash_graph_data:
+            data.append([0, value - minrate + diff])
+
+        self.hash_graph.set_data(data, top=diff * 3)
 
     def run(self):
         self.urwid.run()
@@ -144,6 +183,10 @@ async def update_stats():
             display.gpus_temps.set_text('Temp\n' + '\n'.join(['%dK' % stats[i]['temp'] for i in range(len(stats))]))
             display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d%%' % stats[i]['fan'] for i in range(len(stats))]))
             display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f/s' % (stats[i]['rate'] / 1000) for i in range(len(stats))]))
+
+            hashrate = sum([stats[i]['rate'] for i in range(len(stats))])
+            display.hashrate.set_text('%.2f/s' % (hashrate / 1000))
+            display.add_hash_data(hashrate)
 
             if len(data['output']) > 0:
                 display.output_lines.clear()
