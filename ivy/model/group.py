@@ -77,8 +77,8 @@ class GroupHardware:
 
 class Overclocks:
     def __init__(self, **kwargs):
-        self.nvidia = Overclocks(**kwargs['nvidia'] if 'nvidia' in kwargs else {})
-        self.amd = Overclocks(**kwargs['amd'] if 'amd' in kwargs else {})
+        self.nvidia = Overclock(**kwargs['nvidia'] if 'nvidia' in kwargs else {})
+        self.amd = Overclock(**kwargs['amd'] if 'amd' in kwargs else {})
 
     def as_obj(self):
         obj = {}
