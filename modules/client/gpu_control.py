@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+import re
 
 async def setup():
     await NVIDIA.setup()
