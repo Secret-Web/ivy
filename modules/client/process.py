@@ -109,9 +109,7 @@ class Process:
 
     async def _read_stream(self, logger, stream, error):
         while True:
-            print('waiting')
             line = await stream.readline()
-            print('line')
             if line:
                 is_error = b'\033[0;31m' in line
                 line = line.decode('UTF-8', errors='ignore').strip()
@@ -133,7 +131,5 @@ class Process:
                 self.monitor.output.append(line)
 
                 del self.monitor.output[:-128]
-
-                print('appended')
             else:
                 break
