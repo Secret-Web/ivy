@@ -126,7 +126,7 @@ class Process:
         while True:
             line = await stream.readline()
             if line:
-                self.monitor.output.append(line)
+                self.monitor.output.append(line.decode('UTF-8').strip())
                 del self.monitor.output[:-128]
 
                 is_error = b'\033[0;31m' in line

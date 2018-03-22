@@ -21,7 +21,7 @@ async def apply(hardware, overclock):
             print(gpu.as_obj())
 
     if len(nvidia) > 0:
-        await run_cmd('/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+        await run_cmd('SOC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
 async def revert(hardware):
     nvidia = []
@@ -38,11 +38,11 @@ async def revert(hardware):
             print(gpu.as_obj())
 
     if len(nvidia) > 0:
-        await run_cmd('/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+        await run_cmd('ROC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
 class NVIDIA:
     async def setup():
-        await run_cmd('nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
+        await run_cmd('IOC', 'nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     def apply(i, gpu, overclock):
         if overclock.core['mhz']:
@@ -71,11 +71,10 @@ class AMD:
     def revert(i, gpu):
         pass
 
-async def run_cmd(cmd):
-    print(cmd)
+async def run_cmd(action, cmd):
     proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-    logger = logging.getLogger('CMD')
+    logger = logging.getLogger(action)
     asyncio.ensure_future(_read_stream(logger, proc.stdout, error=False))
     asyncio.ensure_future(_read_stream(logger, proc.stderr, error=True))
 
