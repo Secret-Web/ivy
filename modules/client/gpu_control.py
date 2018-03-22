@@ -11,24 +11,36 @@ async def setup():
     await AMD.apply()
 
 async def apply(hardware, overclock):
+    nvidia = []
+    amd = []
+
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
-            await NVIDIA.apply(i, gpu, overclock.nvidia)
+            nvidia.append(*NVIDIA.apply(i, gpu, overclock.nvidia))
         elif 'AMD' in gpu.vendor:
-            await AMD.apply(i, gpu, overclock.amd)
+            amd.append(*AMD.apply(i, gpu, overclock.amd))
         else:
             print('Unknown GPU[%d] Vendor:' % i)
             print(gpu.as_obj())
 
+    if len(nvidia) > 0:
+        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+
 async def revert(hardware):
+    nvidia = []
+    amd = []
+
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
-            await NVIDIA.revert(i, gpu)
+            nvidia.append(*NVIDIA.revert(i, gpu))
         elif 'AMD' in gpu.vendor:
-            await AMD.revert(i, gpu)
+            amd.append(*AMD.revert(i, gpu))
         else:
             print('Unknown GPU[%d] Vendor:' % i)
             print(gpu.as_obj())
+
+    if len(nvidia) > 0:
+        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
 class NVIDIA:
     async def setup():
@@ -44,7 +56,7 @@ class NVIDIA:
             applies.append('[gpu:%d]/GPUFanControlState=1' % i)
             applies.append('[fan:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min']))
 
-        await run_cmd('xinit /usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(applies))
+        return applies
 
     async def revert(i, gpu):
         applies = [
