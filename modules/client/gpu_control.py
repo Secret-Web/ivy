@@ -81,8 +81,6 @@ async def run_cmd(cmd):
 
     await proc.wait()
 
-    logger.info('done')
-
 async def _read_stream(logger, stream, error):
     while True:
         line = await stream.readline()
