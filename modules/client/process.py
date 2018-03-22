@@ -75,15 +75,7 @@ class Process:
             self.logger.error('No program configured.')
             return
 
-        validated = config.program.is_valid()
-        if validated is not True:
-            self.logger.error('Configured program is not valid. %r' % validated)
-            return
-
         await self.stop()
-
-        print(self.config)
-        print(config)
 
         self.config = config
 
