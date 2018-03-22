@@ -32,7 +32,8 @@ async def revert(hardware):
 
     for i, gpu in enumerate(hardware.gpus):
         if 'NVIDIA' in gpu.vendor:
-            nvidia.append(*NVIDIA.revert(i, gpu))
+            for arg in NVIDIA.revert(i, gpu):
+                nvidia.append(arg)
         elif 'AMD' in gpu.vendor:
             amd.append(*AMD.revert(i, gpu))
         else:
@@ -47,25 +48,18 @@ class NVIDIA:
         await run_cmd('nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     def apply(i, gpu, overclock):
-        applies = [
-            '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
-            '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
-        ]
+        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
+        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
         if overclock.fan['min'] is not None:
-            applies.append('[gpu:%d]/GPUFanControlState=1' % i)
-            applies.append('[fan:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min']))
-
-        return applies
+            yield '[gpu:%d]/GPUFanControlState=1' % i
+            yield '[fan:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min'])
 
     def revert(i, gpu):
-        applies = [
-            '[gpu:%d]/GPUFanControlState=0' % i,
-            '[fan:%d]/GPUTargetFanSpeed=50' % i,
-            '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
-            '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
-        ]
-        return applies
+        yield '[gpu:%d]/GPUFanControlState=0' % i
+        yield '[fan:%d]/GPUTargetFanSpeed=50' % i
+        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
+        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
 class AMD:
     def apply(i, gpu):
