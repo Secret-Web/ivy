@@ -36,8 +36,8 @@ class NVIDIA:
 
     async def apply(i, gpu, overclock):
         applies = [
-            '[gpu:%d]/GPUGraphicsClockOffset[3]=0',
-            '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0'
+            '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i,
+            '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
         ]
 
         if overclock.fan['min'] is not None:
