@@ -63,6 +63,9 @@ class NVIDIA:
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
 class AMD:
+    async def setup():
+        pass
+
     def apply(i, gpu):
         pass
 
