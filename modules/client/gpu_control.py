@@ -49,8 +49,8 @@ class NVIDIA:
         await run_cmd('nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     def apply(i, gpu, overclock):
-        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
-        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
+        #yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
+        #yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
         if overclock.fan['min'] is not None:
             yield '[gpu:%d]/GPUFanControlState=1' % i
@@ -59,8 +59,8 @@ class NVIDIA:
     def revert(i, gpu):
         yield '[gpu:%d]/GPUFanControlState=0' % i
         yield '[fan:%d]/GPUTargetFanSpeed=50' % i
-        yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
-        yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
+        #yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
+        #yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
 class AMD:
     async def setup():
