@@ -77,21 +77,21 @@ class Process:
 
         args = config.program.execute['args']
 
-        args = re.sub('{miner\.id}', '\\1 %s' % self.client.worker_id, args)
+        args = re.sub('{miner\.id}', '%s' % self.client.worker_id, args)
 
         if config.wallet:
-            args = re.sub('{user}', '\\1 %s' % config.wallet.address, args)
+            args = re.sub('{user}', '%s' % config.wallet.address, args)
 
         if config.pool.endpoint is not None:
-            args = re.sub('{pool\.url}', '\\1 %s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url), args)
+            args = re.sub('{pool\.url}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url), args)
 
             if ':' in config.pool.endpoint.url:
-                args = re.sub('{pool\.url\.host}', '\\1 %s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url.split(':')[0]), args)
-                args = re.sub('{pool\.url\.port}', '\\1 %s' % config.pool.endpoint.url.split(':')[1], args)
+                args = re.sub('{pool\.url\.host}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url.split(':')[0]), args)
+                args = re.sub('{pool\.url\.port}', '%s' % config.pool.endpoint.url.split(':')[1], args)
 
-            args = re.sub('{pool\.pass}', '' if not config.pool.endpoint.password else '\\1 %s' % config.pool.endpoint.password, args)
+            args = re.sub('{pool\.pass}', '' if not config.pool.endpoint.password else '%s' % config.pool.endpoint.password, args)
 
-            args = re.sub('{user}', '' if not config.pool.endpoint.username else '\\1 %s' % config.pool.endpoint.username, args)
+            args = re.sub('{user}', '' if not config.pool.endpoint.username else '%s' % config.pool.endpoint.username, args)
 
         args = re.sub('{miner\.id}', self.client.worker_id, args)
 
