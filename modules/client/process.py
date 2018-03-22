@@ -85,10 +85,11 @@ class Process:
 
         if config.pool.endpoint is not None:
             if config.pool.endpoint.url:
-                args = re.sub('{pool\.url}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url), args)
+                ignore_stratum = config.program.execute['ignore_stratum'] if 'ignore_stratum' in config.program.execute else False
+                args = re.sub('{pool\.url}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum and not ignore_stratum else '') + config.pool.endpoint.url), args)
 
                 if ':' in config.pool.endpoint.url:
-                    args = re.sub('{pool\.url\.host}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum else '') + config.pool.endpoint.url.split(':')[0]), args)
+                    args = re.sub('{pool\.url\.host}', '%s' % (('stratum+tcp://' if config.pool.endpoint.stratum and not ignore_stratum else '') + config.pool.endpoint.url.split(':')[0]), args)
                     args = re.sub('{pool\.url\.port}', '%s' % config.pool.endpoint.url.split(':')[1], args)
 
             if config.pool.endpoint.password:
