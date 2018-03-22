@@ -103,7 +103,7 @@ class Process:
 
         logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
-                        stdin=None, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         asyncio.ensure_future(self._read_stream(logger, self.process.stdout, error=False))
         asyncio.ensure_future(self._read_stream(logger, self.process.stderr, error=True))
 
