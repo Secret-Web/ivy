@@ -111,9 +111,10 @@ class Process:
         await gpu_control.setup()
         await gpu_control.apply(config.hardware, self.client.group.hardware.overclock)
 
-        logger = logging.getLogger(config.program.name)
         self.process = await asyncio.create_subprocess_shell(' '.join(args), cwd=miner_dir, bufsize=0,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+        logger = logging.getLogger(config.program.name)
         asyncio.ensure_future(self._read_stream(logger, self.process.stdout, error=False))
         asyncio.ensure_future(self._read_stream(logger, self.process.stderr, error=True))
 
@@ -123,6 +124,10 @@ class Process:
             if line:
                 is_error = b'\033[0;31m' in line
                 line = line.decode('UTF-8', errors='ignore').strip()
+
+                self.monitor.output.append(line)
+                del self.monitor.output[:-128]
+
                 line = re.sub('\033\[.+?m', '', line)
 
                 if len(line) == 0: continue
@@ -137,9 +142,5 @@ class Process:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.client.machine_id})
                 else:
                     logger.info(line)
-
-                self.monitor.output.append(line)
-
-                del self.monitor.output[:-128]
             else:
                 break

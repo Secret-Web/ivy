@@ -1,10 +1,6 @@
 import asyncio
+import logging
 
-
-async def run_cmd(cmd):
-    print(cmd)
-    proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-    await proc.wait()
 
 async def setup():
     await NVIDIA.setup()
@@ -74,3 +70,32 @@ class AMD:
 
     def revert(i, gpu):
         pass
+
+async def run_cmd(cmd):
+    print(cmd)
+    proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+    logger = logging.getLogger('GPU')
+    asyncio.ensure_future(_read_stream(logger, proc.stdout, error=False))
+    asyncio.ensure_future(_read_stream(logger, proc.stderr, error=True))
+
+    await proc.wait()
+
+async def _read_stream(logger, stream, error):
+    while True:
+        line = await stream.readline()
+        if line:
+            is_error = b'\033[0;31m' in line
+            line = line.decode('UTF-8', errors='ignore').strip()
+            line = re.sub('\033\[.+?m', '', line)
+
+            if len(line) == 0: continue
+
+            if is_error:
+                logger.critical(line)
+            elif error:
+                logger.error(line)
+            else:
+                logger.info(line)
+        else:
+            break
