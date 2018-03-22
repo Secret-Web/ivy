@@ -26,7 +26,7 @@ class Monitor:
 
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-        #asyncio.ensure_future(self.ping_miner())
+        asyncio.ensure_future(self.ping_miner())
 
     @property
     def uptime_path(self):

@@ -127,9 +127,5 @@ class Process:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.client.machine_id})
                 else:
                     logger.info(line)
-
-                self.monitor.output.append(line)
-
-                del self.monitor.output[:-128]
             else:
                 break
