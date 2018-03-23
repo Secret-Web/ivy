@@ -56,6 +56,9 @@ class Monitor:
     async def get_stats(self):
         return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
 
+    async def get_hw_stats(self):
+        return await self.client.gpus.get_stats(self.client.hardware)
+
     async def ping_miner(self):
         try:
             updated_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
@@ -78,6 +81,8 @@ class Monitor:
 
                 try:
                     got_stats = await self.get_stats()
+                    hw_stats = await self.get_hw_stats()
+                    print(hw_stats)
 
                     self.stats.shares['accepted'] = got_stats['shares']['accepted'] - updated_shares['accepted']
                     self.stats.shares['rejected'] = got_stats['shares']['rejected'] - updated_shares['rejected']
