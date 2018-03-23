@@ -52,7 +52,8 @@ class API:
     async def get_stats(self, gpu):
         return {
             'temp': 0,
-            'fan': 0
+            'fan': 0,
+            'watts': 0
         }
 
     async def run_cmd(self, action, cmd):

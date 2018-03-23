@@ -51,10 +51,10 @@ class NvidiaAPI(API):
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
     async def get_stats(self, gpu):
-        print(gpu.as_obj())
         return {
             'temp': 0,
-            'fan': 10
+            'fan': 10,
+            'watts': 50
         }
 
 __api__ = NvidiaAPI

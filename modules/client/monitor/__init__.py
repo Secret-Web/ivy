@@ -82,7 +82,6 @@ class Monitor:
                 try:
                     got_stats = await self.get_stats()
                     hw_stats = await self.get_hw_stats()
-                    print(hw_stats)
 
                     self.stats.shares['accepted'] = got_stats['shares']['accepted'] - updated_shares['accepted']
                     self.stats.shares['rejected'] = got_stats['shares']['rejected'] - updated_shares['rejected']
@@ -99,6 +98,10 @@ class Monitor:
 
                         if i < len(got_stats['hashrate']):
                             gpu.rate = got_stats['hashrate'][i]
+                        if i < len(hw_stats):
+                            gpu.temp = hw_stats[i]['temp']
+                            gpu.fan = hw_stats[i]['fan']
+                            gpu.watts = hw_stats[i]['watts']
 
                         online = gpu.rate > 0
                         if gpu.online and not online:
