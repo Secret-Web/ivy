@@ -165,21 +165,6 @@ class Monitor:
 
 class API:
     async def get_stats(self, host):
-        '''
-
-            Should return the following:
-            {
-                'shares': {
-                    'accepted': 0,
-                    'invalid': 0,
-                    'rejected': 0
-                },
-                'hashrate': [
-                    per GPU
-                ]
-            }
-
-        '''
         return {
             'shares': {
                 'accepted': 0,

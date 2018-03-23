@@ -8,11 +8,14 @@ class NvidiaAPI(API):
     async def setup(self):
         await self.run_cmd('IOC', 'nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
+    async def is_mine(self, gpu):
+        return 'NVIDIA' in gpu.vendor:
+
     async def apply(self, hardware, overclock):
         nvidia = []
 
         for i, gpu in enumerate(hardware.gpus):
-            if 'NVIDIA' in gpu.vendor:
+            if self.is_mine(gpu):
                 for arg in self.apply_gpu(i, gpu, overclock.nvidia):
                     nvidia.append(arg)
 
@@ -34,7 +37,7 @@ class NvidiaAPI(API):
         nvidia = []
 
         for i, gpu in enumerate(hardware.gpus):
-            if 'NVIDIA' in gpu.vendor:
+            if self.is_mine(gpu):
                 for arg in NVIDIA.revert(i, gpu):
                     nvidia.append(arg)
 
@@ -46,5 +49,12 @@ class NvidiaAPI(API):
         yield '[fan:%d]/GPUTargetFanSpeed=50' % i
         yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
+
+    async def get_stats(self, gpu):
+        print(gpu.as_obj())
+        return {
+            'temp': 0,
+            'fan': 10
+        }
 
 __api__ = NvidiaAPI
