@@ -5,7 +5,7 @@ import re
 
 class GPUControl:
     def __init__(self):
-        self.gpus = []
+        self.gpus = {}
 
         self.load_gpu('nvidia')
         self.load_gpu('amd')
