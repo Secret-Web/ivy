@@ -57,7 +57,7 @@ class Monitor:
         return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
 
     async def get_hw_stats(self):
-        return await self.client.gpus.get_stats(self.client.hardware)
+        return await self.process.gpus.get_stats(self.client.hardware)
 
     async def ping_miner(self):
         try:

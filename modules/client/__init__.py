@@ -18,8 +18,6 @@ class ClientModule(Module):
 
         self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
 
-        self.gpus = GPUControl()
-
         self.connector = NetConnector(self.logger.getChild('socket'))
         self.connector.listen_event('connection', 'open')(self.event_connection_open)
         self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
