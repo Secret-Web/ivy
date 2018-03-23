@@ -35,7 +35,9 @@ class Monitor:
                 api_id = self.process.config.program.api
                 api = __import__('modules.client.api.%s' % api_id, globals(), locals(), ['object'], 0)
                 self._api[api_id] = api.__api__()
-            except:
+            except Exception as e:
+                self.logger.warning('Failed to load "%s" API. Falling back to default.' % self.process.config.program.api)
+                self.logger.exception('\n' + traceback.format_exc())
                 self._api[api_id] = API()
         return self._api[self.process.config.program.api]
 
