@@ -3,7 +3,7 @@ class AMDAPI:
         pass
 
     async def is_mine(self, gpu):
-        return 'AMD' in gpu.vendor:
+        return 'AMD' in gpu.vendor
 
     async def apply(self, hardware, overclock):
         pass
