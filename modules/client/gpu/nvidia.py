@@ -19,7 +19,7 @@ class NvidiaAPI(API):
         if len(nvidia) > 0:
             await self.run_cmd('SOC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
-    async def apply_gpu(self, i, gpu, overclock):
+    def apply_gpu(self, i, gpu, overclock):
         if overclock.core['mhz']:
             yield '[gpu:%d]/GPUGraphicsClockOffset[3]=%d' % (i, overclock.core['mhz'])
 
@@ -41,7 +41,7 @@ class NvidiaAPI(API):
         if len(nvidia) > 0:
             await self.run_cmd('ROC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
-    async def revert_gpu(self, i, gpu):
+    def revert_gpu(self, i, gpu):
         yield '[gpu:%d]/GPUFanControlState=0' % i
         yield '[fan:%d]/GPUTargetFanSpeed=50' % i
         yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
