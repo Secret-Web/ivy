@@ -62,3 +62,4 @@ class API:
                 else:
                     logger.info(line)
             else:
+                break
