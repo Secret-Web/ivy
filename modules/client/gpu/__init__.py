@@ -30,7 +30,7 @@ class GPUControl:
         gpu_stats = []
 
         for gpu in hardware.gpus:
-            for controller_id, controller in self.gpus.items():
+            for controller_id, controller in self.controllers.items():
                 if controller.is_mine(gpu):
                     gpu_stats.append(await controller.get_stats(gpu))
 
