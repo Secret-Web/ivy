@@ -11,8 +11,8 @@ class GPUControl:
         self.load_gpu('amd')
 
     def load_gpu(self, controller_id):
-        api = __import__('modules.client.gpu.%s' % controller_id, globals(), locals(), ['object'], 0)
-        self.controllers[gpu_id] = api.__api__()
+        controller = __import__('modules.client.gpu.%s' % controller_id, globals(), locals(), ['object'], 0)
+        self.controllers[controller_id] = controller.__api__()
 
     async def setup(self):
         for controller_id, controller in self.controllers.items():
