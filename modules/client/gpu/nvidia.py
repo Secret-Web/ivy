@@ -9,7 +9,7 @@ class NvidiaAPI(API):
         await self.run_cmd('IOC', 'nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
 
     async def is_mine(self, gpu):
-        return 'NVIDIA' in gpu.vendor:
+        return 'NVIDIA' in gpu.vendor
 
     async def apply(self, hardware, overclock):
         nvidia = []
