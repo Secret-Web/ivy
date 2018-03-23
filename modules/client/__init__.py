@@ -6,7 +6,6 @@ from ivy.model.client import Client
 from ivy.model.hardware import get_hardware
 
 from . import api_server
-from .gpu import GPUControl
 from .process import Process
 
 
