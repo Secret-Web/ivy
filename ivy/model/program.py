@@ -6,7 +6,6 @@ class Program:
         self.name = kwargs['name'] if 'name' in kwargs else None
         self.url = kwargs['url'] if 'url' in kwargs else None
         self.support = kwargs['support'] if 'support' in kwargs else None
-        self.suggested = kwargs['suggested'] if 'suggested' in kwargs else None
         self.algorithm = kwargs['algorithm'] if 'algorithm' in kwargs else None
         self.other = kwargs['other'] if 'other' in kwargs else None
 
@@ -20,7 +19,6 @@ class Program:
         if self.name is not None: obj['name'] = self.name
         if self.url is not None: obj['url'] = self.url
         if self.support is not None: obj['support'] = self.support
-        if self.suggested is not None: obj['suggested'] = self.suggested
         if self.algorithm is not None: obj['algorithm'] = self.algorithm
         if self.other is not None: obj['other'] = self.other
 

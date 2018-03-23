@@ -4,7 +4,7 @@ import shlex
 import logging
 import asyncio
 
-from . import gpu_control
+from .gpu import GPUControl
 from .monitor import Monitor
 
 
@@ -15,6 +15,7 @@ class Process:
 
         self.logger = logger.getChild('Process')
 
+        self.gpus = GPUControl()
         self.monitor = Monitor(self.logger, client, connector, self)
 
         self.process = None
@@ -74,8 +75,8 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        await gpu_control.setup()
-        await gpu_control.apply(config.hardware, self.client.group.hardware.overclock)
+        await self.gpus.setup()
+        await self.gpus.apply(config.hardware, self.client.group.hardware.overclock)
 
         self.logger.info('Starting miner...')
 
@@ -116,7 +117,7 @@ class Process:
 
             self.process.terminate()
 
-            await gpu_control.revert(self.client.hardware)
+            await self.gpus.revert(self.client.hardware)
 
             await asyncio.sleep(5)
 #            if self.process.poll() is None:

@@ -79,8 +79,6 @@ class Monitor:
                 try:
                     got_stats = await self.get_stats()
 
-                    print(got_stats)
-
                     self.stats.shares['accepted'] = got_stats['shares']['accepted'] - updated_shares['accepted']
                     self.stats.shares['rejected'] = got_stats['shares']['rejected'] - updated_shares['rejected']
                     self.stats.shares['invalid'] = got_stats['shares']['invalid'] - updated_shares['invalid']
