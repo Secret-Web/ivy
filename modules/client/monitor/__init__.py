@@ -30,14 +30,13 @@ class Monitor:
 
     @property
     def api(self):
-        print(self.process.config.program.as_obj())
         if self.process.config.program.api not in self._api:
             try:
                 api_id = self.process.config.program.api
-                api = __import__('modules.client.api.%s' % api_id, globals(), locals(), ['object'], 0)
+                api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
                 self._api[api_id] = api.__api__()
             except Exception as e:
-                self.logger.warning('Failed to load "%s" API. Falling back to default.' % self.process.config.program.api)
+                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
                 self.logger.exception('\n' + traceback.format_exc())
                 self._api[api_id] = API()
         return self._api[self.process.config.program.api]
