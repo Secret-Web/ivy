@@ -30,8 +30,7 @@ class Monitor:
 
     @property
     def api(self):
-        print(self.process.config)
-        print(self.process.config.program)
+        print(self.process.config.program.as_obj())
         if self.process.config.program.api not in self._api:
             try:
                 api_id = self.process.config.program.api
