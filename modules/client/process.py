@@ -120,8 +120,8 @@ class Process:
             await self.gpus.revert(self.client.hardware)
 
             await asyncio.sleep(5)
-#            if self.process.poll() is None:
-#                self.process.kill()
+            if self.is_running is None:
+                self.process.kill()
 
     async def _read_stream(self, logger, stream, error):
         while True:
