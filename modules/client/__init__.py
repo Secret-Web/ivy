@@ -6,6 +6,7 @@ from ivy.model.client import Client
 from ivy.model.hardware import get_hardware
 
 from . import api_server
+from .gpu import GPUControl
 from .process import Process
 
 
@@ -18,7 +19,7 @@ class ClientModule(Module):
         self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
 
         self.gpus = GPUControl()
-        
+
         self.process = Process(self.logger, self.client, self.connector)
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))

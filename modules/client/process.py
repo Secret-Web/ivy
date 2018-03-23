@@ -4,7 +4,6 @@ import shlex
 import logging
 import asyncio
 
-from .gpu import GPUControl
 from .monitor import Monitor
 
 
