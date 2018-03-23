@@ -168,7 +168,7 @@ class API:
             Should return the following:
             {
                 'shares': {
-                    'acccepted': 0,
+                    'accepted': 0,
                     'invalid': 0,
                     'rejected': 0
                 },
@@ -180,7 +180,7 @@ class API:
         '''
         return {
             'shares': {
-                'acccepted': 0,
+                'accepted': 0,
                 'invalid': 0,
                 'rejected': 0
             },

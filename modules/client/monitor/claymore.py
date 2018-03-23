@@ -26,7 +26,7 @@ class ClaymoreAPI(API):
 
         return {
             'shares': {
-                'acccepted': eth_totals[1],
+                'accepted': eth_totals[1],
                 'invalid': invalids[0],
                 'rejected': eth_totals[2]
             },
