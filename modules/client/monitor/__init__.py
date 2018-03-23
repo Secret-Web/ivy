@@ -60,9 +60,9 @@ class Monitor:
 
             if self.client.dummy:
                 stats = await self.get_stats()
-                updated_shares['accepted'] = stat['shares']['accepted']
-                updated_shares['rejected'] = stat['shares']['rejected']
-                updated_shares['invalid'] = stat['shares']['invalid']
+                updated_shares['accepted'] = stats['shares']['accepted']
+                updated_shares['rejected'] = stats['shares']['rejected']
+                updated_shares['invalid'] = stats['shares']['invalid']
 
                 self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (updated_shares['accepted'], updated_shares['rejected'], updated_shares['invalid']))
 
@@ -77,9 +77,9 @@ class Monitor:
                 try:
                     stats = await self.get_stats()
 
-                    self.queued_stats.shares['accepted'] = stat['shares']['accepted'] - updated_shares['accepted']
-                    self.queued_stats.shares['rejected'] = stat['shares']['rejected'] - updated_shares['rejected']
-                    self.queued_stats.shares['invalid'] = stat['shares']['invalid'] - updated_shares['invalid']
+                    self.queued_stats.shares['accepted'] = stats['shares']['accepted'] - updated_shares['accepted']
+                    self.queued_stats.shares['rejected'] = stats['shares']['rejected'] - updated_shares['rejected']
+                    self.queued_stats.shares['invalid'] = stats['shares']['invalid'] - updated_shares['invalid']
 
                     new_offline = 0
                     for i in range(len(self.queued_stats.hardware.gpus)):
@@ -90,8 +90,8 @@ class Monitor:
                         gpu.fan = 0
                         gpu.watts = 0
 
-                        if i < len(stat['hashrate']):
-                            gpu.rate = stat['hashrate'][i]
+                        if i < len(stats['hashrate']):
+                            gpu.rate = stats['hashrate'][i]
 
                         online = gpu.rate > 0
                         if gpu.online and not online:

@@ -24,6 +24,13 @@ class ClaymoreAPI(API):
 
         invalids = [int(x) for x in invalids.split(';')]
 
-        return version, runtime, eth_totals, eth_hashrates, dcr_totals, dcr_hashrates, stats, pools, invalids
+        return {
+            'shares': {
+                'acccepted': eth_totals[1],
+                'invalid': invalids[0],
+                'rejected': eth_totals[2]
+            },
+            'hashrate': eth_hashrates
+        }
 
 __api__ = ClaymoreAPI
