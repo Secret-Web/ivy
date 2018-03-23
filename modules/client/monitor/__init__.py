@@ -162,7 +162,7 @@ class Monitor:
                 await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
 
 class API:
-    async def get_stats(self):
+    async def get_stats(self, host):
         '''
 
             Should return the following:
