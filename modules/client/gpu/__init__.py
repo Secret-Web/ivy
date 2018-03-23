@@ -40,7 +40,7 @@ class API:
     async def setup(self):
         pass
 
-    async def is_mine(self, gpu):
+    def is_mine(self, gpu):
         pass
 
     async def apply(self, hardware, overclock):
