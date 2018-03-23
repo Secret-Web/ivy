@@ -20,6 +20,12 @@ class ClientModule(Module):
 
         self.gpus = GPUControl()
 
+        self.connector = NetConnector(self.logger.getChild('socket'))
+        self.connector.listen_event('connection', 'open')(self.event_connection_open)
+        self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
+
+        self.register_events(self.connector)
+
         self.process = Process(self.logger, self.client, self.connector)
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
@@ -27,12 +33,7 @@ class ClientModule(Module):
             asyncio.ensure_future(self.process.start(self.client))
 
         self.master_priority = None
-        self.connector = NetConnector(self.logger.getChild('socket'))
-        self.connector.listen_event('connection', 'open')(self.event_connection_open)
-        self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
-
         self.ivy.register_listener('master')(self.on_discovery_master)
-        self.register_events(self.connector)
 
         asyncio.ensure_future(api_server.start(self))
 
