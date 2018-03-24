@@ -67,6 +67,8 @@ class Display:
         self.hash_graph_length = 60
         self.hash_graph_data = []
 
+        self.branding = urwid.Text('- SecretWeb.com -', align='center')
+
         self.urwid = urwid.MainLoop(
             urwid.AttrMap(urwid.Columns([
                 urwid.LineBox(
@@ -116,7 +118,11 @@ class Display:
                                     urwid.Divider(),
 
                                     urwid.BoxAdapter(self.hash_graph, height=15)
-                                ]), title='Hashrate')
+                                ]), title='Hashrate'),
+
+                                urwid.Divider(),
+
+                                self.branding
                             ]),
                         right=1, left=1),
                     valign='top')
