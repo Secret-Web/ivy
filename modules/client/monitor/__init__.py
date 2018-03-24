@@ -57,7 +57,10 @@ class Monitor:
         return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
 
     async def get_hw_stats(self):
-        return await self.process.gpus.get_stats(self.client.hardware)
+        try:
+            return await self.process.gpus.get_stats(self.client.hardware)
+        except Exception as e:
+            await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
 
     async def ping_miner(self):
         try:
