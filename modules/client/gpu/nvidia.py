@@ -67,8 +67,6 @@ class NvidiaAPI(API):
                         'watts': float(g.find('power_readings').find('power_draw').text.split(' ')[0])
                     }
         except:
-            print(stdout)
-            print(stderr)
             raise Exception('Unable to query GPU.')
 
         return {
