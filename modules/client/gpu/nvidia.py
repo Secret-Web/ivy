@@ -24,6 +24,8 @@ class NvidiaAPI(API):
             await self.run_cmd('SOC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
     def apply_gpu(self, i, gpu, overclock):
+        yield '[gpu:%d]/GPUPowerMizerMode=1' % i
+
         if overclock.core['mhz']:
             yield '[gpu:%d]/GPUGraphicsClockOffset[3]=%d' % (i, overclock.core['mhz'])
 
