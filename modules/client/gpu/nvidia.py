@@ -1,5 +1,6 @@
 import socket
 import json
+from xml.dom import minidom
 
 from . import API
 
@@ -51,6 +52,15 @@ class NvidiaAPI(API):
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
     async def get_stats(self, gpu):
+        stdout, stderr = await self.run_cmd('nvidia-smi -q -x')
+        print(stdout)
+        xmldoc = minidom.parseString(stdout)
+        gpus = xmldoc.getElementsByTagName('gpu')
+        print(gpu)
+        print(len(gpus))
+        for g in gpus:
+            print(g.attributes['id'].value)
+
         return {
             'temp': 0,
             'fan': 10,
