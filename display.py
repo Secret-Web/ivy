@@ -180,9 +180,9 @@ async def update_stats():
 
             stats = data['hardware']['gpus']
             display.gpus_names.set_text('\n' + '\n'.join(['GPU%d' % i for i in range(len(stats))]))
-            display.gpus_temps.set_text('Temp\n' + '\n'.join(['%dK' % stats[i]['temp'] for i in range(len(stats))]))
-            display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d%%' % stats[i]['fan'] for i in range(len(stats))]))
-            display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f/s' % (stats[i]['rate'] / 1000) for i in range(len(stats))]))
+            display.gpus_temps.set_text('Temp\n' + '\n'.join(['%d C' % (stats[i]['temp'] - 273.15) for i in range(len(stats))]))
+            display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d %%' % stats[i]['fan'] for i in range(len(stats))]))
+            display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f /s' % (stats[i]['rate'] / 1000) for i in range(len(stats))]))
 
             hashrate = sum([stats[i]['rate'] for i in range(len(stats))])
             display.hashrate.set_text('%.2f/s' % (hashrate / 1000))
@@ -201,4 +201,3 @@ async def update_stats():
 loop.create_task(update_stats())
 
 display.run()
-
