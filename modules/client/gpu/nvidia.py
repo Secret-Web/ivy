@@ -59,9 +59,9 @@ class NvidiaAPI(API):
             # Strip off "pci@"
             if gpu.bus_id[4:] == g.get('id')[4:]:
                 return {
-                    'fan': g.find('fan_speed').text.split(' ')[0],
-                    'temp': g.find('temperature').find('gpu_temp').text.split(' ')[0],
-                    'watts': g.find('power_readings').find('power_draw').text.split(' ')[0]
+                    'fan': float(g.find('fan_speed').text.split(' ')[0]),
+                    'temp': int(g.find('temperature').find('gpu_temp').text.split(' ')[0]) + 273.15,
+                    'watts': float(g.find('power_readings').find('power_draw').text.split(' ')[0])
                 }
 
         return {
