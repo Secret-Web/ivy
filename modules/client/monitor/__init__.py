@@ -102,6 +102,7 @@ class Monitor:
 
                         if i < len(got_stats['hashrate']):
                             gpu.rate = got_stats['hashrate'][i]
+
                         if i < len(hw_stats):
                             gpu.temp = hw_stats[i]['temp']
                             gpu.fan = hw_stats[i]['fan']
