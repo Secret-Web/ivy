@@ -61,7 +61,7 @@ class Monitor:
             return await self.process.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': e, 'machine': self.client.machine_id})
+            await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': str(e), 'machine': self.client.machine_id})
             return []
 
     async def ping_miner(self):
