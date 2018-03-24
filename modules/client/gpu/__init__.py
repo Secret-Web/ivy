@@ -59,16 +59,17 @@ class API:
     async def run_cmd(self, action, cmd, quiet=False):
         proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        if not quiet:
-            logger = logging.getLogger(action)
-            asyncio.ensure_future(self._read_stream(logger, proc.stdout, error=False))
-            asyncio.ensure_future(self._read_stream(logger, proc.stderr, error=True))
+        stdout, stderr = ([], [])
 
-        stdout, stderr = await proc.communicate()
-        
+        logger = logging.getLogger(action)
+        asyncio.ensure_future(self._read_stream(logger, proc.stdout, stdout, quiet=quiet, error=False))
+        asyncio.ensure_future(self._read_stream(logger, proc.stderr, stderr, quiet=quiet, error=True))
+
+        await proc.wait()
+
         return (stdout, stderr)
 
-    async def _read_stream(self, logger, stream, error):
+    async def _read_stream(self, logger, stream, to, quiet, error):
         while True:
             line = await stream.readline()
             if line:
@@ -76,13 +77,14 @@ class API:
                 line = line.decode('UTF-8', errors='ignore').strip()
                 line = re.sub('\033\[.+?m', '', line)
 
-                if len(line) == 0: continue
+                to.append(line)
 
-                if is_error:
-                    logger.critical(line)
-                elif error:
-                    logger.error(line)
-                else:
-                    logger.info(line)
+                if !quiet:
+                    if is_error:
+                        logger.critical(line)
+                    elif error:
+                        logger.error(line)
+                    else:
+                        logger.info(line)
             else:
                 break
