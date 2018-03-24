@@ -50,7 +50,6 @@ def get_hardware():
                 'vendor': x['vendor'],
                 'product': x['product'],
                 'width': x['width'],
-                'clock': x['clock'],
                 'driver': None #x['configuration']['driver']
             })
 
@@ -136,8 +135,6 @@ class GPU:
         self.vendor = kwargs['vendor'] if 'vendor' in kwargs else None
         self.product = kwargs['product'] if 'product' in kwargs else None
 
-        self.clock = kwargs['clock'] if 'clock' in kwargs else None
-
     def as_obj(self):
         obj = {}
 
@@ -146,8 +143,6 @@ class GPU:
 
         if self.vendor is not None: obj['vendor'] = self.vendor
         if self.product is not None: obj['product'] = self.product
-
-        if self.clock is not None: obj['clock'] = self.clock
 
         return obj
 

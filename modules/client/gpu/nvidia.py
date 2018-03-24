@@ -59,7 +59,9 @@ class NvidiaAPI(API):
         for g in gpus:
             # Strip off "pci@"
             if gpu.bus_id[4:] == g.attributes['id'].value[4:]:
-                print(g)
+                print(g.getElementsByTagName('fan_speed')[0])
+                print(g.getElementsByTagName('temperature')[0].getElementsByTagName('gpu_temp')[0])
+                print(g.getElementsByTagName('power_readings')[0].getElementsByTagName('power_draw')[0])
                 break
 
         return {
