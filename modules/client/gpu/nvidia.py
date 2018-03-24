@@ -57,7 +57,7 @@ class NvidiaAPI(API):
         root = ElementTree.fromstring(stdout)
         for g in root.findall('gpu'):
             # Strip off "pci@"
-            if gpu.bus_id[4:] == g.get('id').value[4:]:
+            if gpu.bus_id[4:] == g.get('id')[4:]:
                 print(g.find('fan_speed').text.split(' ')[0])
                 print(g.find('temperature').find('gpu_temp').text.split(' ')[0])
                 print(g.find('power_readings').find('power_draw').text.split(' ')[0])
