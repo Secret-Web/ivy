@@ -64,7 +64,9 @@ class API:
             asyncio.ensure_future(self._read_stream(logger, proc.stdout, error=False))
             asyncio.ensure_future(self._read_stream(logger, proc.stderr, error=True))
 
-        return await proc.communicate()
+        stdout, stderr = await proc.communicate()
+        
+        return (stdout, stderr)
 
     async def _read_stream(self, logger, stream, error):
         while True:
@@ -81,6 +83,6 @@ class API:
                 elif error:
                     logger.error(line)
                 else:
-                    logger.debug(line)
+                    logger.info(line)
             else:
                 break
