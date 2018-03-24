@@ -58,7 +58,7 @@ class NvidiaAPI(API):
 
         for g in gpus:
             # Strip off "pci@"
-            if gpu.bus_id[4:] == g.attributes['id'].value[4:]
+            if gpu.bus_id[4:] == g.attributes['id'].value[4:]:
                 print(g)
                 break
 
