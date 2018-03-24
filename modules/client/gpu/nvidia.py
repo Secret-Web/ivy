@@ -56,20 +56,23 @@ class NvidiaAPI(API):
 
         print(stdout)
 
-        root = ElementTree.fromstring(stdout)
-        for g in root.findall('gpu'):
-            # Strip off "pci@"
-            if gpu.bus_id[4:] == g.get('id')[4:]:
-                return {
-                    'fan': float(g.find('fan_speed').text.split(' ')[0]),
-                    'temp': int(g.find('temperature').find('gpu_temp').text.split(' ')[0]) + 273.15,
-                    'watts': float(g.find('power_readings').find('power_draw').text.split(' ')[0])
-                }
+        try:
+            root = ElementTree.fromstring(stdout)
+            for g in root.findall('gpu'):
+                # Strip off "pci@"
+                if gpu.bus_id[4:] == g.get('id')[4:]:
+                    return {
+                        'fan': float(g.find('fan_speed').text.split(' ')[0]),
+                        'temp': int(g.find('temperature').find('gpu_temp').text.split(' ')[0]) + 273.15,
+                        'watts': float(g.find('power_readings').find('power_draw').text.split(' ')[0])
+                    }
+        except:
+            pass
 
         return {
             'temp': 0,
-            'fan': 10,
-            'watts': 50
+            'fan': 0,
+            'watts': 0
         }
 
 __api__ = NvidiaAPI
