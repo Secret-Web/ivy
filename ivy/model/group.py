@@ -9,6 +9,8 @@ class Group:
         self.id = kwargs['id'] if 'id' in kwargs else None
         self.name = kwargs['name'] if 'name' in kwargs else 'Unnamed Group'
 
+        self.algorithm = kwargs['algorithm'] if 'algorithm' in kwargs else None
+
         self.pool = GroupPool(**kwargs['pool'] if 'pool' in kwargs else {})
         self.wallet = kwargs['wallet'] if 'wallet' in kwargs else None
         self.program = GroupProgram(**kwargs['program'] if 'program' in kwargs else {})

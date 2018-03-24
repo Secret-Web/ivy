@@ -45,6 +45,9 @@ class Process:
 
         args = config.program.execute['args']
 
+        if config.algorithm:
+            args = re.sub('{algorithm}', '%s' % config.algorithm, args)
+
         if config.wallet:
             args = re.sub('{user}', '%s' % config.wallet.address, args)
 
