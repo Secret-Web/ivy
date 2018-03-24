@@ -67,7 +67,7 @@ class NvidiaAPI(API):
                         'watts': float(g.find('power_readings').find('power_draw').text.split(' ')[0])
                     }
         except:
-            pass
+            raise Exception(stdout)
 
         return {
             'temp': 0,
