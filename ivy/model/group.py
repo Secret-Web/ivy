@@ -26,6 +26,8 @@ class Group:
         if self.id is not None: obj['id'] = self.id
         if self.name is not None: obj['name'] = self.name
 
+        if self.algorithm is not None: obj['algorithm'] = self.algorithm
+
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
         if self.wallet is not None: obj['wallet'] = self.wallet
         if self.program is not None: obj['program'] = self.program.as_obj()

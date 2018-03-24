@@ -97,7 +97,7 @@ class Database(dict):
 
         if 'pools' not in loaded or len(loaded['pools']) == 0:
             try:
-                loaded['pools'] = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/361d18e12d94200068a79b96c8936620ae366217/pools.json'))
+                loaded['pools'] = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/pools.json'))
             except Exception:
                 self.logger.exception('\n' + traceback.format_exc())
 
