@@ -56,12 +56,13 @@ class API:
             'watts': 0
         }
 
-    async def run_cmd(self, action, cmd):
+    async def run_cmd(self, action, cmd, quiet=False):
         proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        logger = logging.getLogger(action)
-        asyncio.ensure_future(self._read_stream(logger, proc.stdout, error=False))
-        asyncio.ensure_future(self._read_stream(logger, proc.stderr, error=True))
+        if not quiet:
+            logger = logging.getLogger(action)
+            asyncio.ensure_future(self._read_stream(logger, proc.stdout, error=False))
+            asyncio.ensure_future(self._read_stream(logger, proc.stderr, error=True))
 
         return proc.communicate()
 
@@ -80,6 +81,6 @@ class API:
                 elif error:
                     logger.error(line)
                 else:
-                    logger.info(line)
+                    logger.debug(line)
             else:
                 break

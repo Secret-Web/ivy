@@ -52,7 +52,7 @@ class NvidiaAPI(API):
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
     async def get_stats(self, gpu):
-        stdout, stderr = await self.run_cmd('nvidia-smi -q -x')
+        stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
         print(stdout)
         xmldoc = minidom.parseString(stdout)
         gpus = xmldoc.getElementsByTagName('gpu')
