@@ -91,12 +91,21 @@ class Overclocks:
 class Overclock:
     def __init__(self, **kwargs):
         self.core = kwargs['core'] if 'core' in kwargs else {'mhz': None, 'vlt': None}
+        if isinstance(self.core['mhz'], str): self.core['mhz'] = None
+        if isinstance(self.core['vlt'], str): self.core['vlt'] = None
+
         self.mem = kwargs['mem'] if 'mem' in kwargs else {'mhz': None, 'vlt': None}
+        if isinstance(self.mem['mhz'], str): self.mem['mhz'] = None
+        if isinstance(self.mem['vlt'], str): self.mem['vlt'] = None
 
         self.fan = kwargs['fan'] if 'fan' in kwargs else {'min': None}
+        if isinstance(self.fan['min'], str): self.fan['min'] = None
+
         self.temp = kwargs['temp'] if 'temp' in kwargs else {'max': None}
+        if isinstance(self.temp['max'], str): self.temp['mhz'] = None
 
         self.pwr = kwargs['pwr'] if 'pwr' in kwargs else None
+        if isinstance(self.pwr, str): self.pwr = None
 
     def as_obj(self):
         obj = {}
