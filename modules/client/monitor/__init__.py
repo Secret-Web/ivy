@@ -152,7 +152,7 @@ class Monitor:
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
-                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                '''if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     interval = self.client.fee.interval / 24 * self.client.fee.daily
                     self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
@@ -165,7 +165,7 @@ class Monitor:
 
                     await self.process.start()
 
-                    self.uptime = 0
+                    self.uptime = 0'''
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:

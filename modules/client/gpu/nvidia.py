@@ -54,6 +54,8 @@ class NvidiaAPI(API):
     async def get_stats(self, gpu):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
 
+        print(stdout)
+
         root = ElementTree.fromstring(stdout)
         for g in root.findall('gpu'):
             # Strip off "pci@"
