@@ -59,7 +59,7 @@ class API:
     async def run_cmd(self, action, cmd, quiet=False):
         proc = await asyncio.create_subprocess_shell(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        stdout, stderr = ('', '')
+        stdout, stderr = ([], [])
 
         logger = logging.getLogger(action)
         asyncio.ensure_future(self._read_stream(logger, proc.stdout, stdout, quiet=quiet, error=False))
@@ -67,7 +67,7 @@ class API:
 
         await proc.wait()
 
-        return (stdout, stderr)
+        return ('\n'.join(stdout), '\n'.join(stderr))
 
     async def _read_stream(self, logger, stream, to, quiet, error):
         while True:
@@ -77,7 +77,12 @@ class API:
                 line = line.decode('UTF-8', errors='ignore').strip()
                 line = re.sub('\033\[.+?m', '', line)
 
-                to += line + '\n'
+                if is_error:
+                    if error:
+                        to.append(line)
+                else:
+                    if not error:
+                        to.append(line)
 
                 if not quiet:
                     if is_error:
