@@ -79,7 +79,7 @@ class Process:
         await self.gpus.setup()
         await self.gpus.apply(config.hardware, self.client.group.hardware.overclock)
 
-        self.logger.info('Starting miner...')
+        self.logger.info('Starting miner: %s' % ' '.join(args))
 
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
