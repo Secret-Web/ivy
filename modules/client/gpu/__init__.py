@@ -77,7 +77,7 @@ class API:
                 line = line.decode('UTF-8', errors='ignore').strip()
                 line = re.sub('\033\[.+?m', '', line)
 
-                to += line
+                to += line + '\n'
 
                 if not quiet:
                     if is_error:
