@@ -24,13 +24,18 @@ class Monitor:
 
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-        self._api = {}
+        self._api = {
+            '_': API()
+        }
 
         asyncio.ensure_future(self.ping_miner())
 
     @property
     def api(self):
-        if self.process.config and self.process.config.program.api not in self._api:
+        if not self.process.config:
+            return self._api['_']
+
+        if self.process.config.program.api not in self._api:
             try:
                 api_id = self.process.config.program.api
                 api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
@@ -41,7 +46,7 @@ class Monitor:
             except Exception as e:
                 self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
                 self.logger.exception('\n' + traceback.format_exc())
-                self._api[api_id] = API()
+                self._api[api_id] = self._api['_']
         return self._api[self.process.config.program.api]
 
     @property
