@@ -49,7 +49,7 @@ class Process:
             args = re.sub('{user}', '%s' % config.wallet.address, args)
 
         if config.program.algorithm:
-            args = re.sub('{algorithm}', '%s' % config.program.algorithm, args)
+            args = re.sub('{algorithm}', '%s' % config.program.algorithm.lower(), args)
 
         if config.pool.endpoint is not None:
             if config.pool.endpoint.url:
