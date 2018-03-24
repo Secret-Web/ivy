@@ -55,9 +55,12 @@ class NvidiaAPI(API):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
         xmldoc = minidom.parseString(stdout)
         gpus = xmldoc.getElementsByTagName('gpu')
-        print(gpu.bus_id)
+
         for g in gpus:
-            print(g.attributes['id'].value)
+            # Strip off "pci@"
+            if gpu.bus_id[4:] == g.attributes['id'].value[4:]
+                print(g)
+                break
 
         return {
             'temp': 0,
