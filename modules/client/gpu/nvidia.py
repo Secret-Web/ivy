@@ -1,6 +1,6 @@
 import socket
 import json
-from xml.dom import minidom
+from xml.etree import ElementTree
 
 from . import API
 
@@ -53,15 +53,14 @@ class NvidiaAPI(API):
 
     async def get_stats(self, gpu):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
-        xmldoc = minidom.parseString(stdout)
-        gpus = xmldoc.getElementsByTagName('gpu')
+        xmldoc = ElementTree.fromstring(stdout)
 
-        for g in gpus:
+        for g in root.findall('gpu'):
             # Strip off "pci@"
-            if gpu.bus_id[4:] == g.attributes['id'].value[4:]:
-                print(g.getElementsByTagName('fan_speed')[0].value.split(' ')[0])
-                print(g.getElementsByTagName('temperature')[0].getElementsByTagName('gpu_temp')[0].value.split(' ')[0])
-                print(g.getElementsByTagName('power_readings')[0].getElementsByTagName('power_draw')[0].value.split(' ')[0])
+            if gpu.bus_id[4:] == g.get('name').value[4:]:
+                print(g.find('fan_speed').text.split(' ')[0])
+                print(g.find('temperature').find('gpu_temp').text.split(' ')[0])
+                print(g.find('power_readings').find('power_draw').text.split(' ')[0])
                 break
 
         return {
