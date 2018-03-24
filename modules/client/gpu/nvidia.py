@@ -53,11 +53,9 @@ class NvidiaAPI(API):
 
     async def get_stats(self, gpu):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
-        print(stdout)
         xmldoc = minidom.parseString(stdout)
         gpus = xmldoc.getElementsByTagName('gpu')
-        print(gpu)
-        print(len(gpus))
+        print(gpu.bus_id)
         for g in gpus:
             print(g.attributes['id'].value)
 
