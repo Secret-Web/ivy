@@ -79,7 +79,7 @@ class API:
 
                 to.append(line)
 
-                if !quiet:
+                if not quiet:
                     if is_error:
                         logger.critical(line)
                     elif error:
