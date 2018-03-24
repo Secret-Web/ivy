@@ -45,8 +45,6 @@ class Process:
 
         args = config.program.execute['args']
 
-        args = re.sub('{miner\.id}', '%s' % self.client.worker_id, args)
-
         if config.wallet:
             args = re.sub('{user}', '%s' % config.wallet.address, args)
 

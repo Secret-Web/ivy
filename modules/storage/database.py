@@ -4,6 +4,7 @@ import time
 import asyncio
 import traceback
 import urllib.request
+from shutil import copyfile
 
 from ivy.model.fee import Fee
 from ivy.model.message import Message
@@ -131,14 +132,14 @@ class Database(dict):
         obj['groups'] = {k: v.as_obj() for k, v in self.groups.items()}
         obj['machines'] = {k: v.as_obj() for k, v in self.machines.items()}
 
+        with open(self.database_file, 'w') as f:
+            f.write(json.dumps(obj, indent=2))
+
         if os.path.exists(self.database_file_backup):
             os.remove(self.database_file_backup)
 
         if os.path.exists(self.database_file):
-            os.rename(self.database_file, self.database_file_backup)
-
-        with open(self.database_file, 'w') as f:
-            f.write(json.dumps(obj, indent=2))
+            copyfile(self.database_file, self.database_file_backup)
 
     async def periodic_save(self):
         last_update = 0
