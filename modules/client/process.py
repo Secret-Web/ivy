@@ -92,18 +92,17 @@ class Process:
 
         self.logger.info('Installing %s' % config.program.name)
 
-        strip_components = 0
-        if 'strip_components' in config.program.install:
-            strip_components = config.program.install['strip_components']
-
         install = [
             'rm -rf *',
-            'wget -c "%s" -O "miner.tar.gz"' % config.program.install['url'],
-            'tar --strip-components=%d -xzf miner.tar.gz' % strip_components,
-            'rm miner.tar.gz'
+            'wget -c "%s" -O download.file' % config.program.install['url']
         ]
 
-        install.extend(config.program.install['execute'])
+        for cmd in config.program.install['execute']:
+            install.append(cmd.replace('{file}', 'download.file'))
+
+        install.extend([
+            'rm -f download.file'
+        ])
 
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir, bufsize=0,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)

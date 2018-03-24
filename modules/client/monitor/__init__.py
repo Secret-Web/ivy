@@ -30,7 +30,7 @@ class Monitor:
 
     @property
     def api(self):
-        if self.process.config.program.api not in self._api:
+        if self.process and self.process.config.program.api not in self._api:
             try:
                 api_id = self.process.config.program.api
                 api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
