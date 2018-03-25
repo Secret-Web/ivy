@@ -202,7 +202,7 @@ async def update_stats():
         except Exception as e:
             display.output_lines.append(urwid.Text(traceback.format_exc()))
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(2)
 
 loop.create_task(update_stats())
 
