@@ -107,9 +107,10 @@ class Process:
             'rm -f download.file'
         ])
 
-        installer = await asyncio.create_subprocess_shell('(' + ' && '.join(install) + ') > ivy-install.log', cwd=miner_dir, bufsize=0,
+        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        await installer.wait()
+        stdout, stderr = await installer.communicate()
+        print(stdout)
 
     async def stop(self):
         if self.is_running:
