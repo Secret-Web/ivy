@@ -41,7 +41,7 @@ class NvidiaAPI(API):
 
         for i, gpu in enumerate(hardware.gpus):
             if self.is_mine(gpu):
-                for arg in NVIDIA.revert(i, gpu):
+                for arg in self.revert_gpu(i, gpu):
                     nvidia.append(arg)
 
         if len(nvidia) > 0:

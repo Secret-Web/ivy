@@ -43,6 +43,9 @@ class Monitor:
             except AttributeError as ae:
                 self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
                 self._api[api_id] = API()
+            except ModuleNotFoundError as me:
+                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
+                self._api[api_id] = API()
             except Exception as e:
                 self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
                 self.logger.exception('\n' + traceback.format_exc())
