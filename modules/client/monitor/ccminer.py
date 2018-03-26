@@ -1,20 +1,18 @@
 import socket
 import json
-import aiohttp
 
 from . import API
 
 
 class ClaymoreAPI(API):
     async def get_stats(self, host):
-        session = aiohttp.ClientSession()
-        async with session.ws_connect('ws://127.0.0.1:4068/histo', protocols=('text',)) as ws:
-            async for msg in ws:
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    print(msg.data)
-                    break
-                elif msg.type == aiohttp.WSMsgType.ERROR:
-                    break
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, 4068))
+        s.send('histo\n'.encode("utf-8"))
+        data = json.loads(s.recv(2048).decode("utf-8"))
+        s.close()
+
+        print(data)
 
         return {
             'shares': {
