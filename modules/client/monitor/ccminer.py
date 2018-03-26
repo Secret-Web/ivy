@@ -3,7 +3,7 @@ import socket
 from . import API
 
 
-class ClaymoreAPI(API):
+class CCMinerAPI(API):
     async def get_stats(self, host):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 4068))
@@ -35,4 +35,4 @@ class ClaymoreAPI(API):
             'hashrate': hashrate
         }
 
-__api__ = ClaymoreAPI
+__api__ = CCMinerAPI
