@@ -22,9 +22,9 @@ class ClaymoreAPI(API):
                 if entry.startswith('KHS'):
                     hashrate.append(float(entry.split('=')[1]))
                 elif entry.startswith('ACC'):
-                    accepted.append(float(entry.split('=')[1]))
+                    accepted += int(entry.split('=')[1])
                 elif entry.startswith('REJ'):
-                    rejected.append(float(entry.split('=')[1]))
+                    rejected += int(entry.split('=')[1])
 
         return {
             'shares': {
