@@ -1,5 +1,4 @@
 import socket
-import json
 
 from . import API
 
@@ -9,7 +8,7 @@ class ClaymoreAPI(API):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 4068))
         s.send('histo\n'.encode("utf-8"))
-        data = json.loads(s.recv(2048).decode("utf-8"))
+        data = s.recv(2048).decode("utf-8")
         s.close()
 
         print(data)
