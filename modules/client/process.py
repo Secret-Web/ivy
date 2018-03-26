@@ -85,8 +85,8 @@ class Process:
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         logger = logging.getLogger(config.program.name)
-        asyncio.ensure_future(self._read_stream(logger, self.process.stdout, error=False))
-        asyncio.ensure_future(self._read_stream(logger, self.process.stderr, error=True))
+        asyncio.ensure_future(self.monitor.read_stream(logger, self.process.stdout, error=False, log=True))
+        asyncio.ensure_future(self.monitor.read_stream(logger, self.process.stderr, error=True, log=True))
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -123,29 +123,3 @@ class Process:
             await asyncio.sleep(5)
             if self.is_running is None:
                 self.process.kill()
-
-    async def _read_stream(self, logger, stream, error):
-        while True:
-            line = await stream.readline()
-            if line:
-                is_error = b'\033[0;31m' in line
-                line = line.decode('UTF-8', errors='ignore').strip()
-                line = re.sub('\033\[.+?m', '', line)
-
-                self.monitor.output.append(line)
-                del self.monitor.output[:-128]
-
-                if len(line) == 0: continue
-
-                if is_error:
-                    logger.critical(line)
-                    if self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
-                elif error:
-                    logger.error(line)
-                    if self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.client.machine_id})
-                else:
-                    logger.info(line)
-            else:
-                break
