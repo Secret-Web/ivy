@@ -199,7 +199,7 @@ async def update_stats():
             display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f %s/s' % convert_rate(stats[i]['rate']) for i in range(len(stats))]))
 
             hashrate = sum([stats[i]['rate'] for i in range(len(stats))])
-            display.hashrate.set_text('%.2f %d/s' % convert_rate(hashrate))
+            display.hashrate.set_text('%.2f %s/s' % convert_rate(hashrate))
             display.add_hash_data(hashrate)
 
             if len(data['output']) > 0:
