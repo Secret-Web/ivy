@@ -109,8 +109,11 @@ class Process:
 
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await installer.communicate()
-        print(stdout)
+
+        asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stdout, error=False))
+        asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stderr, error=True))
+
+        await installer.wait()
 
     async def stop(self):
         if self.is_running:
