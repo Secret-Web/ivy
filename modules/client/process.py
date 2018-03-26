@@ -126,5 +126,7 @@ class Process:
             await self.gpus.revert(self.client.hardware)
 
             await asyncio.sleep(5)
-            if self.is_running is None:
-                self.process.kill()
+
+            while self.is_running:
+                self.logger.info('Waiting for miner to stop...')
+                await asyncio.sleep(5)
