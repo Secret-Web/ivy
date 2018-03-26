@@ -144,8 +144,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         rows = []
         for id, total in stats.machines.items():
-            print(total)
-
             rows.append(
                         (
                             id,
