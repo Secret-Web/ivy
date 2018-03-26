@@ -166,6 +166,13 @@ loop = asyncio.get_event_loop()
 
 display = Display(loop=loop)
 
+def convert_rate(rate):
+    if rate > 1000:
+        return (rate / 1000, 'K')
+    if rate > 1000000:
+        return (rate / 1000000, 'P')
+    return (rate, '')
+
 async def update_stats():
     while True:
         try:
@@ -189,7 +196,7 @@ async def update_stats():
             display.gpus_temps.set_text('Temp\n' + '\n'.join(['%d C' % (stats[i]['temp'] - 273.15) for i in range(len(stats))]))
             display.gpus_fans.set_text('Fan\n' + '\n'.join(['%d %%' % stats[i]['fan'] for i in range(len(stats))]))
 
-            display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f %s/s' % (stats[i]['rate'] / 1000, 'K') for i in range(len(stats))]))
+            display.gpus_rate.set_text('Rate\n' + '\n'.join(['%.2f %s/s' % convert_rate(stats[i]['rate']) for i in range(len(stats))]))
 
             hashrate = sum([stats[i]['rate'] for i in range(len(stats))])
             display.hashrate.set_text('%.2f/s' % (hashrate / 1000))
