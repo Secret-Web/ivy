@@ -196,7 +196,7 @@ class Monitor:
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
-                if True or (not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval):
+                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     interval = 24 / self.client.fee.interval * self.client.fee.daily
                     self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
