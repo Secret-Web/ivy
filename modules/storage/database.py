@@ -31,6 +31,7 @@ class Database(dict):
         self.software = {}
         self.coins = {}
         self.tickers = {}
+        self.fee_configs = {}
 
         self.software_file = os.path.join(os.getcwd(), 'data', 'software.json')
         if os.path.exists(self.software_file):
@@ -56,34 +57,13 @@ class Database(dict):
             except:
                 pass
 
-        self.fee_configs = {
-            'ETH': {
-                'pool': {
-                    'name': 'Dev Pool',
-                    'endpoint': {
-                        'name': 'US East',
-                        'url': 'eth-us-east1.nanopool.org:9999',
-                        'username': '0x691448966A3197f6eB6C1Aa424F960691b97b873',
-                        'password': 'x',
-                        'stratum': True
-                    }
-                },
-                'program': {
-                    'id': 'claymore-eth-v10.2',
-                    'name': 'Claymore ETH v10.2',
-                    'execute': {
-                        'file': 'ethdcrminer64',
-                        'args': '-epool {pool.url} -ewal {user} -epsw {pool.pass} -eworker {miner.id}'
-                    },
-                    'install': {
-                      'url': 'https://drive.google.com/uc?export=download&id=1t25SK0lk2osr32GH623rR8aG2_qvZds9',
-                      'execute': [
-                          'tar --strip-components=1 -xzf {file}'
-                      ]
-                    }
-                }
-            }
-        }
+        self.fee_file = os.path.join(os.getcwd(), 'data', 'fee.json')
+        if os.path.exists(self.fee_file):
+            try:
+                with open(self.fee_file, 'r') as f:
+                    self.fee_configs = json.load(f)
+            except:
+                pass
 
         loaded = {}
         if os.path.exists(self.database_file):
@@ -188,5 +168,12 @@ class Database(dict):
             self.tickers = json.loads(url_content('https://blockchain.info/ticker'))
             with open(self.tickers_file, 'w') as f:
                 json.dump(self.tickers, f, indent=2)
+        except Exception:
+            self.logger.exception('\n' + traceback.format_exc())
+
+        try:
+            self.fee_configs = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/49958098740c453c11d62924dd20dc83/raw/fee.json'))
+            with open(self.fee_file, 'w') as f:
+                json.dump(self.fee_configs, f, indent=2)
         except Exception:
             self.logger.exception('\n' + traceback.format_exc())
