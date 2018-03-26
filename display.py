@@ -167,9 +167,9 @@ loop = asyncio.get_event_loop()
 display = Display(loop=loop)
 
 def convert_rate(rate):
-    if rate > 1000:
+    if rate > 10000:
         return (rate / 1000, 'K')
-    if rate > 1000000:
+    if rate > 10000000:
         return (rate / 1000000, 'P')
     return (rate, '')
 
