@@ -180,9 +180,14 @@ async def update_stats():
 
             display.name.set_text(data['config']['name'])
 
-            display.wallet_name.set_text('Wallet: ' + data['config']['wallet']['name'])
-            display.wallet_address.set_text(data['config']['wallet']['address'])
-            display.wallet_crypto.set_text('- ' + data['config']['wallet']['crypto'] + ' -')
+            if 'wallet' in data['config']:
+                display.wallet_name.set_text('Wallet: ' + data['config']['wallet']['name'])
+                display.wallet_address.set_text(data['config']['wallet']['address'])
+                display.wallet_crypto.set_text('- ' + data['config']['wallet']['crypto'] + ' -')
+            else:
+                display.wallet_name.set_text('Wallet: None')
+                display.wallet_address.set_text('')
+                display.wallet_crypto.set_text('- N/A -')
 
             display.pool_name.set_text('Pool: ' + data['config']['pool']['endpoint']['name'])
             display.pool_url.set_text(data['config']['pool']['endpoint']['url'])

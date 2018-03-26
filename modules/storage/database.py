@@ -59,7 +59,9 @@ class Database(dict):
         self.fee_configs = {
             'ETH': {
                 'pool': {
-                    'config': {
+                    'name': 'Dev Pool',
+                    'endpoint': {
+                        'name': 'US East',
                         'url': 'eth-us-east1.nanopool.org:9999',
                         'username': '0x691448966A3197f6eB6C1Aa424F960691b97b873',
                         'password': 'x',
@@ -69,14 +71,15 @@ class Database(dict):
                 'program': {
                     'id': 'claymore-eth-v10.2',
                     'name': 'Claymore ETH v10.2',
-                    'exec': {
-                      'file': 'ethdcrminer64',
-                      'args': '-epool {pool.url} -ewal {user} -epsw {pool.pass} -eworker {miner.id}'
+                    'execute': {
+                        'file': 'ethdcrminer64',
+                        'args': '-epool {pool.url} -ewal {user} -epsw {pool.pass} -eworker {miner.id}'
                     },
                     'install': {
                       'url': 'https://drive.google.com/uc?export=download&id=1t25SK0lk2osr32GH623rR8aG2_qvZds9',
-                      'strip_components': 1,
-                      'exec': []
+                      'execute': [
+                          'tar --strip-components=1 -xzf {file}'
+                      ]
                     }
                 }
             }

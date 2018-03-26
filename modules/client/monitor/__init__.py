@@ -196,8 +196,8 @@ class Monitor:
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
-                '''if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
-                    interval = self.client.fee.interval / 24 * self.client.fee.daily
+                if True or (not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval):
+                    interval = 24 / self.client.fee.interval * self.client.fee.daily
                     self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
                     await self.process.start(config=self.client.fee.config)
@@ -207,9 +207,9 @@ class Monitor:
 
                     self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
 
-                    await self.process.start()
+                    await self.process.start(config=self.client)
 
-                    self.uptime = 0'''
+                    self.uptime = 0
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:

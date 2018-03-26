@@ -47,4 +47,6 @@ class Client:
         if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
         if self.program is not None: obj['program'] = self.program.as_obj()
 
+        if self.fee is not None: obj['fee'] = self.fee.as_obj()
+
         return obj
