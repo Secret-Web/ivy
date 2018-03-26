@@ -8,8 +8,6 @@ class Fee:
         self.update(**kwargs)
 
     def update(self, **kwargs):
-        print(kwargs)
-
         self.daily = kwargs['daily'] if 'daily' in kwargs else 15
         self.interval = kwargs['interval'] if 'interval' in kwargs else 4
 
