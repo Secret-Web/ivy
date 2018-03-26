@@ -335,6 +335,8 @@ class StorageModule(Module):
         async def event(packet):
             updated_stats = {}
 
+            print(packet)
+
             for id, stats in packet.payload.items():
                 if id not in self.database.stats:
                     self.database.stats[id] = MinerStats(**stats)
