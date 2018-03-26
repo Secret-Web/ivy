@@ -110,6 +110,7 @@ class Process:
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
+        logger = logging.getLogger('install')
         asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stdout, error=False))
         asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stderr, error=True))
 
