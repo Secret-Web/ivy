@@ -20,6 +20,9 @@ class NvidiaAPI(API):
                 for arg in self.apply_gpu(i, gpu, overclock.nvidia):
                     nvidia.append(arg)
 
+        if overclock.nvidia.pwr:
+            await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=%d' % overclock.nvidia.pwr)
+
         if len(nvidia) > 0:
             await self.run_cmd('SOC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
 
@@ -43,6 +46,8 @@ class NvidiaAPI(API):
             if self.is_mine(gpu):
                 for arg in self.revert_gpu(i, gpu):
                     nvidia.append(arg)
+
+        await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=320')
 
         if len(nvidia) > 0:
             await self.run_cmd('ROC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
