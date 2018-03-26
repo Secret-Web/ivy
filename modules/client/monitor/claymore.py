@@ -17,7 +17,7 @@ class ClaymoreAPI(API):
         runtime = int(runtime)
 
         eth_totals = [int(x) for x in eth_totals.split(';')]
-        eth_hashrates = [int(x) for x in eth_hashrates.split(';')]
+        eth_hashrates = [float(x) * 1000 for x in eth_hashrates.split(';')]
 
         stats = stats.split(';')
         stats = [[273.15 + float(stats[i * 2]), int(stats[i * 2 + 1])] for i in range(int(len(stats) / 2))]
