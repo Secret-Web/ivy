@@ -73,8 +73,8 @@ class Monitor:
                 line = line.decode('UTF-8', errors='ignore').strip()
                 line = re.sub('\033\[.+?m', '', line)
 
-                self.monitor.output.append(line)
-                del self.monitor.output[:-128]
+                self.output.append(line)
+                del self.output[:-128]
 
                 if len(line) == 0: continue
 
