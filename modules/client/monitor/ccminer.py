@@ -19,6 +19,7 @@ class ClaymoreAPI(API):
 
         for info in data.split('|'):
             for entry in info.split(';'):
+                print(entry)
                 if entry.startswith('KHS'):
                     hashrate.append(float(entry.split('=')[1]))
                 elif entry.startswith('ACC'):
