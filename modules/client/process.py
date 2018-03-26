@@ -111,8 +111,8 @@ class Process:
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         logger = logging.getLogger('install')
-        asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stdout, error=False))
-        asyncio.ensure_future(self.monitor.read_stream(logger, self.installer.stderr, error=True))
+        asyncio.ensure_future(self.monitor.read_stream(logger, installer.stdout, error=False))
+        asyncio.ensure_future(self.monitor.read_stream(logger, installer.stderr, error=True))
 
         await installer.wait()
 
