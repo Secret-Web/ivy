@@ -342,8 +342,6 @@ class StorageModule(Module):
                     self.database.stats[id].update(**stats)
                 updated_stats[id] = self.database.stats[id].as_obj()
 
-            print(updated_stats)
-
             if len(updated_stats) > 0:
                 await packet.send('machines', 'stats', updated_stats)
                 self.new_snapshot(updated_stats)
