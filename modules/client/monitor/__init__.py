@@ -87,7 +87,7 @@ class Monitor:
 
     async def get_hw_stats(self):
         try:
-            return await self.gpus.get_stats(self.client.hardware)
+            return await self.module.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': str(e), 'machine': self.client.machine_id})
