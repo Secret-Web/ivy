@@ -1,6 +1,5 @@
 from ivy.model.pool import Pool
 from ivy.model.wallet import Wallet
-from ivy.model.program import Program
 
 
 class Program:
