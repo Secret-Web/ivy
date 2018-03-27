@@ -32,7 +32,7 @@ class Program:
         if self.execute is not None: obj['execute'] = self.execute
         if self.install is not None: obj['install'] = self.install
 
-        if self.fee is not None: obj['fee'] = self.config.as_obj()
+        if self.fee is not None: obj['fee'] = self.fee.as_obj()
 
         return obj
 
