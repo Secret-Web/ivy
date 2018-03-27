@@ -5,6 +5,7 @@ import os
 import socket
 import json
 import traceback
+from urllib.error import URLError
 import urllib.request
 
 import urwid
@@ -211,11 +212,12 @@ async def update_stats():
                 display.output_lines.clear()
                 for line in data['output']:
                     display.output_lines.append(urwid.Text(line))
-                display.output_lines.set_focus(len(data['output']) - 1)
-        except ConnectionRefusedError:
+        except URLError:
             display.output_lines.append(urwid.Text('Unable to establish a connection. Is Ivy online...?'))
         except Exception as e:
             display.output_lines.append(urwid.Text(traceback.format_exc()))
+
+        display.output_lines.set_focus(len(data['output']) - 1)
 
         await asyncio.sleep(2)
 
