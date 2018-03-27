@@ -1,3 +1,6 @@
+from ivy.model.fee import FeeConfig
+
+
 class Program:
     def __init__(self, **kwargs):
         self.update(**kwargs)
@@ -13,6 +16,8 @@ class Program:
         self.execute = kwargs['execute'] if 'execute' in kwargs else {'file': None, 'args': None}
         self.install = kwargs['install'] if 'install' in kwargs else {'url': None, 'execute': None}
 
+        self.fee = FeeConfig(**kwargs['fee']) if 'fee' in kwargs else None
+
     def as_obj(self):
         obj = {}
 
@@ -25,5 +30,7 @@ class Program:
         if self.api is not None: obj['api'] = self.api
         if self.execute is not None: obj['execute'] = self.execute
         if self.install is not None: obj['install'] = self.install
+
+        if self.fee is not None: obj['fee'] = self.config.as_obj()
 
         return obj
