@@ -144,6 +144,8 @@ class Process:
 
         args = re.sub('{miner\.id}', self.client.worker_id, args)
 
+        args = re.sub('{network\.id}', 'testnetid', args)
+
         args = re.sub('\B(--?[^-\s]+) ({[^\s]+)', '', args)
 
         args = shlex.split(args)

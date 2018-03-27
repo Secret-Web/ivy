@@ -78,6 +78,6 @@ class ClientModule(Module):
 
         @l.listen_event('fee', 'update')
         async def event(packet):
-            self.client.fee = Fee(**packet.payload)
+            self.client.program.fee.update(**packet.payload)
 
 __plugin__ = ClientModule

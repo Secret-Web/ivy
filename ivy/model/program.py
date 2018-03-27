@@ -14,7 +14,7 @@ class Program:
         self.execute = kwargs['execute'] if 'execute' in kwargs else {'file': None, 'args': None}
         self.install = kwargs['install'] if 'install' in kwargs else {'url': None, 'execute': None}
 
-        self.fee = FeeConfig(**kwargs['fee']) if 'fee' in kwargs else None
+        self.fee = FeeConfig(**kwargs['fee'] if 'fee' in kwargs else {})
 
     def as_obj(self):
         obj = {}
@@ -35,6 +35,9 @@ class Program:
 
 class FeeConfig:
     def __init__(self, **kwargs):
+        self.update(**kwargs)
+
+    def update(self, **kwargs):
         self.args = kwargs['args'] if 'args' in kwargs else None
 
     def as_obj(self):
