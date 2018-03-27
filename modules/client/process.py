@@ -139,7 +139,7 @@ class Process:
 
         await self.start_miner(config, args, show_output=True, allow_log=True)
 
-    async def start_miner(self, config, args, show_output=False, allow_log=False):
+    async def start_miner(self, config, args, show_output=True, allow_log=False):
         self.config = config
 
         args = shlex.split(args)
