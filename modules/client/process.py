@@ -161,7 +161,7 @@ class Process:
             self.logger.info('Not logging')
 
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
-                        stdin=asyncio.subprocess.DEVNULL)
+                        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         if not show_output:
             self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log)

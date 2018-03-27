@@ -56,23 +56,24 @@ class Monitor:
     async def _read_stream(self, logger, stream, is_error, allow_log=False):
         while True:
             line = await stream.readline()
-            if line:
-                line = line.decode('UTF-8', errors='ignore').replace('\n', '')
-                line = re.sub('\033\[.+?m', '', line)
-
-                self.output.append(line)
-                del self.output[:-128]
-
-                if len(line) == 0: continue
-
-                if is_error:
-                    logger.critical(line)
-                    if allow_log and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
-                else:
-                    logger.info(line)
-            else:
+            if not line:
+                print('break')
                 break
+
+            line = line.decode('UTF-8', errors='ignore').replace('\n', '')
+            line = re.sub('\033\[.+?m', '', line)
+
+            self.output.append(line)
+            del self.output[:-128]
+
+            if len(line) == 0: continue
+
+            if is_error:
+                logger.critical(line)
+                if allow_log and self.connector.socket:
+                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
+            else:
+                logger.info(line)
 
     async def get_stats(self):
         return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
