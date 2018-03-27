@@ -165,6 +165,8 @@ class Process:
         else:
             self.process_streams = None
 
+        print(self.process_streams)
+        print(dir(self.process_streams))
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
