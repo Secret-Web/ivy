@@ -4,9 +4,6 @@ import shlex
 import logging
 import asyncio
 
-from .gpu import GPUControl
-from .monitor import Monitor
-
 
 class Process:
     def __init__(self, module):
