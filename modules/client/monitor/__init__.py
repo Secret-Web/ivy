@@ -8,12 +8,12 @@ from ivy.model.stats import MinerStats
 
 
 class Monitor:
-    def __init__(self, logger, client, connector, process):
-        self.client = client
-        self.connector = connector
-        self.process = process
+    def __init__(self, module):
+        self.client = module.client
+        self.connector = module.connector
+        self.process = module.process
 
-        self.logger = logger.getChild('Monitor')
+        self.logger = module.logger.getChild('Monitor')
 
         self.output = []
         self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
@@ -57,20 +57,15 @@ class Monitor:
     def uptime_path(self):
         return os.path.join('/tmp/.ivy-uptime')
 
-    def as_obj(self):
-        return {
-            'config': self.process.config.as_obj() if self.process.config is not None else {},
-            'hardware': self.stats.hardware.as_obj(),
-            'shares': self.shares,
-            'output': self.output
-        }
+    async def read_stream(self, logger, process, allow_log=False):
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, error=False, allow_log=log))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, error=True, allow_log=log))
 
-    async def read_stream(self, logger, stream, error, log=False):
+    async def _read_stream(self, logger, stream, error, allow_log=False):
         while True:
             line = await stream.readline()
             if line:
-                is_error = b'\033[0;31m' in line
-                line = line.decode('UTF-8', errors='ignore').strip()
+                line = line.decode('UTF-8', errors='ignore')
                 line = re.sub('\033\[.+?m', '', line)
 
                 self.output.append(line)
@@ -80,12 +75,8 @@ class Monitor:
 
                 if is_error:
                     logger.critical(line)
-                    if log and self.connector.socket:
+                    if allow_log and self.connector.socket:
                         await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
-                elif error:
-                    logger.error(line)
-                    if log and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': line, 'machine': self.client.machine_id})
                 else:
                     logger.info(line)
             else:

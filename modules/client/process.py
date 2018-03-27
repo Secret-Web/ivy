@@ -9,14 +9,13 @@ from .monitor import Monitor
 
 
 class Process:
-    def __init__(self, logger, client, connector):
-        self.client = client
-        self.connector = connector
+    def __init__(self, module):
+        self.module = module
 
-        self.logger = logger.getChild('Process')
+        self.client = module.client
+        self.connector = module.connector
 
-        self.gpus = GPUControl()
-        self.monitor = Monitor(self.logger, client, connector, self)
+        self.logger = module.logger.getChild('Process')
 
         self.process = None
         self.config = None
@@ -38,8 +37,6 @@ class Process:
             return
 
         await self.stop()
-
-        self.config = config
 
         await self.install(config=config)
 
@@ -70,24 +67,24 @@ class Process:
 
         args = re.sub('\B(--?[^-\s]+) ({[^\s<]+)', '', args)
 
-        args = shlex.split(args)
+        await self.start_miner(config, shlex.split(args))
+
+    async def start_miner(self, config, args, log=False):
         args.insert(0, './' + config.program.execute['file'])
 
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            await self.gpus.setup()
-            await self.gpus.apply(config.hardware, self.client.group.hardware.overclock)
+            await self.monitor.gpus.setup()
+            await self.monitor.gpus.apply(config.hardware, self.client.group.hardware.overclock)
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        logger = logging.getLogger(config.program.name)
-        asyncio.ensure_future(self.monitor.read_stream(logger, self.process.stdout, error=False, log=True))
-        asyncio.ensure_future(self.monitor.read_stream(logger, self.process.stderr, error=True, log=True))
+        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=True)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -111,9 +108,7 @@ class Process:
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        logger = logging.getLogger('install')
-        asyncio.ensure_future(self.monitor.read_stream(logger, installer.stdout, error=False))
-        asyncio.ensure_future(self.monitor.read_stream(logger, installer.stderr, error=True))
+        self.module.monitor.read_stream(logging.getLogger('Install'), installer, allow_log=False)
 
         await installer.wait()
 
@@ -125,4 +120,4 @@ class Process:
                 self.logger.info('Waiting for miner to stop...')
                 await asyncio.sleep(5)
 
-            await self.gpus.revert(self.client.hardware)
+            await self.monitor.gpus.revert(self.client.hardware)

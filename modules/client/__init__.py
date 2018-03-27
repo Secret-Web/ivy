@@ -23,7 +23,11 @@ class ClientModule(Module):
 
         self.register_events(self.connector)
 
-        self.process = Process(self.logger, self.client, self.connector)
+        self.gpus = GPUControl()
+
+        self.process = Process(self)
+        self.monitor = Monitor(self)
+
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
