@@ -165,7 +165,7 @@ class Process:
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         if forward_output:
-            self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=show_output, allow_log=allow_log)
+            self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
