@@ -101,6 +101,8 @@ class Monitor:
             update = False
             last_poke = 0
 
+            offline_gpus = 0
+
             while True:
                 await asyncio.sleep(5)
 
@@ -112,6 +114,7 @@ class Monitor:
                     self.stats.shares['rejected'] = got_stats['shares']['rejected'] - updated_shares['rejected']
                     self.stats.shares['invalid'] = got_stats['shares']['invalid'] - updated_shares['invalid']
 
+                    new_online = 0
                     new_offline = 0
                     for i in range(len(self.stats.hardware.gpus)):
                         gpu = self.stats.hardware.gpus[i]
@@ -132,6 +135,8 @@ class Monitor:
                         online = gpu.rate > 0
                         if gpu.online and not online:
                             new_offline += 1
+                        if not gpu.online and online:
+                            new_online += 1
                         gpu.online = online
 
                     self.shares['accepted'] = self.stats.shares['accepted'] + updated_shares['accepted']
@@ -141,8 +146,13 @@ class Monitor:
                     if new_offline > 0 and self.connector.socket:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
+                    if offline_gpus > 0 and new_online > 0 and self.connector.socket:
+                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
+
+                    offline_gpus += new_offline
+
                     # If the miner is offline, set it online and force an update
-                    if not self.stats.online:
+                    if not self.stats.online or new_offline > 0 or new_online > 0:
                         update = self.stats.online = True
                     else:
                         # Otherwise, push an update every minute
