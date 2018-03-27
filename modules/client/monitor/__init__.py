@@ -61,7 +61,7 @@ class Monitor:
         asyncio.ensure_future(self._read_stream(logger, process.stdout, error=False, allow_log=allow_log))
         asyncio.ensure_future(self._read_stream(logger, process.stderr, error=True, allow_log=allow_log))
 
-    async def _read_stream(self, logger, stream, error, allow_log=False):
+    async def _read_stream(self, logger, stream, is_error, allow_log=False):
         while True:
             line = await stream.readline()
             if line:
