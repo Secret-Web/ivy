@@ -160,7 +160,7 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        if not show_output:
+        if show_output:
             self.process_streams = asyncio.gather(*self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log))
         else:
             self.process_streams = None
