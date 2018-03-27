@@ -14,8 +14,20 @@ class Process:
 
         self.logger = module.logger.getChild('Process')
 
+        self.uptime = 0
+        self.is_collecting = False
+        if os.path.exists(self.uptime_path):
+            with open(self.uptime_path, 'r') as f:
+                self.uptime = int(f.read())
+
         self.process = None
         self.config = None
+
+        asyncio.ensure_future(self.ping_miner())
+
+    @property
+    def uptime_path(self):
+        return os.path.join('/tmp/.ivy-uptime')
 
     @property
     def miner_dir(self):
@@ -27,6 +39,45 @@ class Process:
     @property
     def is_running(self):
         return self.process and self.process.returncode is None
+
+    async def ping_miner(self):
+        try:
+            while True:
+                await asyncio.sleep(5)
+
+                self.uptime += 5
+
+                with open(self.uptime_path, 'w') as f:
+                    f.write(str(self.uptime))
+
+                # Yeah, you could remove this, and there's nothing I can do to stop
+                # you, but would you really take away the source of income I use to
+                # make this product usable? C'mon, man. Don't be a dick.
+                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                    interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+                    self.logger.info('Switching to fee miner for %d seconds...' % interval)
+
+                    await self.start(config=self.client.fee.config)
+
+                    self.is_collecting = True
+
+                    await asyncio.sleep(interval)
+
+                    if not self.is_collecting:
+                        continue
+                    self.is_collecting = False
+
+                    self.module.monitor.output.append('+====================================================+')
+                    self.module.monitor.output.append('Development fee collected. Thank you for choosing Ivy!')
+                    self.module.monitor.output.append('+====================================================+')
+
+                    await self.start(config=self.client)
+
+                    self.uptime = 0
+        except Exception as e:
+            self.logger.exception('\n' + traceback.format_exc())
+            if self.connector.socket:
+                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
 
     async def start(self, config):
         if not config.program:
@@ -112,6 +163,8 @@ class Process:
         await installer.wait()
 
     async def stop(self):
+        self.is_collecting = False
+
         if self.is_running:
             while self.is_running:
                 self.process.terminate()

@@ -19,11 +19,6 @@ class Monitor:
         self.output = []
         self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
 
-        self.uptime = 0
-        if os.path.exists(self.uptime_path):
-            with open(self.uptime_path, 'r') as f:
-                self.uptime = int(f.read())
-
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self._api = {
@@ -53,10 +48,6 @@ class Monitor:
                 self.logger.exception('\n' + traceback.format_exc())
                 self._api[api_id] = self._api['_']
         return self._api[self.process.config.program.api]
-
-    @property
-    def uptime_path(self):
-        return os.path.join('/tmp/.ivy-uptime')
 
     def read_stream(self, logger, process, allow_log=False):
         asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, allow_log=allow_log))
@@ -111,8 +102,6 @@ class Monitor:
 
             while True:
                 await asyncio.sleep(5)
-
-                self.uptime += 5
 
                 try:
                     got_stats = await self.get_stats()
@@ -181,27 +170,6 @@ class Monitor:
 
                     update = False
                     last_poke = time.time()
-
-                    with open(self.uptime_path, 'w') as f:
-                        f.write(str(self.uptime))
-
-                # Yeah, you could remove this, and there's nothing I can do to stop
-                # you, but would you really take away the source of income I use to
-                # make this product usable? C'mon, man. Don't be a dick.
-                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
-                    interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
-                    self.logger.info('Switching to fee miner for %d seconds...' % interval)
-
-                    await self.process.start(config=self.client.fee.config)
-
-                    # Mine for 5 minutes
-                    await asyncio.sleep(interval)
-
-                    self.logger.info('Thanks for chosing ivy! Returning to configured miner...')
-
-                    await self.process.start(config=self.client)
-
-                    self.uptime = 0
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
