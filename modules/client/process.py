@@ -71,10 +71,10 @@ class Process:
                     self.module.monitor.output.append('Switching to fee miner for %d seconds...' % interval)
 
                     if config.program.fee is None:
-                        self.module.monitor.output.append('+=======================================================+')
-                        self.module.monitor.output.append('May the fleas of a thousand goat zombies infest your bed.')
-                        self.module.monitor.output.append('+=======================================================+')
-                        return
+                        self.module.monitor.output.append(' +===========================================================+')
+                        self.module.monitor.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
+                        self.module.monitor.output.append(' +===========================================================+')
+                        continue
 
                     await self.start_miner(config, args=config.program.fee.args)
 
@@ -86,9 +86,9 @@ class Process:
                         continue
                     self.is_collecting = False
 
-                    self.module.monitor.output.append('+=======================================================+')
-                    self.module.monitor.output.append('Development fee collected.    Thank you for choosing Ivy!')
-                    self.module.monitor.output.append('+=======================================================+')
+                    self.module.monitor.output.append(' +===========================================================+')
+                    self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
+                    self.module.monitor.output.append(' +===========================================================+')
 
                     await self.start()
 
