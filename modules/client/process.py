@@ -66,7 +66,7 @@ class Process:
 
         await self.start_miner(config, shlex.split(args))
 
-    async def start_miner(self, config, args, log=False):
+    async def start_miner(self, config, args, allow_log=False):
         args.insert(0, './' + config.program.execute['file'])
 
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -81,7 +81,7 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=True)
+        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
