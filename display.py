@@ -217,7 +217,7 @@ async def update_stats():
         except Exception as e:
             display.output_lines.append(urwid.Text(traceback.format_exc()))
 
-        display.output_lines.set_focus(len(data['output']) - 1)
+        display.output_lines.set_focus(len(display.output_lines) - 1)
 
         await asyncio.sleep(2)
 
