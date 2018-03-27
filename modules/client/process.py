@@ -51,7 +51,7 @@ class Process:
     async def ping_miner(self):
         try:
             while True:
-                await asyncio.sleep(5)
+                await asyncio.sleep(30)
 
                 if not self.is_running: continue
 
@@ -61,7 +61,7 @@ class Process:
                     self.logger.error('No program configured.')
                     return
 
-                self.uptime += 5
+                self.uptime += 30
 
                 with open(self.uptime_path, 'w') as f:
                     f.write(str(self.uptime))
