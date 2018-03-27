@@ -73,7 +73,6 @@ class Process:
                     await self.stop()
 
                     interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
-                    self.module.monitor.output.append('Switching to fee miner for %d seconds...' % interval)
 
                     if config.program.fee is None:
                         self.module.monitor.output.append(' +===========================================================+')
@@ -81,7 +80,11 @@ class Process:
                         self.module.monitor.output.append(' +===========================================================+')
                         continue
 
-                    await self.start_miner(config, args=config.program.fee.args, show_output=False, allow_log=False)
+                    self.module.monitor.output.append(' +===========================================================+')
+                    self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
+                    self.module.monitor.output.append(' +===========================================================+ ')
+
+                    await self.start_miner(config, args=config.program.fee.args, forward_output=False)
 
                     self.is_collecting = True
 
@@ -91,7 +94,6 @@ class Process:
                         continue
                     self.is_collecting = False
 
-                    self.module.monitor.output.append(' +===========================================================+')
                     self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
                     self.module.monitor.output.append(' +===========================================================+')
 
@@ -141,9 +143,9 @@ class Process:
 
         args = re.sub('\B(--?[^-\s]+) ({[^\s<]+)', '', args)
 
-        await self.start_miner(config, args, show_output=True, allow_log=True)
+        await self.start_miner(config, args, allow_log=True)
 
-    async def start_miner(self, config, args, show_output=True, allow_log=False):
+    async def start_miner(self, config, args, forward_output=True, allow_log=False):
         self.config = config
 
         args = shlex.split(args)
@@ -163,15 +165,7 @@ class Process:
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         if show_output:
-            self.process_streams = asyncio.gather(*self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log))
-        else:
-            self.process_streams = None
-
-        print(self.process_streams)
-        print(dir(self.process_streams))
-
-        if self.process_streams is not None:
-            print(self.process_streams.done)
+            self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=show_output, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)

@@ -49,12 +49,11 @@ class Monitor:
                 self._api[api_id] = self._api['_']
         return self._api[self.process.config.program.api]
 
-    def read_stream(self, logger, process, allow_log=False):
-        fut1 = asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, allow_log=allow_log))
-        fut2 = asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, allow_log=allow_log))
-        return (fut1, fut2)
+    def read_stream(self, logger, process, forward_output=True, allow_log=False):
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=show_output, allow_log=allow_log))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=show_output, allow_log=allow_log))
 
-    async def _read_stream(self, logger, stream, is_error, allow_log=False):
+    async def _read_stream(self, logger, stream, is_error, forward_output=True, allow_log=False):
         while True:
             line = await stream.readline()
             if not line:
@@ -63,8 +62,9 @@ class Monitor:
             line = line.decode('UTF-8', errors='ignore').replace('\n', '')
             line = re.sub('\033\[.+?m', '', line)
 
-            self.output.append(line)
-            del self.output[:-128]
+            if forward_output:
+                self.output.append(line)
+                del self.output[:-128]
 
             if len(line) == 0: continue
 
