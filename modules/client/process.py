@@ -97,9 +97,9 @@ class Process:
                     self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
                     self.module.monitor.output.append(' +===========================================================+')
 
-                    await self.start()
-
                     self.uptime = 0
+
+                    await self.start()
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
@@ -116,7 +116,10 @@ class Process:
 
         await self.install(config=config)
 
-        args = config.program.execute['args']
+        await self.start_miner(config, config.program.execute['args'], allow_log=True)
+
+    async def start_miner(self, config, args, forward_output=True, allow_log=False):
+        self.config = config
 
         if config.wallet:
             args = re.sub('{user}', '%s' % config.wallet.address, args)
@@ -141,12 +144,7 @@ class Process:
 
         args = re.sub('{miner\.id}', self.client.worker_id, args)
 
-        args = re.sub('\B(--?[^-\s]+) ({[^\s<]+)', '', args)
-
-        await self.start_miner(config, args, allow_log=True)
-
-    async def start_miner(self, config, args, forward_output=True, allow_log=False):
-        self.config = config
+        args = re.sub('\B(--?[^-\s]+) ({[^\s]+)', '', args)
 
         args = shlex.split(args)
 
@@ -164,8 +162,7 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        if forward_output:
-            self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output, allow_log=allow_log)
+        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
