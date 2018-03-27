@@ -24,6 +24,7 @@ class Process:
                 self.uptime = int(f.read())
 
         self.process = None
+        self.process_streams = None
 
         asyncio.ensure_future(self.ping_miner())
 
@@ -156,17 +157,14 @@ class Process:
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
-        process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
+        self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        coros = [process]
-
         if not show_output:
-            coros.append(*self.module.monitor.read_stream(logging.getLogger(config.program.name), process, allow_log=allow_log))
+            self.process_streams = asyncio.gather(*self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log))
+        else:
+            self.process_streams = None
 
-        self.process = asyncio.gather(*coros)
-
-        print(self.process)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -199,7 +197,7 @@ class Process:
 
         if self.is_running:
             while self.is_running:
-                self.process.cancel()
+                self.process.terminate()
 
                 self.logger.info('Waiting for miner to stop...')
                 await asyncio.sleep(5)
