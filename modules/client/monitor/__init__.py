@@ -57,7 +57,7 @@ class Monitor:
     def uptime_path(self):
         return os.path.join('/tmp/.ivy-uptime')
 
-    async def read_stream(self, logger, process, allow_log=False):
+    def read_stream(self, logger, process, allow_log=False):
         asyncio.ensure_future(self._read_stream(logger, process.stdout, error=False, allow_log=log))
         asyncio.ensure_future(self._read_stream(logger, process.stderr, error=True, allow_log=log))
 
