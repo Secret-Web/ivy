@@ -72,7 +72,7 @@ class Process:
 
                     if config.program.fee is None:
                         self.module.monitor.output.append('+====================================================+')
-                        self.module.monitor.output.append('Congradulations. You have made a poor little dev sad..)
+                        self.module.monitor.output.append('Congradulations. You have made a poor little dev sad..')
                         self.module.monitor.output.append('+====================================================+')
                         return
 
