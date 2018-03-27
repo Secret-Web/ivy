@@ -28,7 +28,7 @@ class Process:
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
-            asyncio.ensure_future(self.process.start())
+            asyncio.ensure_future(self.start())
 
     @property
     def uptime_path(self):
