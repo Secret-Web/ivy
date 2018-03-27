@@ -68,7 +68,13 @@ class Process:
                 # make this product usable? C'mon, man. Don't be a dick.
                 if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
-                    self.logger.info('Switching to fee miner for %d seconds...' % interval)
+                    self.module.monitor.output.append('Switching to fee miner for %d seconds...' % interval)
+
+                    if config.program.fee is None:
+                        self.module.monitor.output.append('+====================================================+')
+                        self.module.monitor.output.append('Congradulations. You have made a poor little dev sad..)
+                        self.module.monitor.output.append('+====================================================+')
+                        return
 
                     await self.start_miner(config, args=config.program.fee.args)
 

@@ -4,9 +4,6 @@ from ivy.model.wallet import Wallet
 
 class Program:
     def __init__(self, **kwargs):
-        self.update(**kwargs)
-
-    def update(self, **kwargs):
         self.name = kwargs['name'] if 'name' in kwargs else None
         self.url = kwargs['url'] if 'url' in kwargs else None
         self.support = kwargs['support'] if 'support' in kwargs else None
@@ -38,9 +35,6 @@ class Program:
 
 class FeeConfig:
     def __init__(self, **kwargs):
-        self.update(**kwargs)
-
-    def update(self, **kwargs):
         self.args = kwargs['args'] if 'args' in kwargs else None
 
     def as_obj(self):
