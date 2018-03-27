@@ -46,6 +46,6 @@ class FeeConfig:
     def as_obj(self):
         obj = {}
 
-        if self.args is not None: obj['args'] = self.args.as_obj()
+        if self.args is not None: obj['args'] = self.args
 
         return obj
