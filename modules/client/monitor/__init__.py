@@ -60,6 +60,10 @@ class Monitor:
                 line = line.decode('UTF-8', errors='ignore').replace('\n', '')
                 line = re.sub('\033\[.+?m', '', line)
 
+                if show_output:
+                    self.output.append(line)
+                    del self.output[:-128]
+
                 if len(line) == 0: continue
 
                 if is_error:

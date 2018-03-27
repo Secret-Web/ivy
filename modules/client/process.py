@@ -155,6 +155,11 @@ class Process:
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
+        if not show_output:
+            self.logger.info('Ignoring output')
+        if not allow_log:
+            self.logger.info('Not logging')
+
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
