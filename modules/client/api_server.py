@@ -5,23 +5,23 @@ import asyncio
 from aiohttp import web
 
 
-client = None
+module = None
 
 async def index(request):
     return web.Response(text=json.dumps({
-        'config': client.process.config.as_obj() if client.process.process.config is not None else {},
-        'hardware': client.monitor.stats.hardware.as_obj(),
-        'shares': client.monitor.shares,
-        'output': client.monitor.output
+        'config': module.process.config.as_obj() if module.process.config is not None else {},
+        'hardware': module.monitor.stats.hardware.as_obj(),
+        'shares': module.monitor.shares,
+        'output': module.monitor.output
     }), content_type='text/html')
 
 app = web.Application()
 
 app.router.add_get('/', index)
 
-async def start(client_instance):
-    global client
-    client = client_instance
+async def start(module_instance):
+    global module
+    module = module_instance
 
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
