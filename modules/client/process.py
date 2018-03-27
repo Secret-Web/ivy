@@ -25,6 +25,11 @@ class Process:
 
         asyncio.ensure_future(self.ping_miner())
 
+        if self.client.dummy is not False:
+            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
+        else:
+            asyncio.ensure_future(self.process.start())
+
     @property
     def uptime_path(self):
         return os.path.join('/tmp/.ivy-uptime')
@@ -45,6 +50,14 @@ class Process:
             while True:
                 await asyncio.sleep(5)
 
+                if not self.is_running: continue
+
+                config = self.module.client
+
+                if not config.program:
+                    self.logger.error('No program configured.')
+                    return
+
                 self.uptime += 5
 
                 with open(self.uptime_path, 'w') as f:
@@ -57,7 +70,7 @@ class Process:
                     interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
                     self.logger.info('Switching to fee miner for %d seconds...' % interval)
 
-                    await self.start(config=self.client.fee.config)
+                    await self.start_miner(config, args=config.program.fee.args)
 
                     self.is_collecting = True
 
@@ -71,7 +84,7 @@ class Process:
                     self.module.monitor.output.append('Development fee collected. Thank you for choosing Ivy!')
                     self.module.monitor.output.append('+====================================================+')
 
-                    await self.start(config=self.client)
+                    await self.start()
 
                     self.uptime = 0
         except Exception as e:
@@ -79,7 +92,9 @@ class Process:
             if self.connector.socket:
                 await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
 
-    async def start(self, config):
+    async def start(self):
+        config = self.module.client
+
         if not config.program:
             self.logger.error('No program configured.')
             return

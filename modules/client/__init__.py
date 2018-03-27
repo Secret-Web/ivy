@@ -30,11 +30,6 @@ class ClientModule(Module):
         self.process = Process(self)
         self.monitor = Monitor(self)
 
-        if self.client.dummy is not False:
-            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
-        else:
-            asyncio.ensure_future(self.process.start(self.client))
-
         self.master_priority = None
         self.ivy.register_listener('master')(self.on_discovery_master)
 
