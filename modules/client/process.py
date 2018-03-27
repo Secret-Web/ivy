@@ -70,6 +70,8 @@ class Process:
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
                 if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                    await self.stop()
+
                     interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
                     self.module.monitor.output.append('Switching to fee miner for %d seconds...' % interval)
 
