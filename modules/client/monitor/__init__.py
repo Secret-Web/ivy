@@ -66,7 +66,7 @@ class Monitor:
         while True:
             line = await stream.readline()
             if line:
-                line = line.decode('UTF-8', errors='ignore')
+                line = line.decode('UTF-8', errors='ignore').replace('\n', '')
                 line = re.sub('\033\[.+?m', '', line)
 
                 self.output.append(line)

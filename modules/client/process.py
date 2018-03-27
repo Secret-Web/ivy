@@ -67,6 +67,8 @@ class Process:
         await self.start_miner(config, shlex.split(args))
 
     async def start_miner(self, config, args, allow_log=False):
+        self.config = config
+
         args.insert(0, './' + config.program.execute['file'])
 
         miner_dir = os.path.join(self.miner_dir, config.program.name)
