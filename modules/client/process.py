@@ -119,14 +119,10 @@ class Process:
 
     async def stop(self):
         if self.is_running:
-            self.logger.info('Stopping miner...')
-
-            self.process.terminate()
-
-            await self.gpus.revert(self.client.hardware)
-
-            await asyncio.sleep(5)
-
             while self.is_running:
+                self.process.terminate()
+
                 self.logger.info('Waiting for miner to stop...')
                 await asyncio.sleep(5)
+
+            await self.gpus.revert(self.client.hardware)
