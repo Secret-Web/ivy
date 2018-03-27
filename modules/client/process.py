@@ -3,6 +3,7 @@ import re
 import shlex
 import logging
 import asyncio
+import traceback
 
 
 class Process:
@@ -136,10 +137,12 @@ class Process:
 
         args = re.sub('\B(--?[^-\s]+) ({[^\s<]+)', '', args)
 
-        await self.start_miner(config, shlex.split(args))
+        await self.start_miner(config, args)
 
     async def start_miner(self, config, args, allow_log=False):
         self.config = config
+
+        args = shlex.split(args)
 
         args.insert(0, './' + config.program.execute['file'])
 
