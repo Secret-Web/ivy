@@ -163,7 +163,8 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, show_output=show_output, allow_log=allow_log)
+        if not show_output:
+            self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
