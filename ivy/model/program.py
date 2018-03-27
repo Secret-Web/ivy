@@ -41,17 +41,11 @@ class FeeConfig:
         self.update(**kwargs)
 
     def update(self, **kwargs):
-        self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs else None
-        self.wallet = Wallet(**kwargs['wallet']) if 'wallet' in kwargs else None
-        self.program = Program(**kwargs['program']) if 'program' in kwargs else None
+        self.args = kwargs['args'] if 'args' in kwargs else None
 
     def as_obj(self):
         obj = {}
 
-        obj['name'] = 'Dev Mining'
-
-        if self.pool is not None: obj['pool'] = self.pool.as_obj()
-        if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
-        if self.program is not None: obj['program'] = self.program.as_obj()
+        if self.args is not None: obj['args'] = self.args.as_obj()
 
         return obj
