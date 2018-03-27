@@ -50,8 +50,8 @@ class Monitor:
         return self._api[self.process.config.program.api]
 
     def read_stream(self, logger, process, forward_output=True, allow_log=False):
-        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=show_output, allow_log=allow_log))
-        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=show_output, allow_log=allow_log))
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output, allow_log=allow_log))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output, allow_log=allow_log))
 
     async def _read_stream(self, logger, stream, is_error, forward_output=True, allow_log=False):
         while True:
