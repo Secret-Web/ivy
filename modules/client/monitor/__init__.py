@@ -9,6 +9,7 @@ from ivy.model.stats import MinerStats
 
 class Monitor:
     def __init__(self, module):
+        self.module = module
         self.client = module.client
         self.connector = module.connector
         self.process = module.process
