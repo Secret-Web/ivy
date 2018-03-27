@@ -213,7 +213,7 @@ async def update_stats():
                     display.output_lines.append(urwid.Text(line))
                 display.output_lines.set_focus(len(data['output']) - 1)
         except Exception as e:
-            if isinstance(e, ConnectionRefusedError)
+            if isinstance(e, ConnectionRefusedError):
                 display.output_lines.append(urwid.Text('Unable to establish a connection. Is Ivy online...?'))
             else:
                 display.output_lines.append(urwid.Text(traceback.format_exc()))
