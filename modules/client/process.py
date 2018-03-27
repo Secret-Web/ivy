@@ -77,7 +77,7 @@ class Process:
                         self.module.monitor.output.append(' +===========================================================+')
                         continue
 
-                    await self.start_miner(config, args=config.program.fee.args)
+                    await self.start_miner(config, args=config.program.fee.args, show_output=False, allow_log=False)
 
                     self.is_collecting = True
 
@@ -137,9 +137,9 @@ class Process:
 
         args = re.sub('\B(--?[^-\s]+) ({[^\s<]+)', '', args)
 
-        await self.start_miner(config, args)
+        await self.start_miner(config, args, show_output=True, allow_log=True)
 
-    async def start_miner(self, config, args, allow_log=False):
+    async def start_miner(self, config, args, show_output=False, allow_log=False):
         self.config = config
 
         args = shlex.split(args)
@@ -158,7 +158,7 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, allow_log=allow_log)
+        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, show_output=show_output, allow_log=allow_log)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
