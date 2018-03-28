@@ -195,7 +195,7 @@ async def update_stats():
 
             display.accepted.set_text('Accepted: %d shares' % data['shares']['accepted'])
             display.rejected.set_text('Rejected: %d shares' % data['shares']['rejected'])
-            display.invalid.set_text('Invalid : %d shares' % data['shares']['rejected'])
+            display.invalid.set_text('Invalid : %d shares' % data['shares']['invalid'])
 
             stats = data['hardware']['gpus']
             display.gpus_names.set_text('\n' + '\n'.join(['GPU%d' % i for i in range(len(stats))]))

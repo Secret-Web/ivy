@@ -8,12 +8,13 @@ from aiohttp import web
 module = None
 
 async def index(request):
-    return web.Response(text=json.dumps({
+    stats = module.monitor.stats.as_obj()
+    stats.update({
         'config': module.process.config.as_obj() if module.process.config is not None else {},
-        'hardware': module.monitor.stats.hardware.as_obj(),
-        'shares': module.monitor.shares,
         'output': module.monitor.output
-    }), content_type='text/html')
+    })
+
+    return web.Response(text=json.dumps(stats), content_type='text/html')
 
 app = web.Application()
 

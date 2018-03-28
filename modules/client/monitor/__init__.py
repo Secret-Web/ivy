@@ -17,8 +17,6 @@ class Monitor:
         self.logger = module.logger.getChild('Monitor')
 
         self.output = []
-        self.shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
-
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self._api = {
@@ -88,18 +86,22 @@ class Monitor:
 
     async def ping_miner(self):
         try:
-            updated_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
-
             if self.client.dummy:
                 got_stats = await self.get_stats()
-                updated_shares['accepted'] = got_stats['shares']['accepted']
-                updated_shares['rejected'] = got_stats['shares']['rejected']
-                updated_shares['invalid'] = got_stats['shares']['invalid']
+                self.stats.shares['accepted'] = got_stats['shares']['accepted']
+                self.stats.shares['rejected'] = got_stats['shares']['rejected']
+                self.stats.shares['invalid'] = got_stats['shares']['invalid']
 
-                self.logger.debug('startup: %d accepted, %d rejected, %d invalid.' % (updated_shares['accepted'], updated_shares['rejected'], updated_shares['invalid']))
+                self.logger.debug('startup: %d accepted, %d rejected, %d invalid.'
+                                        % (self.stats.shares['accepted'],
+                                            self.stats.shares['rejected'],
+                                            self.stats.shares['invalid']))
 
             update = False
             last_poke = 0
+
+            last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+            new_stats = MinerStats()
 
             offline_gpus = 0
 
@@ -110,9 +112,15 @@ class Monitor:
                     got_stats = await self.get_stats()
                     hw_stats = await self.get_hw_stats()
 
-                    self.stats.shares['accepted'] = got_stats['shares']['accepted'] - updated_shares['accepted']
-                    self.stats.shares['rejected'] = got_stats['shares']['rejected'] - updated_shares['rejected']
-                    self.stats.shares['invalid'] = got_stats['shares']['invalid'] - updated_shares['invalid']
+                    # Update the total shares
+                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] + self.stats.shares['accepted']
+                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] + self.stats.shares['rejected']
+                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] + self.stats.shares['invalid']
+
+                    # Update the newest stats (since last attempted update)
+                    new_stats.shares['accepted'] = got_stats['shares']['accepted'] - last_shares['accepted']
+                    new_stats.shares['rejected'] = got_stats['shares']['rejected'] - last_shares['rejected']
+                    new_stats.shares['invalid'] = got_stats['shares']['invalid'] - last_shares['invalid']
 
                     new_online = 0
                     new_offline = 0
@@ -139,10 +147,6 @@ class Monitor:
                             new_online += 1
                         gpu.online = online
 
-                    self.shares['accepted'] = self.stats.shares['accepted'] + updated_shares['accepted']
-                    self.shares['rejected'] = self.stats.shares['rejected'] + updated_shares['rejected']
-                    self.shares['invalid'] = self.stats.shares['invalid'] + updated_shares['invalid']
-
                     if new_offline > 0 and self.connector.socket:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
@@ -152,32 +156,31 @@ class Monitor:
                     offline_gpus += new_offline
 
                     # If the miner is offline, set it online and force an update
-                    if not self.stats.online or new_offline > 0 or new_online > 0:
-                        update = self.stats.online = True
+                    if not new_stats.online or new_offline > 0 or new_online > 0:
+                        update = new_stats.online = True
                     else:
                         # Otherwise, push an update every minute
                         update = time.time() - last_poke > 60
                 except Exception as e:
-                    self.stats.online = False
+                    new_stats.online = False
                     update = True
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
 
                 if update:
+                    last_shares = self.stats.shares
+                    new_stats.hardware = self.stats.hardware
+
                     if self.connector.socket:
-                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: self.stats.as_obj()})
+                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
                     else:
                         self.logger.warning('Not connected to any MASTER SERVER.')
 
-                    updated_shares['invalid'] += self.stats.shares['invalid']
-                    updated_shares['accepted'] += self.stats.shares['accepted']
-                    updated_shares['rejected'] += self.stats.shares['rejected']
-
-                    if self.stats.shares['accepted'] + self.stats.shares['rejected'] + self.stats.shares['invalid'] > 0:
+                    if new_stats.shares['accepted'] + new_stats.shares['rejected'] + new_stats.shares['invalid'] > 0:
                         self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
-                                                (self.stats.shares['accepted'],
-                                                    self.stats.shares['rejected'],
-                                                    self.stats.shares['invalid']))
+                                                (new_stats.shares['accepted'],
+                                                    new_stats.shares['rejected'],
+                                                    new_stats.shares['invalid']))
 
                     update = False
                     last_poke = time.time()
