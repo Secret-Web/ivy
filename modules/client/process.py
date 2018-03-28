@@ -23,6 +23,7 @@ class Process:
             with open(self.uptime_path, 'r') as f:
                 self.uptime = int(f.read())
 
+        self.is_fee = False
         self.process = None
         self.process_streams = None
 
@@ -70,6 +71,8 @@ class Process:
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
                 if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                    self.is_fee = True
+
                     await self.stop()
 
                     interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
@@ -78,26 +81,26 @@ class Process:
                         self.module.monitor.output.append(' +===========================================================+')
                         self.module.monitor.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
                         self.module.monitor.output.append(' +===========================================================+')
-                        continue
+                    else:
+                        self.module.monitor.output.append(' +===========================================================+')
+                        self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
+                        self.module.monitor.output.append(' +===========================================================+ ')
 
-                    self.module.monitor.output.append(' +===========================================================+')
-                    self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
-                    self.module.monitor.output.append(' +===========================================================+ ')
+                        await self.start_miner(config, args=config.program.fee.args, forward_output=False)
 
-                    await self.start_miner(config, args=config.program.fee.args, forward_output=False)
+                        self.is_collecting = True
 
-                    self.is_collecting = True
+                        await asyncio.sleep(interval)
 
-                    await asyncio.sleep(interval)
+                        if not self.is_collecting:
+                            continue
+                        self.is_collecting = False
 
-                    if not self.is_collecting:
-                        continue
-                    self.is_collecting = False
-
-                    self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
-                    self.module.monitor.output.append(' +===========================================================+')
+                        self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
+                        self.module.monitor.output.append(' +===========================================================+')
 
                     self.uptime = 0
+                    self.is_fee = False
 
                     await self.start()
         except Exception as e:

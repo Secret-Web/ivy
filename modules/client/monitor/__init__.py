@@ -149,11 +149,12 @@ class Monitor:
                             new_online += 1
                         gpu.online = online
 
-                    if new_offline > 0 and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
+                    if not self.module.process.is_fee:
+                        if new_offline > 0 and self.connector.socket:
+                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
-                    if offline_gpus > 0 and new_online > 0 and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
+                        if offline_gpus > 0 and new_online > 0 and self.connector.socket:
+                            await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
 
                     offline_gpus += new_offline
 
@@ -194,7 +195,7 @@ class Monitor:
 
                     reset = True
 
-                if reset:
+                if reset or self.module.process.is_fee:
                     reset = False
                     last_shares['accepted'] = self.stats.shares['accepted']
                     last_shares['rejected'] = self.stats.shares['rejected']
