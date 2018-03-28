@@ -174,7 +174,7 @@ class StorageModule(Module):
             elif isinstance(packet.payload, str):
                 o = 0
                 for i in range(0, len(self.database.messages)):
-                    if self.database.messages[i - o]['level'] == packet.payload:
+                    if self.database.messages[i - o].level == packet.payload:
                         del self.database.messages[i - o]
                         o += 1
             else:
