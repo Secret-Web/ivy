@@ -124,11 +124,6 @@ class Monitor:
 
                     session_shares = got_stats['shares']
 
-                    # Update the newest stats (since last attempted update)
-                    new_stats.shares['accepted'] = self.stats.shares['accepted'] - last_shares['accepted']
-                    new_stats.shares['rejected'] = self.stats.shares['rejected'] - last_shares['rejected']
-                    new_stats.shares['invalid'] = self.stats.shares['invalid'] - last_shares['invalid']
-
                     new_online = 0
                     new_offline = 0
                     for i in range(len(self.stats.hardware.gpus)):
@@ -177,8 +172,13 @@ class Monitor:
                         reset = True
 
                 if update:
-                    reset = True
+                    update = False
+                    last_poke = time.time()
 
+                    # Update the newest stats (since last attempted update)
+                    new_stats.shares['accepted'] = self.stats.shares['accepted'] - last_shares['accepted']
+                    new_stats.shares['rejected'] = self.stats.shares['rejected'] - last_shares['rejected']
+                    new_stats.shares['invalid'] = self.stats.shares['invalid'] - last_shares['invalid']
                     new_stats.hardware = self.stats.hardware
 
                     if self.connector.socket:
@@ -192,10 +192,10 @@ class Monitor:
                                                     new_stats.shares['rejected'],
                                                     new_stats.shares['invalid']))
 
-                    update = False
-                    last_poke = time.time()
+                    reset = True
 
                 if reset:
+                    reset = False
                     last_shares['accepted'] = self.stats.shares['accepted']
                     last_shares['rejected'] = self.stats.shares['rejected']
                     last_shares['invalid'] = self.stats.shares['invalid']
