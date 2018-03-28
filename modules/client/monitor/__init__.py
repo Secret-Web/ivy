@@ -99,7 +99,7 @@ class Monitor:
             last_poke = 0
 
             last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
-            new_stats = MinerStats()
+            new_stats = MinerStats(hardware=self.client.hardware.as_obj())
 
             offline_gpus = 0
 
@@ -168,6 +168,8 @@ class Monitor:
                 if update:
                     last_shares = self.stats.shares
                     new_stats.hardware = self.stats.hardware
+
+                    print(last_shares)
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
