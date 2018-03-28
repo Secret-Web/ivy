@@ -96,6 +96,7 @@ class Monitor:
                                             self.stats.shares['invalid']))
 
             update = False
+            reset = False
             last_poke = 0
 
             session_shares = None
@@ -172,15 +173,13 @@ class Monitor:
                     update = True
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
+                    else:
+                        reset = True
 
                 if update:
-                    last_shares['accepted'] = self.stats.shares['accepted']
-                    last_shares['rejected'] = self.stats.shares['rejected']
-                    last_shares['invalid'] = self.stats.shares['invalid']
+                    reset = True
 
                     new_stats.hardware = self.stats.hardware
-
-                    print(new_stats.as_obj())
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
@@ -195,6 +194,12 @@ class Monitor:
 
                     update = False
                     last_poke = time.time()
+
+                if reset:
+                    last_shares['accepted'] = self.stats.shares['accepted']
+                    last_shares['rejected'] = self.stats.shares['rejected']
+                    last_shares['invalid'] = self.stats.shares['invalid']
+
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
