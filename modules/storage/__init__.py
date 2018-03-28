@@ -169,7 +169,17 @@ class StorageModule(Module):
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
-            del self.database.messages[packet.payload if packet.payload else 0]
+            if isinstance(packet.payload, int):
+                del self.database.messages[packet.payload if packet.payload else 0]
+            elif isinstance(packet.payload, str):
+                o = 0
+                for i in range(0, len(self.database.messages)):
+                    if self.database.messages[i - o]['level'] == packet.payload:
+                        del self.database.messages[i - o]
+                        o += 1
+            else:
+                return
+
             await packet.send('messages', 'data', [x.as_obj() for x in self.database.messages])
 
         @l.listen_event('messages', 'data')
