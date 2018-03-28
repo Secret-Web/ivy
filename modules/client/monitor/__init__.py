@@ -106,7 +106,7 @@ class Monitor:
             offline_gpus = 0
 
             while True:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
 
                 try:
                     got_stats = await self.get_stats()
