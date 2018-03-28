@@ -65,7 +65,7 @@ class Display:
 
         self.hashrate = urwid.Text('Loading data...', align='center')
         self.hash_graph = urwid.BarGraph(['graph_bg', 'graph_1', 'graph_2'])
-        self.hash_graph_length = 60
+        self.hash_graph_length = 200
         self.hash_graph_data = []
 
         self.branding = urwid.Text('- SecretWeb.com -', align='center')
