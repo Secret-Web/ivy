@@ -169,7 +169,7 @@ class Monitor:
                     last_shares = self.stats.shares
                     new_stats.hardware = self.stats.hardware
 
-                    print(last_shares)
+                    print(new_stats.as_obj())
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
