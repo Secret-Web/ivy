@@ -3,15 +3,17 @@ from datetime import datetime
 
 class Message:
     def __init__(self, **kwargs):
-        today = datetime.utcnow()
-        datestr = '%d-%.2d-%.2d %.2d:%.2d:%d' % (today.year, today.month, today.day, today.hour, today.minute, today.second)
-        self.time = datestr
-
+        self.time = kwargs['time'] if 'time' in kwargs else None
         self.level = kwargs['level'] if 'level' in kwargs else None
         self.text = kwargs['text'] if 'text' in kwargs else None
 
         self.group = kwargs['group'] if 'group' in kwargs else None
         self.machine = kwargs['machine'] if 'machine' in kwargs else None
+
+        if self.time is None:
+            today = datetime.utcnow()
+            datestr = '%d-%.2d-%.2d %.2d:%.2d:%d' % (today.year, today.month, today.day, today.hour, today.minute, today.second)
+            self.time = datestr
 
     def as_obj(self):
         obj = {}
