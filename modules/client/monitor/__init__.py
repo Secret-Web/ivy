@@ -111,8 +111,8 @@ class Monitor:
                     got_stats = await self.get_stats()
                     hw_stats = await self.get_hw_stats()
 
-                    if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted']
-                                            or session_shares['rejected'] > got_stats['shares']['rejected']
+                    if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted'] \
+                                            or session_shares['rejected'] > got_stats['shares']['rejected'] \
                                             or session_shares['invalid'] > got_stats['shares']['invalid']:
                         session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
 
@@ -124,9 +124,9 @@ class Monitor:
                     session_shares = got_stats['shares']
 
                     # Update the newest stats (since last attempted update)
-                    new_stats.shares['accepted'] = got_stats['shares']['accepted'] - last_shares['accepted']
-                    new_stats.shares['rejected'] = got_stats['shares']['rejected'] - last_shares['rejected']
-                    new_stats.shares['invalid'] = got_stats['shares']['invalid'] - last_shares['invalid']
+                    new_stats.shares['accepted'] = self.stats.shares['accepted'] - last_shares['accepted']
+                    new_stats.shares['rejected'] = self.stats.shares['rejected'] - last_shares['rejected']
+                    new_stats.shares['invalid'] = self.stats.shares['invalid'] - last_shares['invalid']
 
                     new_online = 0
                     new_offline = 0
@@ -174,9 +174,9 @@ class Monitor:
                         self.logger.exception('\n' + traceback.format_exc())
 
                 if update:
-                    last_shares['accepted'] += self.stats.shares['accepted']
-                    last_shares['rejected'] += self.stats.shares['rejected']
-                    last_shares['invalid'] += self.stats.shares['invalid']
+                    last_shares['accepted'] = self.stats.shares['accepted']
+                    last_shares['rejected'] = self.stats.shares['rejected']
+                    last_shares['invalid'] = self.stats.shares['invalid']
 
                     new_stats.hardware = self.stats.hardware
 
