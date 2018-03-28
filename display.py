@@ -65,7 +65,7 @@ class Display:
 
         self.hashrate = urwid.Text('Loading data...', align='center')
         self.hash_graph = urwid.BarGraph(['graph_bg', 'graph_1', 'graph_2'])
-        self.hash_graph_length = 100
+        self.hash_graph_length = 48
         self.hash_graph_data = []
 
         self.branding = urwid.Text('- SecretWeb.com -', align='center')
@@ -137,6 +137,8 @@ class Display:
         self.urwid.screen.set_terminal_properties(colors=256)
 
     def add_hash_data(self, value):
+        if len(self.hash_graph_data) == 0 and value == 0: return
+
         self.hash_graph_data.append(value)
 
         del self.hash_graph_data[:-self.hash_graph_length]
@@ -152,7 +154,7 @@ class Display:
         for value in self.hash_graph_data:
             data.append([0, value - minrate + diff])
 
-        self.hash_graph.set_data(data, top=diff * 1.5)
+        self.hash_graph.set_data(data, top=diff * 3)
 
     def run(self):
         self.urwid.run()
