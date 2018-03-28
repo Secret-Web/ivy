@@ -98,6 +98,7 @@ class Monitor:
             update = False
             last_poke = 0
 
+            session_shares = None
             last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
             new_stats = MinerStats(hardware=self.client.hardware.as_obj())
 
@@ -110,10 +111,17 @@ class Monitor:
                     got_stats = await self.get_stats()
                     hw_stats = await self.get_hw_stats()
 
-                    # Update the total shares
-                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] - self.stats.shares['accepted']
-                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] - self.stats.shares['rejected']
-                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] - self.stats.shares['invalid']
+                    if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted']
+                                            or session_shares['rejected'] > got_stats['shares']['rejected']
+                                            or session_shares['invalid'] > got_stats['shares']['invalid']:
+                        session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+
+                    # Update the total shares using the current session offset
+                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] - session_shares['accepted']
+                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] - session_shares['rejected']
+                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] - session_shares['invalid']
+
+                    session_shares = got_stats['shares']
 
                     # Update the newest stats (since last attempted update)
                     new_stats.shares['accepted'] = got_stats['shares']['accepted'] - last_shares['accepted']
@@ -166,7 +174,10 @@ class Monitor:
                         self.logger.exception('\n' + traceback.format_exc())
 
                 if update:
-                    last_shares = self.stats.shares
+                    last_shares['accepted'] += self.stats.shares['accepted']
+                    last_shares['rejected'] += self.stats.shares['rejected']
+                    last_shares['invalid'] += self.stats.shares['invalid']
+
                     new_stats.hardware = self.stats.hardware
 
                     print(new_stats.as_obj())
