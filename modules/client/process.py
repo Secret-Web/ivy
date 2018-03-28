@@ -116,9 +116,9 @@ class Process:
 
         await self.install(config=config)
 
-        await self.start_miner(config, config.program.execute['args'], allow_log=True)
+        await self.start_miner(config, config.program.execute['args'])
 
-    async def start_miner(self, config, args, forward_output=True, allow_log=False):
+    async def start_miner(self, config, args, forward_output=True):
         self.config = config
 
         if config.wallet:
@@ -164,7 +164,7 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output, allow_log=allow_log)
+        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -188,7 +188,7 @@ class Process:
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger('Install'), installer, allow_log=False)
+        self.module.monitor.read_stream(logging.getLogger('Install'), installer)
 
         await installer.wait()
 

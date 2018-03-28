@@ -47,11 +47,11 @@ class Monitor:
                 self._api[api_id] = self._api['_']
         return self._api[self.process.config.program.api]
 
-    def read_stream(self, logger, process, forward_output=True, allow_log=False):
-        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output, allow_log=allow_log))
-        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output, allow_log=allow_log))
+    def read_stream(self, logger, process, forward_output=True):
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output))
 
-    async def _read_stream(self, logger, stream, is_error, forward_output=True, allow_log=False):
+    async def _read_stream(self, logger, stream, is_error, forward_output=True):
         while True:
             line = await stream.readline()
             if not line:
@@ -68,8 +68,6 @@ class Monitor:
 
             if is_error:
                 logger.critical(line)
-                if allow_log and self.connector.socket:
-                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'text': line, 'machine': self.client.machine_id})
             else:
                 logger.info(line)
 
@@ -151,7 +149,7 @@ class Monitor:
                         await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
                     if offline_gpus > 0 and new_online > 0 and self.connector.socket:
-                        await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
+                        await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
 
                     offline_gpus += new_offline
 
