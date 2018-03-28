@@ -113,9 +113,9 @@ class Monitor:
                     hw_stats = await self.get_hw_stats()
 
                     # Update the total shares
-                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] + self.stats.shares['accepted']
-                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] + self.stats.shares['rejected']
-                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] + self.stats.shares['invalid']
+                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] - self.stats.shares['accepted']
+                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] - self.stats.shares['rejected']
+                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] - self.stats.shares['invalid']
 
                     # Update the newest stats (since last attempted update)
                     new_stats.shares['accepted'] = got_stats['shares']['accepted'] - last_shares['accepted']
