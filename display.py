@@ -152,7 +152,7 @@ class Display:
         for value in self.hash_graph_data:
             data.append([0, value - minrate + diff])
 
-        self.hash_graph.set_data(data, top=diff * 3)
+        self.hash_graph.set_data(data, top=diff * 1.5)
 
     def run(self):
         self.urwid.run()
