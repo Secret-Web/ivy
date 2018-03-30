@@ -96,12 +96,16 @@ class Monitor:
                                             self.stats.shares['invalid']))
 
             update = False
-            reset = False
             last_poke = 0
 
             session_shares = None
             last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
             new_stats = MinerStats(hardware=self.client.hardware.as_obj())
+
+            def reset():
+                last_shares['accepted'] = self.stats.shares['accepted']
+                last_shares['rejected'] = self.stats.shares['rejected']
+                last_shares['invalid'] = self.stats.shares['invalid']
 
             offline_gpus = 0
 
@@ -155,12 +159,14 @@ class Monitor:
 
                         if offline_gpus > 0 and new_online > 0 and self.connector.socket:
                             await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
+
+                        offline_gpus += new_offline
                     else:
+                        reset()
+
                         new_offline = 0
                         new_online = 0
                         offline_gpus = len(hw_stats)
-
-                    offline_gpus += new_offline
 
                     # If the miner is offline, set it online and force an update
                     if not new_stats.online or new_offline > 0 or new_online > 0:
@@ -174,7 +180,7 @@ class Monitor:
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
                     else:
-                        reset = True
+                        reset()
 
                 if update:
                     update = False
@@ -197,13 +203,7 @@ class Monitor:
                                                     new_stats.shares['rejected'],
                                                     new_stats.shares['invalid']))
 
-                    reset = True
-
-                if reset:
-                    reset = False
-                    last_shares['accepted'] = self.stats.shares['accepted']
-                    last_shares['rejected'] = self.stats.shares['rejected']
-                    last_shares['invalid'] = self.stats.shares['invalid']
+                    reset()
 
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
