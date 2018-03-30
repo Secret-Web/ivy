@@ -173,6 +173,7 @@ class Monitor:
                     else:
                         reset()
 
+                print(self.module.process.is_fee)
                 if self.module.process.is_fee:
                     last_shares['accepted'] = self.stats.shares['accepted']
                     last_shares['rejected'] = self.stats.shares['rejected']
