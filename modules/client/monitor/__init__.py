@@ -170,8 +170,6 @@ class Monitor:
                     update = True
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
-                    else:
-                        reset()
 
                 print(self.module.process.is_fee)
                 if self.module.process.is_fee:
