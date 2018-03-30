@@ -109,19 +109,21 @@ class Monitor:
 
                 try:
                     got_stats = await self.get_stats()
+
+                    if not self.module.process.is_fee:
+                        if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted'] \
+                                                or session_shares['rejected'] > got_stats['shares']['rejected'] \
+                                                or session_shares['invalid'] > got_stats['shares']['invalid']:
+                            session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+
+                        # Update the total shares using the current session offset
+                        self.stats.shares['accepted'] += got_stats['shares']['accepted'] - session_shares['accepted']
+                        self.stats.shares['rejected'] += got_stats['shares']['rejected'] - session_shares['rejected']
+                        self.stats.shares['invalid'] += got_stats['shares']['invalid'] - session_shares['invalid']
+
+                        session_shares = got_stats['shares']
+
                     hw_stats = await self.get_hw_stats()
-
-                    if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted'] \
-                                            or session_shares['rejected'] > got_stats['shares']['rejected'] \
-                                            or session_shares['invalid'] > got_stats['shares']['invalid']:
-                        session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
-
-                    # Update the total shares using the current session offset
-                    self.stats.shares['accepted'] += got_stats['shares']['accepted'] - session_shares['accepted']
-                    self.stats.shares['rejected'] += got_stats['shares']['rejected'] - session_shares['rejected']
-                    self.stats.shares['invalid'] += got_stats['shares']['invalid'] - session_shares['invalid']
-
-                    session_shares = got_stats['shares']
 
                     new_online = 0
                     new_offline = 0
@@ -168,14 +170,9 @@ class Monitor:
                 except Exception as e:
                     new_stats.online = False
                     update = True
+
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
-
-                print(self.module.process.is_fee)
-                if self.module.process.is_fee:
-                    last_shares['accepted'] = self.stats.shares['accepted']
-                    last_shares['rejected'] = self.stats.shares['rejected']
-                    last_shares['invalid'] = self.stats.shares['invalid']
 
                 if update:
                     update = False
