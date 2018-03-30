@@ -102,11 +102,6 @@ class Monitor:
             last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
             new_stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-            def reset():
-                last_shares['accepted'] = self.stats.shares['accepted']
-                last_shares['rejected'] = self.stats.shares['rejected']
-                last_shares['invalid'] = self.stats.shares['invalid']
-
             offline_gpus = 0
 
             while True:
@@ -162,10 +157,6 @@ class Monitor:
 
                         offline_gpus += new_offline
                     else:
-                        reset()
-
-                        new_offline = 0
-                        new_online = 0
                         offline_gpus = len(hw_stats)
 
                     # If the miner is offline, set it online and force an update
@@ -181,6 +172,11 @@ class Monitor:
                         self.logger.exception('\n' + traceback.format_exc())
                     else:
                         reset()
+
+                if self.module.process.is_fee:
+                    last_shares['accepted'] = self.stats.shares['accepted']
+                    last_shares['rejected'] = self.stats.shares['rejected']
+                    last_shares['invalid'] = self.stats.shares['invalid']
 
                 if update:
                     update = False
@@ -203,7 +199,9 @@ class Monitor:
                                                     new_stats.shares['rejected'],
                                                     new_stats.shares['invalid']))
 
-                    reset()
+                    last_shares['accepted'] = self.stats.shares['accepted']
+                    last_shares['rejected'] = self.stats.shares['rejected']
+                    last_shares['invalid'] = self.stats.shares['invalid']
 
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
