@@ -102,7 +102,8 @@ class Monitor:
             last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
             new_stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-            offline_gpus = 0
+            # Has three states. True for online, False for offline, and int while it's waiting to be confirmed offline. (unstable)
+            gpu_status = {}
 
             while True:
                 await asyncio.sleep(1)
@@ -144,22 +145,33 @@ class Monitor:
                             gpu.watts = hw_stats[i]['watts']
 
                         online = gpu.rate > 0
+
                         if gpu.online and not online:
-                            new_offline += 1
+                            # Begin timer for "confirmed dead"
+                            gpu_status[i] = time.time()
+
                         if not gpu.online and online:
-                            new_online += 1
+                            if isinstance(gpu_status[i], int):
+                                gpu_status[i] = True
+                            else:
+                                new_online += 1
+
                         gpu.online = online
+
+                        if not isinstance(gpu_status[i], bool):
+                            # If a timer is currently running
+                            if time.time() - gpu_status[i] > 60:
+                                gpu_status[i] = False
+                                new_offline += 1
 
                     if not self.module.process.is_fee:
                         if new_offline > 0 and self.connector.socket:
                             await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
-                        if offline_gpus > 0 and new_online > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(offline_gpus, new_online), 'machine': self.client.machine_id})
+                        confirmed_dead = sum([1 if isinstance(gpu_status[i]) and not gpu_status[i] else 0])
 
-                        offline_gpus += new_offline
-                    else:
-                        offline_gpus = len(hw_stats)
+                        if confirmed_dead > 0 and new_online > 0 and self.connector.socket:
+                            await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(confirmed_dead, new_online), 'machine': self.client.machine_id})
 
                     # If the miner is offline, set it online and force an update
                     if not new_stats.online or new_offline > 0 or new_online > 0:
