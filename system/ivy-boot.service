@@ -5,7 +5,6 @@ Description=Ivy boot script
 Type=simple
 User=root
 StandardOutput=journal+console
-StandardError=journal+console
 StandardInput=tty
 ExecStop=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
 TimeoutSec=infinity
