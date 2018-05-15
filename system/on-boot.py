@@ -20,8 +20,6 @@ palette = [
     ('progress-smooth', '', '', '', '#CCC', '#888')
 ]
 
-rows, columns = (os.environ['LINES'], os.environ['COLUMNS'])
-
 class Display:
     def __init__(self, loop):
         self.step_i = -1
@@ -62,7 +60,7 @@ class Display:
                         urwid.Divider(),
                         urwid.Divider(),
 
-                        urwid.AttrMap(urwid.BoxAdapter(self.output, height=rows - 13), 'log'),
+                        urwid.AttrMap(urwid.BoxAdapter(self.output, height=16), 'log'),
 
                         urwid.Divider(),
                         urwid.Divider()
