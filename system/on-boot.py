@@ -1,10 +1,13 @@
-
 import sys
 import os
 import re
+import logging
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
 
+
+logging.basicConfig()
+logger = logging.getLogger('ivy')
 
 step_i = 0
 steps_max = 0
@@ -15,13 +18,13 @@ def step_done():
 	step_i += 1
 
 async def system_check():
-	print('Checking for system patches')
+	logger.info('Checking for system patches')
 	await run_command('apt', 'update')
 	await run_command('apt', 'upgrade', '-y')
 	await run_command('apt', 'autoremove', '-y')
 	step_done()
 
-	print('Installing tools')
+	logger.info('Installing tools')
 	await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
 	await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
 	await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
@@ -29,21 +32,21 @@ async def system_check():
 	await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
 	step_done()
 
-	print('Installing XOrg + i3')
+	logger.info('Installing XOrg + i3')
 	await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
 	await run_command('systemctl', 'set-default', 'multi-user.target')
 	await run_command('usermod', '-a', '-G', 'video', 'ivy')
 	step_done()
 
-	print('Installing python requirements')
+	logger.info('Installing python requirements')
 	await run_command(sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt')
 	step_done()
 
-	print('Verifying graphics drivers')
+	logger.info('Verifying graphics drivers')
 	await asyncio.sleep(2)
 	step_done()
 
-	print('Verifying symlinks')
+	logger.info('Verifying symlinks')
 	await run_command('rm', '-f', '/etc/systemd/system/ivy-boot.service')
 	await run_command('ln', '-f', '/home/ivy/ivy/system/ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
 	await run_command('systemctl', 'enable', 'ivy-boot')
@@ -87,7 +90,7 @@ async def _read_stream(stream, is_error):
 		if not output: break
 
 		output = re.sub('\033\[.+?m', '', output.decode('UTF-8', errors='ignore')).replace('\n', '')
-	print('[%d / %d] %s' % (step_i, steps_max, output))
+	logger.info('[%d / %d] %s' % (step_i, steps_max, output))
 
 loop = asyncio.get_event_loop()
 
