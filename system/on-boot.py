@@ -6,7 +6,7 @@ import asyncio
 from asyncio.subprocess import PIPE, STDOUT
 
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ivy')
 
 step_i = 0
