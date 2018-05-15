@@ -6,7 +6,6 @@ Type=simple
 User=root
 StandardOutput=journal+console
 ExecStop=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
-TimeoutSec=infinity
 
 [Install]
 WantedBy=default.target
