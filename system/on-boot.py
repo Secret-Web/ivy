@@ -9,7 +9,7 @@ from asyncio.subprocess import PIPE, STDOUT
 step_i = 0
 steps_max = 0
 with open(__file__, 'r') as f:
-	self.steps_max = f.read().count('step_done()') - 2
+	steps_max = f.read().count('step_done()') - 2
 
 def step_done():
 	step_i += 1
