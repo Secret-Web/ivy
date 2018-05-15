@@ -104,13 +104,6 @@ async def system_check():
     await run_command('apt', 'install', '-y', *'curl git lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
     display.step_done()
 
-    display.set_step('Installing python 3.6')
-    await run_command('add-apt-repository', '-y', 'ppa:jonathonf/python-3.6')
-    await run_command('apt', 'update')
-    await run_command('apt', 'install', '-y', 'python3.6', 'python3.6-dev')
-    await run_command('curl', 'https://bootstrap.pypa.io/get-pip.py', '|', 'python3.6')
-    display.step_done()
-
     display.set_step('Verifying graphics drivers')
     await asyncio.sleep(2)
     display.step_done()
