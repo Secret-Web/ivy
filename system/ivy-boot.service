@@ -1,6 +1,5 @@
 [Unit]
 Description=Ivy boot script
-Before=multi-user.target
 
 [Service]
 Type=oneshot
