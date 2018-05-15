@@ -1,5 +1,3 @@
-sudo python3.6 ivy/system/on-boot.py
-
 if [ -f ivy/data/config.json ]; then
     if [[ -z "$DISPLAY" ]] && [[ $(tty) = /dev/tty1 ]]; then
         startx
