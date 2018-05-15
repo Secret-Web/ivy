@@ -90,7 +90,7 @@ async def _read_stream(stream, is_error):
 		if not output: break
 
 		output = re.sub('\033\[.+?m', '', output.decode('UTF-8', errors='ignore')).replace('\n', '')
-	logger.info('[%d / %d] %s' % (step_i, steps_max, output))
+		logger.info('[%d / %d] %s' % (step_i, steps_max, output))
 
 loop = asyncio.get_event_loop()
 
