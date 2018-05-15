@@ -2,11 +2,11 @@
 Description=Ivy boot script
 
 [Service]
-Type=simple
+Type=oneshot
 User=root
 StandardOutput=journal+console
 StandardInput=tty
-ExecStart=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
+ExecStop=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
 
 [Install]
 WantedBy=network-online.target
