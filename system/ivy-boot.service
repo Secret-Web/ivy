@@ -11,4 +11,4 @@ ExecStop=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
 TimeoutSec=infinity
 
 [Install]
-WantedBy=network-online.target
+WantedBy=default.target
