@@ -101,7 +101,7 @@ async def system_check():
     await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
     await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
     await run_command('apt', 'install', '-y', 'software-properties-common')
-    await run_command('apt', 'install', '-y', *'curl git lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
+    await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
     display.step_done()
 
     display.set_step('Verifying graphics drivers')
