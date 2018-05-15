@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if \$(cat ~/ivy/data/config.json | jq 'has("client")'); then
+        i3-msg "exec xterm -fg white -bg black -e python3.6 ~/ivy/display.py"
+fi
+
+if \$(cat ~/ivy/data/config.json | jq 'has("master")'); then
+        i3-msg "exec chromium-browser --app=http://localhost/"
+fi
