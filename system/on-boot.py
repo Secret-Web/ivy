@@ -109,6 +109,10 @@ async def system_check():
     display.step_done()
 
     display.set_step('Verifying symlinks')
+    await run_command('rm', '-f', '/etc/systemd/system/ivy-boot.service')
+    await run_command('ln', '-sf', './ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
+    await run_command('systemctl', 'enable', 'ivy-boot')
+
     await run_command('rm', '-f', '/etc/systemd/system/ivy.service')
     await run_command('ln', '-sf', './ivy.service', '/etc/systemd/system/ivy.service')
     await run_command('systemctl', 'enable', 'ivy')
