@@ -1,6 +1,6 @@
-python3.6 system/on-boot.py
+python3.6 ivy/system/on-boot.py
 
-if [ -f data/config.json ]; then
+if [ -f ivy/data/config.json ]; then
     if [[ -z "$DISPLAY" ]] && [[ $(tty) = /dev/tty1 ]]; then
         startx
         exit 0
