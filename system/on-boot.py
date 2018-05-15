@@ -15,6 +15,7 @@ with open(__file__, 'r') as f:
 	steps_max = f.read().count('step_done()') - 2
 
 def step_done():
+	global step_i
 	step_i += 1
 
 async def system_check():
