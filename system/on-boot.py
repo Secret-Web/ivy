@@ -1,3 +1,4 @@
+
 import sys
 import os
 import re
@@ -102,6 +103,15 @@ async def system_check():
     await run_command('apt', 'install', '-y', 'software-properties-common')
     await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
     display.step_done()
+    display.set_step('Installing XOrg + i3')
+    await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
+    await run_command('systemctl', 'set-default', 'multi-user.target')
+    await run_command('usermod', '-a', '-G', 'video', 'ivy')
+    display.step_done()
+
+    display.set_step('Installing python requirements')
+    await run_command(sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt')
+    display.step_done()
 
     display.set_step('Verifying graphics drivers')
     await asyncio.sleep(2)
@@ -109,36 +119,26 @@ async def system_check():
 
     display.set_step('Verifying symlinks')
     await run_command('rm', '-f', '/etc/systemd/system/ivy-boot.service')
-    await run_command('ln', '-f', './ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
     await run_command('systemctl', 'enable', 'ivy-boot')
 
     await run_command('rm', '-f', '/etc/systemd/system/ivy.service')
-    await run_command('ln', '-f', './ivy.service', '/etc/systemd/system/ivy.service')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/ivy.service', '/etc/systemd/system/ivy.service')
     await run_command('systemctl', 'enable', 'ivy')
 
     await run_command('rm', '-f', '/etc/i3status.conf')
-    await run_command('ln', '-f', './i3status.conf', '/etc/i3status.conf')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/i3status.conf', '/etc/i3status.conf')
 
-    await run_command('mkdir', '-p', '~/.config/i3/')
-    await run_command('rm', '-f', '~/.config/i3/config')
-    await run_command('ln', '-f', './i3config.conf', '~/.config/i3/config')
+    await run_command('mkdir', '-p', '/home/ivy/.config/i3/')
+    await run_command('rm', '-f', '/home/ivy/.config/i3/config')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/i3config.conf', '/home/ivy/.config/i3/config')
 
-    await run_command('rm', '-f', '~/.Xresources')
-    await run_command('ln', '-f', '~/ivy/system/Xresources.conf', '~/.Xresources')
+    await run_command('rm', '-f', '/home/ivy/.Xresources')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/Xresources.conf', '/home/ivy/.Xresources')
 
     await run_command('mkdir', '/etc/systemd/system/getty@tty1.service.d')
     await run_command('rm', '-f', '/etc/systemd/system/getty@tty1.service.d/override.conf')
-    await run_command('ln', '-f', './tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
-    display.step_done()
-
-    display.set_step('Installing python requirements')
-    await run_command(sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt')
-    display.step_done()
-
-    display.set_step('Installing XOrg + i3')
-    await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
-    await run_command('systemctl', 'set-default', 'multi-user.target')
-    await run_command('usermod', '-a', '-G', 'video', 'ivy')
+    await run_command('ln', '-f', '/home/ivy/ivy/system/tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
     display.step_done()
 
     await asyncio.sleep(5)
