@@ -110,26 +110,26 @@ async def system_check():
 
     display.set_step('Verifying symlinks')
     await run_command('rm', '-f', '/etc/systemd/system/ivy-boot.service')
-    await run_command('ln', '-sf', './ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
+    await run_command('ln', '-f', './ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
     await run_command('systemctl', 'enable', 'ivy-boot')
 
     await run_command('rm', '-f', '/etc/systemd/system/ivy.service')
-    await run_command('ln', '-sf', './ivy.service', '/etc/systemd/system/ivy.service')
+    await run_command('ln', '-f', './ivy.service', '/etc/systemd/system/ivy.service')
     await run_command('systemctl', 'enable', 'ivy')
 
     await run_command('rm', '-f', '/etc/i3status.conf')
-    await run_command('ln', '-sf', './i3status.conf', '/etc/i3status.conf')
+    await run_command('ln', '-f', './i3status.conf', '/etc/i3status.conf')
 
     await run_command('mkdir', '-p', '~/.config/i3/')
     await run_command('rm', '-f', '~/.config/i3/config')
-    await run_command('ln', '-sf', './i3config.conf', '~/.config/i3/config')
+    await run_command('ln', '-f', './i3config.conf', '~/.config/i3/config')
 
     await run_command('rm', '-f', '~/.Xresources')
-    await run_command('ln', '-sf', '~/ivy/system/Xresources.conf', '~/.Xresources')
+    await run_command('ln', '-f', '~/ivy/system/Xresources.conf', '~/.Xresources')
 
     await run_command('mkdir', '/etc/systemd/system/getty@tty1.service.d')
     await run_command('rm', '-f', '/etc/systemd/system/getty@tty1.service.d/override.conf')
-    await run_command('ln', '-sf', './tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
+    await run_command('ln', '-f', './tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
     display.step_done()
 
     display.set_step('Installing python requirements')
