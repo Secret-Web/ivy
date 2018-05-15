@@ -1,10 +1,12 @@
 if [ -f ~/ivy/data/config.json ]; then
     if [[ -z "$DISPLAY" ]] && [[ $(tty) = /dev/tty1 ]]; then
         startx
-        logout
+        exit 0
     fi
 else
     cd ivy
     python3.6 install.py
-    logout
+    exit 0
 fi
+
+exit 1
