@@ -71,6 +71,7 @@ class Display:
             ), 'background'),
             palette,
             event_loop=urwid.AsyncioEventLoop(loop=loop),
+            handle_mouse=False
         )
 
         self.urwid.screen.set_terminal_properties(colors=256)
