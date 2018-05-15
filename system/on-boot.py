@@ -20,7 +20,7 @@ palette = [
     ('progress-smooth', '', '', '', '#CCC', '#888')
 ]
 
-rows, columns = tuple([int(x) for x in os.popen('stty size', 'r').read().split()])
+rows, columns = (os.environ['LINES'], os.environ['COLUMNS'])
 
 class Display:
     def __init__(self, loop):
