@@ -7,6 +7,7 @@ User=root
 StandardOutput=journal+console
 StandardInput=tty
 ExecStart=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
+TimeoutStopSec=999999
 
 [Install]
 WantedBy=network-online.target
