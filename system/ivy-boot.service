@@ -3,7 +3,7 @@ Description=Ivy boot script
 
 [Service]
 User=root
-StandardOutput=journal+console
+StandardOutput=tty
 StandardInput=tty
 ExecStart=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
 
