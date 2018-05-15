@@ -5,119 +5,45 @@ import re
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
 
-import urwid
 
+step_i = 0
+steps_max = 0
+with open(__file__, 'r') as f:
+	self.steps_max = f.read().count('step_done()') - 2
 
-palette = [
-    ('header', '', '', '', '#FFF,bold', '#558'),
-    ('footer', '', '', '', '#FFF,bold', '#558'),
-
-    ('background', '', '', '', '#FFF', '#000'),
-
-    ('log', '', '', '', '#888', '#000'),
-
-    ('progress-normal', '', '', '', '#FFF', '#55C'),
-    ('progress-complete', '', '', '', '#000', '#FFF'),
-    ('progress-smooth', '', '', '', '#CCC', '#888')
-]
-
-class Display:
-    def __init__(self, loop):
-        self.step_i = -1
-        self.steps_max = 0
-        with open(__file__, 'r') as f:
-            self.steps_max = f.read().count('set_step(') - 3
-
-        self.operation = urwid.Text('', align='center')
-
-        self.step_text = urwid.Text('', align='center')
-
-        self.progress = urwid.ProgressBar('progress-normal', 'progress-complete', 0, 1, 'progress-smooth')
-
-        self.branding = urwid.Text('- SecretWeb.com -', align='center')
-
-        self.set_step('Getting ready')
-        self.step_done()
-
-        self.output_lines = urwid.SimpleListWalker([])
-        self.output = urwid.ListBox(self.output_lines)
-
-        self.urwid = urwid.MainLoop(
-            urwid.AttrMap(urwid.Filler(
-                urwid.Pile([
-                    urwid.AttrMap(urwid.Pile([urwid.Divider(), urwid.Text('Ivy', align='center'), urwid.Divider()]), 'header'),
-
-                    urwid.Divider(),
-
-                    urwid.Padding(urwid.Pile([
-                        self.operation,
-
-                        self.step_text,
-
-                        urwid.Divider(),
-
-                        self.progress,
-
-                        urwid.Divider(),
-                        urwid.Divider(),
-
-                        urwid.AttrMap(urwid.BoxAdapter(self.output, height=16), 'log'),
-
-                        urwid.Divider(),
-                        urwid.Divider()
-                    ]), left=2, right=2),
-
-                    urwid.AttrMap(self.branding, 'footer')
-                ])
-            ), 'background'),
-            palette,
-            event_loop=urwid.AsyncioEventLoop(loop=loop),
-            handle_mouse=False
-        )
-
-        self.urwid.screen.set_terminal_properties(colors=256)
-
-    def set_step(self, text):
-        self.operation.set_text(text)
-
-    def step_done(self):
-        self.step_i += 1
-
-        self.step_text.set_text('%d / %d' % (self.step_i, self.steps_max))
-        self.progress.set_completion(self.step_i / self.steps_max)
-
-    def run(self):
-        self.urwid.run()
+def step_done():
+    step_i += 1
 
 async def system_check():
-    display.set_step('Checking for system patches')
+    print('Checking for system patches')
     await run_command('apt', 'update')
     await run_command('apt', 'upgrade', '-y')
     await run_command('apt', 'autoremove', '-y')
-    display.step_done()
+    step_done()
 
-    display.set_step('Installing tools')
+    print('Installing tools')
     await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
     await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
     await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
     await run_command('apt', 'install', '-y', 'software-properties-common')
     await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
-    display.step_done()
-    display.set_step('Installing XOrg + i3')
+    step_done()
+
+    print('Installing XOrg + i3')
     await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
     await run_command('systemctl', 'set-default', 'multi-user.target')
     await run_command('usermod', '-a', '-G', 'video', 'ivy')
-    display.step_done()
+    step_done()
 
-    display.set_step('Installing python requirements')
+    print('Installing python requirements')
     await run_command(sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt')
-    display.step_done()
+    step_done()
 
-    display.set_step('Verifying graphics drivers')
+    print('Verifying graphics drivers')
     await asyncio.sleep(2)
-    display.step_done()
+    step_done()
 
-    display.set_step('Verifying symlinks')
+    print('Verifying symlinks')
     await run_command('rm', '-f', '/etc/systemd/system/ivy-boot.service')
     await run_command('ln', '-f', '/home/ivy/ivy/system/ivy-boot.service', '/etc/systemd/system/ivy-boot.service')
     await run_command('systemctl', 'enable', 'ivy-boot')
@@ -139,7 +65,7 @@ async def system_check():
     await run_command('mkdir', '/etc/systemd/system/getty@tty1.service.d')
     await run_command('rm', '-f', '/etc/systemd/system/getty@tty1.service.d/override.conf')
     await run_command('ln', '-f', '/home/ivy/ivy/system/tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
-    display.step_done()
+    step_done()
 
     await asyncio.sleep(5)
 
@@ -161,16 +87,8 @@ async def _read_stream(stream, is_error):
         if not output: break
 
         output = re.sub('\033\[.+?m', '', output.decode('UTF-8', errors='ignore')).replace('\n', '')
-        display.output_lines.append(urwid.Text(output))
-        display.output_lines.set_focus(len(display.output_lines) - 1)
+	print('[%d / %d] %s' % (step_i, steps_max, output))
 
 loop = asyncio.get_event_loop()
 
-loop.create_task(system_check())
-
-display = Display(loop=loop)
-
-#loop.run_until_complete(system_check())
-
-display.run()
-
+loop.run_until_complete(system_check())
