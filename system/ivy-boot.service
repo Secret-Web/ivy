@@ -9,4 +9,4 @@ StandardInput=tty
 ExecStart=/usr/bin/python3.6 /home/ivy/ivy/system/on-boot.py
 
 [Install]
-WantedBy=basic.target
+WantedBy=network-online.target
