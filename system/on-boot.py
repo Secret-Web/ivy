@@ -29,6 +29,7 @@ class Display:
             self.steps_max = f.read().count('set_step(') - 3
 
         self.operation = urwid.Text('', align='center')
+        print(dir(self.operation))
 
         self.step_text = urwid.Text('', align='center')
 
@@ -36,11 +37,11 @@ class Display:
 
         self.branding = urwid.Text('- SecretWeb.com -', align='center')
 
-        self.set_step('Getting ready')
-        self.step_done()
-
         self.output_lines = urwid.SimpleListWalker([])
         self.output = urwid.ListBox(self.output_lines)
+
+        self.set_step('Getting ready')
+        self.step_done()
 
         self.urwid = urwid.MainLoop(
             urwid.AttrMap(urwid.Filler(
@@ -78,19 +79,17 @@ class Display:
 
     def add_line(self, output):
         self.output_lines.append(urwid.Text(output))
-        self.output_lines.set_focus(len(display.output_lines) - 1)
+        self.output_lines.set_focus(len(self.output_lines) - 1)
 
     def set_step(self, text):
         self.operation.set_text(text)
-        self.add_line('%s...' % self.operation.get_text())
+        self.add_line('%s...' % self.operation.text)
 
     def step_done(self):
         self.step_i += 1
 
         self.step_text.set_text('%d / %d' % (self.step_i, self.steps_max))
         self.progress.set_completion(self.step_i / self.steps_max)
-
-        self.add_line('%s...Done' % self.operation.get_text())
 
     def run(self):
         self.urwid.run()
