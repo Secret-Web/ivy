@@ -125,7 +125,9 @@ async def system_check():
     display.step_done()
 
     display.set_step('Verifying graphics drivers')
-    await asyncio.sleep(2)
+    await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
+    await run_command('apt', 'update')
+    await run_command('apt', 'install', '-y', 'nvidia-390', 'nvidia-cuda-toolkit')
     display.step_done()
 
     display.set_step('Verifying symlinks')
