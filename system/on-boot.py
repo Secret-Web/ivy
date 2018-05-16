@@ -9,7 +9,7 @@ import urwid
 
 palette = [
     ('header', '', '', '', '#FFF,bold', '#558'),
-    ('footer', '', '', '', '#FFF,bold', '#558'),
+    ('footer', '', '', '', '#FFF,italics', '#558'),
 
     ('background', '', '', '', '#FFF', '#000'),
 
@@ -168,7 +168,5 @@ loop = asyncio.get_event_loop()
 loop.create_task(system_check())
 
 display = Display(loop=loop)
-
-#loop.run_until_complete(system_check())
 
 display.run()
