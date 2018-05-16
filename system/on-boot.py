@@ -88,6 +88,10 @@ class Display:
         self.urwid.run()
 
 async def system_check():
+    display.set_step('Applying branding')
+    await run_command('echo', 'Ivy - SecretWeb.com \l', '>', '/etc/issue')
+    display.step_done()
+
     display.set_step('Checking for system patches')
     await run_command('apt', 'update')
     await run_command('apt', 'upgrade', '-y')
