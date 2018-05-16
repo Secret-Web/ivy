@@ -1,5 +1,6 @@
 import sys
 import os
+from os.path import expanduser
 import re
 import asyncio
 from asyncio.subprocess import PIPE, STDOUT
@@ -7,6 +8,9 @@ from contextlib import suppress
 
 import urwid
 
+
+HOME = expanduser('~')
+PATH = os.path.dirname(os.path.realpath(__file__))
 
 palette = [
     ('header', '', '', '', '#FFF,bold', '#558'),
@@ -23,13 +27,12 @@ palette = [
 
 class Display:
     def __init__(self, loop):
-        self.step_i = -1
+        self.step_i = 0
         self.steps_max = 0
         with open(__file__, 'r') as f:
-            self.steps_max = f.read().count('set_step(') - 3
+            self.steps_max = f.read().count('set_step(') - 2
 
         self.operation = urwid.Text('', align='center')
-        print(dir(self.operation))
 
         self.step_text = urwid.Text('', align='center')
 
@@ -39,9 +42,6 @@ class Display:
 
         self.output_lines = urwid.SimpleListWalker([])
         self.output = urwid.ListBox(self.output_lines)
-
-        self.set_step('Getting ready')
-        self.step_done()
 
         self.urwid = urwid.MainLoop(
             urwid.AttrMap(urwid.Filler(
@@ -95,63 +95,67 @@ class Display:
         self.urwid.run()
 
 async def system_check():
+    display.set_step('Applying branding')
+    with open('/etc/issue', 'w') as f:
+        f.write('Ivy - SecretWeb.com \\l\n')
+    display.step_done()
+
+    display.set_step('Checking for system patches')
+    await run_command('apt', 'update')
+    await run_command('apt', 'upgrade', '-y')
+    await run_command('apt', 'autoremove', '-y')
+    display.step_done()
+
+    display.set_step('Installing tools')
+    await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
+    await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
+    await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
+    await run_command('apt', 'install', '-y', 'software-properties-common')
+    await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
+    display.step_done()
+
+    display.set_step('Installing XOrg + i3')
+    await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
+    await run_command('systemctl', 'set-default', 'multi-user.target')
+    await run_command('usermod', '-a', '-G', 'video', 'ivy')
+    display.step_done()
+
+    display.set_step('Installing python requirements')
+    await run_command(sys.executable, '-m', 'pip', 'install', '-r', os.path.join(PATH, '../requirements.txt'))
+    display.step_done()
+
+    display.set_step('Verifying graphics drivers')
+    await asyncio.sleep(2)
+    display.step_done()
+
+    display.set_step('Verifying symlinks')
     with suppress(FileNotFoundError):
-        display.set_step('Applying branding')
-        with open('/etc/issue', 'w') as f:
-            f.write('Ivy - SecretWeb.com \\l\n')
-        display.step_done()
-
-        display.set_step('Checking for system patches')
-        await run_command('apt', 'update')
-        await run_command('apt', 'upgrade', '-y')
-        await run_command('apt', 'autoremove', '-y')
-        display.step_done()
-
-        display.set_step('Installing tools')
-        await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
-        await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
-        await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
-        await run_command('apt', 'install', '-y', 'software-properties-common')
-        await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
-        display.step_done()
-
-        display.set_step('Installing XOrg + i3')
-        await run_command('apt', 'install', '-y', 'xorg', 'i3', 'chromium-browser')
-        await run_command('systemctl', 'set-default', 'multi-user.target')
-        await run_command('usermod', '-a', '-G', 'video', 'ivy')
-        display.step_done()
-
-        display.set_step('Installing python requirements')
-        await run_command(sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt')
-        display.step_done()
-
-        display.set_step('Verifying graphics drivers')
-        await asyncio.sleep(2)
-        display.step_done()
-
-        display.set_step('Verifying symlinks')
         os.remove('/etc/systemd/system/ivy.service')
-        os.link('./ivy.service', '/etc/systemd/system/ivy.service')
-        await run_command('systemctl', 'enable', 'ivy')
+    os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
+    await run_command('systemctl', 'enable', 'ivy')
 
+    with suppress(FileNotFoundError):
         os.remove('/etc/i3status.conf')
-        os.link('./i3status.conf', '/etc/i3status.conf')
+    os.link(os.path.join(PATH, 'i3status.conf'), '/etc/i3status.conf')
 
-        os.mkdirs('~/.config/i3/', exist_ok=True)
-        os.remove('~/.config/i3/config')
-        os.link('./i3config.conf', '~/.config/i3/config')
+    os.makedirs(os.path.join(HOME, '.config/i3/'), exist_ok=True)
+    with suppress(FileNotFoundError):
+        os.remove(os.path.join(HOME, '.config/i3/config'))
+    os.link(os.path.join(PATH, 'i3config.conf'), os.path.join(HOME, '.config/i3/config'))
 
-        os.remove('~/.Xresources')
-        os.link('~/ivy/system/Xresources.conf', '~/.Xresources')
+    with suppress(FileNotFoundError):
+        os.remove(os.path.join(HOME, '.Xresources'))
+    os.link(os.path.join(PATH, 'Xresources'), os.path.join(HOME, '.Xresources'))
 
-        os.mkdirs('/etc/systemd/system/getty@tty1.service.d', exist_ok=True)
+    os.makedirs('/etc/systemd/system/getty@tty1.service.d', exist_ok=True)
+    with suppress(FileNotFoundError):
         os.remove('/etc/systemd/system/getty@tty1.service.d/override.conf')
-        os.link('./tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
-        display.step_done()
+    os.link(os.path.join(PATH, 'tty1@override.conf'), '/etc/systemd/system/getty@tty1.service.d/override.conf')
+    display.step_done()
 
-        await asyncio.sleep(5)
+    await asyncio.sleep(5)
 
-        loop.stop()
+    loop.stop()
 
 async def run_command(*args):
     process = await asyncio.subprocess.create_subprocess_exec(*args, \
@@ -173,8 +177,8 @@ async def _read_stream(stream, is_error):
 
 loop = asyncio.get_event_loop()
 
-loop.create_task(system_check())
-
 display = Display(loop=loop)
+
+loop.create_task(system_check())
 
 display.run()
