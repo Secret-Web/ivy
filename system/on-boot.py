@@ -89,7 +89,7 @@ class Display:
 
 async def system_check():
     display.set_step('Applying branding')
-    await run_command('echo', 'Ivy - SecretWeb.com \l', '>', '/etc/issue')
+    await run_command('echo', '"Ivy - SecretWeb.com \l"', '>', '/etc/issue')
     display.step_done()
 
     display.set_step('Checking for system patches')

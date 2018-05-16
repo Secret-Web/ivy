@@ -72,7 +72,7 @@ def yn(text, end=colors.ENDC):
 os.system('cls' if os.name == 'nt' else 'clear')
 
 print(colors.HEADER + colors.BOLD + '''
-===========================![ ivy Monitoring ]!=============================''')
+===========================![ Ivy Monitoring ]!=============================''')
 print(colors.ENDC +
 '''
 Welcome to the ivy Monitor installer!  In the following few steps, I'll walk
