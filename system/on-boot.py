@@ -159,7 +159,7 @@ async def system_check():
             #await run_command('tar', '-xzf', 'amdgpu-pro.tar.gz', cwd='/tmp')
             #await run_command('./amdgpu-pro-install -y', cwd='/tmp/amdgpu-pro')
 
-            installed = True
+            #installed = True
 
     if installed:
         await run_command('shutdown', '-r', 'now')
