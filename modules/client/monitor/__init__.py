@@ -158,7 +158,7 @@ class Monitor:
 
                         gpu.online = online
 
-                        if not isinstance(gpu_status[i], bool):
+                        if len(gpu_status) > i and not isinstance(gpu_status[i], bool):
                             # If a timer is currently running
                             if time.time() - gpu_status[i] > 60:
                                 gpu_status[i] = False
