@@ -101,10 +101,6 @@ def is_installed(pkg):
     display.add_line(out if out else err)
     return 'no packages' not in err
 
-is_installed('amdgpu-pro')
-
-exit(1)
-
 async def system_check():
     display.set_step('Applying branding')
     with open('/etc/issue', 'w') as f:
