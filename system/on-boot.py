@@ -95,6 +95,12 @@ class Display:
     def run(self):
         self.urwid.run()
 
+async def is_installed(pkg):
+    p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    out = p.communicate()[0].decode('UTF-8').strip()
+    display.add_line(out)
+    return 'no packages' not in out
+
 async def system_check():
     display.set_step('Applying branding')
     with open('/etc/issue', 'w') as f:
@@ -131,13 +137,32 @@ async def system_check():
     out = p.communicate()[0].decode('UTF-8').strip()
     graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
 
-    display.add_line('%r' % graphics)
+    display.add_line('Cards: %r' % graphics)
+
+    installed = False
 
     if 'NVIDIA' in graphics:
-        display.set_step('Installing NVIDIA drivers')
-        await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
-        await run_command('apt', 'update')
-        await run_command('apt', 'install', '-y', 'nvidia-390', 'nvidia-cuda-toolkit')
+        display.set_step('Verifying NVIDIA drivers')
+        if not is_installed('nvidia-390'):
+            display.set_step('Installing NVIDIA drivers')
+            await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
+            await run_command('apt', 'update')
+            await run_command('apt', 'install', '-y', 'nvidia-390', 'nvidia-cuda-toolkit')
+
+            installed = True
+
+    if 'AMD' in graphics:
+        display.set_step('Verifying AMD drive')
+        if not is_installed('amdgpu-pro'):
+            display.set_step('Installing AMD drive')
+            await run_command('wget', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            await run_command('tar', '-xzf', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            await run_command('./amdgpu-pro-install -y', cwd='/tmp/amdgpu-pro')
+
+            installed = True
+
+    if installed:
+        await run_command('shutdown', '-r', 'now')
 
     display.step_done()
 
@@ -170,9 +195,12 @@ async def system_check():
 
     loop.stop()
 
-async def run_command(*args):
+async def run_command(*args, cwd=None):
+    if cwd is None:
+        cwd = os.path.dirname(os.path.realpath(__file__))
+
     process = await asyncio.subprocess.create_subprocess_exec(*args, \
-                                    cwd=os.path.dirname(os.path.realpath(__file__)), \
+                                    cwd=cwd, \
                                     stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     asyncio.ensure_future(_read_stream(process.stdout, is_error=False))
