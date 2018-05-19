@@ -95,7 +95,7 @@ class Display:
     def run(self):
         self.urwid.run()
 
-async def is_installed(pkg):
+def is_installed(pkg):
     p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     out = p.communicate()[0].decode('UTF-8').strip()
     display.add_line(out)
