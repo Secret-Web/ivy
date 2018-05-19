@@ -98,7 +98,7 @@ class Display:
 def is_installed(pkg):
     p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     out = p.communicate()[0].decode('UTF-8').strip()
-    display.add_line(out)
+    display.add_line('%r: %s' % ('no packages' not in out, out))
     return 'no packages' not in out
 
 async def system_check():
