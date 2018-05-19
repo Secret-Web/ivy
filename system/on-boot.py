@@ -128,7 +128,7 @@ async def system_check():
     display.set_step('Verifying graphics drivers')
 
     p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    out = p.communicate()[0].decode('UTF-8')
+    out = p.communicate()[0].decode('UTF-8').strip()
     graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
 
     display.add_line('%r' % graphics)

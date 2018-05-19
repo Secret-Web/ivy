@@ -2,6 +2,8 @@ cd ivy
 
 sudo python3.6 system/on-boot.py
 
+clear
+
 python3.6 start.py
 
 if [ -f data/config.json ]; then
