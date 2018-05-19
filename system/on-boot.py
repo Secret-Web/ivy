@@ -97,9 +97,9 @@ class Display:
 
 def is_installed(pkg):
     p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    out = p.communicate()[0].decode('UTF-8').strip()
-    display.add_line('%r: %s' % ('no packages' not in out, out))
-    return 'no packages' not in out
+    out, err = [x.decode('UTF-8', errors='ignore').strip() for x in p.communicate()]
+    display.add_line(out if out else err)
+    return 'no packages' not in err
 
 async def system_check():
     display.set_step('Applying branding')
@@ -213,7 +213,7 @@ async def _read_stream(stream, is_error):
         output = await stream.readline()
         if not output: break
 
-        output = re.sub('\033\[.+?m', '', output.decode('UTF-8', errors='ignore')).replace('\n', '')
+        output = output.decode('UTF-8', errors='ignore').replace('\n', '')
         display.add_line(output)
 
 loop = asyncio.get_event_loop()
