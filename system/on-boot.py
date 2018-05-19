@@ -96,10 +96,14 @@ class Display:
         self.urwid.run()
 
 def is_installed(pkg):
-    p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = [x.decode('UTF-8', errors='ignore').strip() for x in p.communicate()]
     display.add_line(out if out else err)
     return 'no packages' not in err
+
+is_installed('amdgpu-pro')
+
+exit(1)
 
 async def system_check():
     display.set_step('Applying branding')
@@ -133,7 +137,7 @@ async def system_check():
 
     display.set_step('Verifying graphics drivers')
 
-    p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out = p.communicate()[0].decode('UTF-8').strip()
     graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
 
