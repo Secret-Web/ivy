@@ -3,6 +3,7 @@ import os
 from os.path import expanduser
 import re
 import asyncio
+import subprocess
 from asyncio.subprocess import PIPE, STDOUT
 from contextlib import suppress
 
