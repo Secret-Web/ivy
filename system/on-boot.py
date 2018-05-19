@@ -30,7 +30,7 @@ class Display:
         self.step_i = 0
         self.steps_max = 0
         with open(__file__, 'r') as f:
-            self.steps_max = f.read().count('set_step(') - 2
+            self.steps_max = f.read().count('step_done(') - 2
 
         self.operation = urwid.Text('', align='center')
 
@@ -130,7 +130,10 @@ async def system_check():
     out = p.communicate()[0].decode('UTF-8')
     graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
 
+    display.add_line('%r' % graphics)
+
     if 'NVIDIA' in graphics:
+        display.set_step('Installing NVIDIA drivers')
         await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
         await run_command('apt', 'update')
         await run_command('apt', 'install', '-y', 'nvidia-390', 'nvidia-cuda-toolkit')
