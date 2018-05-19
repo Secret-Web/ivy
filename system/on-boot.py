@@ -155,7 +155,7 @@ async def system_check():
         display.set_step('Verifying AMD drive')
         if not is_installed('amdgpu-pro'):
             display.set_step('Installing AMD drive')
-            await run_command('wget', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
             await run_command('tar', '-xzf', 'amdgpu-pro.tar.gz', cwd='/tmp')
             #await run_command('./amdgpu-pro-install -y', cwd='/tmp/amdgpu-pro')
 
