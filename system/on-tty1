@@ -1,10 +1,13 @@
-sudo python3.6 ivy/system/on-boot.py
+cd ivy
 
-if [ -f ivy/data/config.json ]; then
+sudo python3.6 system/on-boot.py
+
+python3.6 start.py
+
+if [ -f data/config.json ]; then
     startx
     exit 0
 else
-    cd ivy
     python3.6 install.py
     exit 0
 fi
