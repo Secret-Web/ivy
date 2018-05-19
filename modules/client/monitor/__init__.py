@@ -168,7 +168,7 @@ class Monitor:
                         if new_offline > 0 and self.connector.socket:
                             await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
 
-                        confirmed_dead = sum([1 if len(gpu_status) <= i and isinstance(gpu_status[i]) and not gpu_status[i] else 0])
+                        confirmed_dead = sum([1 if len(gpu_status) > i and isinstance(gpu_status[i]) and not gpu_status[i] else 0])
 
                         if confirmed_dead > 0 and new_online > 0 and self.connector.socket:
                             await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(confirmed_dead, new_online), 'machine': self.client.machine_id})
