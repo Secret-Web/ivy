@@ -128,7 +128,7 @@ async def system_check():
 
     p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     out = p.communicate()[0].decode('UTF-8')
-    graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line for line in out.split('\n')]
+    graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
 
     if 'NVIDIA' in graphics:
         await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
