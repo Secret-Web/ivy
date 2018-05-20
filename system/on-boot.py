@@ -95,8 +95,6 @@ class Display:
     def run(self):
         self.urwid.run()
 
-shutil.rmtree('/tmp/amdgpu-pro')
-os.mkdir('/tmp/amdgpu-pro')
 async def system_check():
     display.set_step('Applying branding')
     with open('/etc/issue', 'w') as f:
@@ -152,7 +150,8 @@ async def system_check():
         if not is_installed('amdgpu-pro'):
             display.set_step('Installing AMD drive')
             #await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
-            shutil.rmtree('/tmp/amdgpu-pro')
+            with suppress(FileNotFoundError):
+                shutil.rmtree('/tmp/amdgpu-pro')
             os.mkdir('/tmp/amdgpu-pro')
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', '/tmp/amdgpu-pro/', cwd='/tmp')
             #await run_command('./amdgpu-pro-install -y', cwd='/tmp/amdgpu-pro')
