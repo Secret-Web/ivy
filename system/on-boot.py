@@ -95,10 +95,6 @@ class Display:
     def run(self):
         self.urwid.run()
 
-TMP_DIR = '/tmp/amdgpu-pro'
-print(os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
-exit(1)
-
 async def system_check():
     display.set_step('Applying branding')
     with open('/etc/issue', 'w') as f:
@@ -160,7 +156,7 @@ async def system_check():
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
             display.add_line(os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
-            await run_command('./amdgpu-pro-install -y', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+            await run_command('./amdgpu-pro-install', '-y', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
             #installed = True
 
