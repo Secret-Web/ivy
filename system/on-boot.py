@@ -96,7 +96,7 @@ class Display:
         self.urwid.run()
 
 TMP_DIR = '/tmp/amdgpu-pro'
-os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0])
+print(os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 exit(1)
 
 async def system_check():
