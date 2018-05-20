@@ -148,17 +148,26 @@ async def system_check():
     if 'AMD' in graphics:
         display.set_step('Verifying AMD drivers')
         if not is_installed('amdgpu-pro'):
-            display.set_step('Installing AMD drive')
-            #await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            display.set_step('Installing AMD drivers')
+
+            #await run_command('apt', 'install', '-y', 'amdgpu-pros')
+
+
+            await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+
             TMP_DIR = '/tmp/amdgpu-pro'
             with suppress(FileNotFoundError):
                 shutil.rmtree(TMP_DIR)
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
-            display.add_line(os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
             await run_command('./amdgpu-pro-install', '-y', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+            await run_command('./amdgpu-pro-install', '--px', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
-            #installed = True
+            await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
+            await run_command('apt', 'update')
+            await run_command('apt', 'install', 'libclc-amdgcn', 'mesa-opencl-icd')
+
+            installed = True
 
     if installed:
         await run_command('shutdown', '-r', 'now')
@@ -166,10 +175,10 @@ async def system_check():
     display.step_done()
 
     display.set_step('Verifying symlinks')
-    with suppress(FileNotFoundError):
-        os.remove('/etc/systemd/system/ivy.service')
-    os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
-    await run_command('systemctl', 'enable', 'ivy')
+    #with suppress(FileNotFoundError):
+    #    os.remove('/etc/systemd/system/ivy.service')
+    #os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
+    #await run_command('systemctl', 'enable', 'ivy')
 
     with suppress(FileNotFoundError):
         os.remove('/etc/i3status.conf')
