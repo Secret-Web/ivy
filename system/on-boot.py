@@ -95,12 +95,8 @@ class Display:
     def run(self):
         self.urwid.run()
 
-def is_installed(pkg):
-    p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = [x.decode('UTF-8', errors='ignore').strip() for x in p.communicate()]
-    display.add_line(out if out else err)
-    return 'no packages' not in err
-
+shutil.rmtree('/tmp/amdgpu-pro')
+os.mkdir('/tmp/amdgpu-pro')
 async def system_check():
     display.set_step('Applying branding')
     with open('/etc/issue', 'w') as f:
@@ -155,7 +151,7 @@ async def system_check():
         display.set_step('Verifying AMD drivers')
         if not is_installed('amdgpu-pro'):
             display.set_step('Installing AMD drive')
-            await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            #await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
             shutil.rmtree('/tmp/amdgpu-pro')
             os.mkdir('/tmp/amdgpu-pro')
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', '/tmp/amdgpu-pro/', cwd='/tmp')
@@ -196,6 +192,12 @@ async def system_check():
     await asyncio.sleep(5)
 
     loop.stop()
+
+def is_installed(pkg):
+    p = subprocess.Popen(['dpkg', '-l', pkg], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = [x.decode('UTF-8', errors='ignore').strip() for x in p.communicate()]
+    display.add_line(out if out else err)
+    return 'no packages' not in err
 
 async def run_command(*args, cwd=None):
     if cwd is None:
