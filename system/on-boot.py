@@ -155,6 +155,7 @@ async def system_check():
                 shutil.rmtree(TMP_DIR)
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
+            display.add_line(os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
             await run_command('./amdgpu-pro-install -y', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
             #installed = True
@@ -202,6 +203,8 @@ def is_installed(pkg):
 async def run_command(*args, cwd=None):
     if cwd is None:
         cwd = os.path.dirname(os.path.realpath(__file__))
+
+    display.add_line(' '.join(args))
 
     process = await asyncio.subprocess.create_subprocess_exec(*args, \
                                     cwd=cwd, \
