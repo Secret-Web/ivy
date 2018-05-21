@@ -192,7 +192,7 @@ async def system_check():
                 shutil.rmtree(TMP_DIR)
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
-            await run_command('./amdgpu-install', '-y', '--opencl=legacy,pal', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+            await run_command('./amdgpu-install', '-y', '--opencl=rocm', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
             await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
             await run_command('apt', 'update')
