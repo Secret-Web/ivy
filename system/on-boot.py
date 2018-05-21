@@ -20,6 +20,11 @@ SYMLINKS = [
     ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
 ]
 
+GFX_VERSION = {
+    'NVIDIA': '390',
+    'AMD': '180.10-572953'
+}
+
 palette = [
     ('header', '', '', '', '#FFF,bold', '#558'),
     ('footer', '', '', '', '#FFF,italics', '#558'),
@@ -166,7 +171,7 @@ async def system_check():
             display.set_step('Installing NVIDIA drivers')
             await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
             await run_command('apt', 'update')
-            await run_command('apt', 'install', '-y', 'nvidia-390', 'nvidia-cuda-toolkit')
+            await run_command('apt', 'install', '-y', 'nvidia-%s' % GFX_VERSION['NVIDIA'], 'nvidia-cuda-toolkit')
 
             installed = True
 
@@ -187,8 +192,7 @@ async def system_check():
                 shutil.rmtree(TMP_DIR)
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
-            await run_command('./amdgpu-pro-install', '-y', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
-            await run_command('./amdgpu-pro-install', '--px', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+            await run_command('./amdgpu-pro-install', '-y', '--version=%s' % GFX_VERSION['AMD'], '--px', '--opencl=legacy', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
             await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
             await run_command('apt', 'update')
