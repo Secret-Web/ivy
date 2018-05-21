@@ -6,19 +6,18 @@ from . import API
 
 
 class NvidiaAPI(API):
-    async def setup(self):
-        await self.run_cmd('IOC', 'nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
-
     def is_mine(self, gpu):
         return 'NVIDIA' in gpu.vendor
 
-    async def apply(self, hardware, overclock):
+    async def setup(self, gpus):
+        await self.run_cmd('IOC', 'nvidia-smi --persistence-mode=1 && nvidia-xconfig -a --allow-empty-initial-configuration --cool-bits=28 --enable-all-gpus')
+
+    async def apply(self, gpus, overclock):
         nvidia = []
 
-        for i, gpu in enumerate(hardware.gpus):
-            if self.is_mine(gpu):
-                for arg in self.apply_gpu(i, gpu, overclock.nvidia):
-                    nvidia.append(arg)
+        for i, gpu in gpus:
+            for arg in self.apply_gpu(i, gpu, overclock.nvidia):
+                nvidia.append(arg)
 
         if overclock.nvidia.pwr:
             await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=%d' % overclock.nvidia.pwr)
@@ -39,13 +38,12 @@ class NvidiaAPI(API):
             yield '[gpu:%d]/GPUFanControlState=1' % i
             yield '[fan:%d]/GPUTargetFanSpeed=%d' % (i, overclock.fan['min'])
 
-    async def revert(self, hardware):
+    async def revert(self, gpus):
         nvidia = []
 
-        for i, gpu in enumerate(hardware.gpus):
-            if self.is_mine(gpu):
-                for arg in self.revert_gpu(i, gpu):
-                    nvidia.append(arg)
+        for i, gpu in gpus
+            for arg in self.revert_gpu(i, gpu):
+                nvidia.append(arg)
 
         await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=320')
 

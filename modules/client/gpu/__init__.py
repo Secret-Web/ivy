@@ -14,17 +14,20 @@ class GPUControl:
         controller = __import__('modules.client.gpu.%s' % controller_id, globals(), locals(), ['object'], 0)
         self.controllers[controller_id] = controller.__api__()
 
-    async def setup(self):
+    async def setup(self, hardware):
         for controller_id, controller in self.controllers.items():
-            await controller.setup()
+            if controller.has_gpu(hardware):
+                await controller.setup([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)])
 
     async def apply(self, hardware, overclock):
         for controller_id, controller in self.controllers.items():
-            await controller.apply(hardware, overclock)
+            if controller.has_gpu(hardware):
+                await controller.apply([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)], overclock)
 
     async def revert(self, hardware):
         for controller_id, controller in self.controllers.items():
-            await controller.revert(hardware)
+            if controller.has_gpu(hardware):
+                await controller.revert([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)])
 
     async def get_stats(self, hardware):
         gpu_stats = []
@@ -37,10 +40,16 @@ class GPUControl:
         return gpu_stats
 
 class API:
-    async def setup(self):
+    def is_mine(self, gpu):
         pass
 
-    def is_mine(self, gpu):
+    def has_gpu(self, hardware):
+        for i, gpu in enumerate(hardware.gpus):
+            if self.is_mine(gpu):
+                return True
+        return False
+
+    async def setup(self, hardware):
         pass
 
     async def apply(self, hardware, overclock):
