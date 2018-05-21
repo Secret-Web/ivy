@@ -17,7 +17,7 @@ SYMLINKS = [
     ('i3status.conf', '/etc/i3status.conf'),
     ('i3config.conf', '~/.config/i3/config'),
     ('Xresources', '~/.Xresources'),
-    ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf'),
+    ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
 ]
 
 palette = [
