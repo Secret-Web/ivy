@@ -158,10 +158,15 @@ async def system_check():
 
     display.add_line('Cards: %r' % graphics)
 
+    await asyncio.sleep(1)
+
     installed = False
 
     if 'NVIDIA' in graphics:
         display.set_step('Verifying NVIDIA drivers')
+
+        await asyncio.sleep(1)
+
         if not is_installed('nvidia-390'):
             display.set_step('Installing NVIDIA drivers')
             await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
@@ -172,6 +177,9 @@ async def system_check():
 
     if 'AMD' in graphics:
         display.set_step('Verifying AMD drivers')
+
+        await asyncio.sleep(1)
+
         if not is_installed('amdgpu-pro'):
             display.set_step('Installing AMD drivers')
 
