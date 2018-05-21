@@ -13,6 +13,13 @@ import urwid
 HOME = expanduser('~')
 PATH = os.path.dirname(os.path.realpath(__file__))
 
+SYMLINKS = [
+    ('i3status.conf', '/etc/i3status.conf'),
+    ('i3config.conf', '~/.config/i3/config'),
+    ('Xresources', '~/.Xresources'),
+    ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf'),
+]
+
 palette = [
     ('header', '', '', '', '#FFF,bold', '#558'),
     ('footer', '', '', '', '#FFF,italics', '#558'),
@@ -101,6 +108,13 @@ async def system_check():
         f.write('Ivy - SecretWeb.com \\l\n')
     display.step_done()
 
+    display.set_step('Cleaning symlinks')
+    for f, t in SYMLINKS:
+        os.makedirs(os.path.dirname(os.path.realpath(t)), exist_ok=True)
+        with suppress(FileNotFoundError):
+            os.remove(os.path.realpath(t))
+    display.step_done()
+
     display.set_step('Checking for system patches')
     await run_command('apt', 'update')
     await run_command('apt', 'upgrade', '-y')
@@ -125,32 +139,10 @@ async def system_check():
     await run_command(sys.executable, '-m', 'pip', 'install', '-r', os.path.join(PATH, '../requirements.txt'))
     display.step_done()
 
-    display.set_step('Verifying symlinks')
-    #with suppress(FileNotFoundError):
-    #    os.remove('/etc/systemd/system/ivy.service')
-    #os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
-    #await run_command('systemctl', 'enable', 'ivy')
-
-    with suppress(FileNotFoundError):
-        os.remove('/etc/i3status.conf')
-    os.link(os.path.join(PATH, 'i3status.conf'), '/etc/i3status.conf')
-
-    os.makedirs(os.path.join(HOME, '.config/i3/'), exist_ok=True)
-    with suppress(FileNotFoundError):
-        os.remove(os.path.join(HOME, '.config/i3/config'))
-    os.link(os.path.join(PATH, 'i3config.conf'), os.path.join(HOME, '.config/i3/config'))
-
-    with suppress(FileNotFoundError):
-        os.remove(os.path.join(HOME, '.Xresources'))
-    os.link(os.path.join(PATH, 'Xresources'), os.path.join(HOME, '.Xresources'))
-
-    os.makedirs('/etc/systemd/system/getty@tty1.service.d', exist_ok=True)
-    with suppress(FileNotFoundError):
-        os.remove('/etc/systemd/system/getty@tty1.service.d/override.conf')
-    os.link(os.path.join(PATH, 'tty1@override.conf'), '/etc/systemd/system/getty@tty1.service.d/override.conf')
-
+    display.set_step('Creating symlinks')
+    for f, t in SYMLINKS:
+        os.link(os.path.join(PATH, f), os.path.realpath(t))
     await run_command('systemctl', 'daemon-reload')
-
     display.step_done()
 
     display.set_step('Verifying graphics drivers')
