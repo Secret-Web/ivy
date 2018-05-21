@@ -41,7 +41,7 @@ class NvidiaAPI(API):
     async def revert(self, gpus):
         nvidia = []
 
-        for i, gpu in gpus
+        for i, gpu in gpus:
             for arg in self.revert_gpu(i, gpu):
                 nvidia.append(arg)
 
