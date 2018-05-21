@@ -192,7 +192,7 @@ async def system_check():
 
             await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
             await run_command('apt', 'update')
-            await run_command('apt', 'install', 'libclc-amdgcn', 'mesa-opencl-icd')
+            await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
             installed = True
 
