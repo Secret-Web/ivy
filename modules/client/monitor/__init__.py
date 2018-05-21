@@ -146,15 +146,16 @@ class Monitor:
 
                         online = gpu.rate > 0
 
-                        if gpu.online and not online:
-                            # Begin timer for "confirmed dead"
-                            gpu_status[i] = time.time()
+                        if len(gpu_status) > i:
+                            if gpu.online and not online:
+                                # Begin timer for "confirmed dead"
+                                gpu_status[i] = time.time()
 
-                        if not gpu.online and online:
-                            if isinstance(gpu_status[i], int):
-                                gpu_status[i] = True
-                            else:
-                                new_online += 1
+                            if not gpu.online and online:
+                                if isinstance(gpu_status[i], int):
+                                    gpu_status[i] = True
+                                else:
+                                    new_online += 1
 
                         gpu.online = online
 
