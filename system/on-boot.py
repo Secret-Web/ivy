@@ -125,6 +125,31 @@ async def system_check():
     await run_command(sys.executable, '-m', 'pip', 'install', '-r', os.path.join(PATH, '../requirements.txt'))
     display.step_done()
 
+    display.set_step('Verifying symlinks')
+    #with suppress(FileNotFoundError):
+    #    os.remove('/etc/systemd/system/ivy.service')
+    #os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
+    #await run_command('systemctl', 'enable', 'ivy')
+
+    with suppress(FileNotFoundError):
+        os.remove('/etc/i3status.conf')
+    os.link(os.path.join(PATH, 'i3status.conf'), '/etc/i3status.conf')
+
+    os.makedirs(os.path.join(HOME, '.config/i3/'), exist_ok=True)
+    with suppress(FileNotFoundError):
+        os.remove(os.path.join(HOME, '.config/i3/config'))
+    os.link(os.path.join(PATH, 'i3config.conf'), os.path.join(HOME, '.config/i3/config'))
+
+    with suppress(FileNotFoundError):
+        os.remove(os.path.join(HOME, '.Xresources'))
+    os.link(os.path.join(PATH, 'Xresources'), os.path.join(HOME, '.Xresources'))
+
+    os.makedirs('/etc/systemd/system/getty@tty1.service.d', exist_ok=True)
+    with suppress(FileNotFoundError):
+        os.remove('/etc/systemd/system/getty@tty1.service.d/override.conf')
+    os.link(os.path.join(PATH, 'tty1@override.conf'), '/etc/systemd/system/getty@tty1.service.d/override.conf')
+    display.step_done()
+
     display.set_step('Verifying graphics drivers')
 
     p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -152,7 +177,6 @@ async def system_check():
 
             #await run_command('apt', 'install', '-y', 'amdgpu-pros')
 
-
             await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
 
             TMP_DIR = '/tmp/amdgpu-pro'
@@ -172,31 +196,6 @@ async def system_check():
     if installed:
         await run_command('shutdown', '-r', 'now')
 
-    display.step_done()
-
-    display.set_step('Verifying symlinks')
-    #with suppress(FileNotFoundError):
-    #    os.remove('/etc/systemd/system/ivy.service')
-    #os.link(os.path.join(PATH, 'ivy.service'), '/etc/systemd/system/ivy.service')
-    #await run_command('systemctl', 'enable', 'ivy')
-
-    with suppress(FileNotFoundError):
-        os.remove('/etc/i3status.conf')
-    os.link(os.path.join(PATH, 'i3status.conf'), '/etc/i3status.conf')
-
-    os.makedirs(os.path.join(HOME, '.config/i3/'), exist_ok=True)
-    with suppress(FileNotFoundError):
-        os.remove(os.path.join(HOME, '.config/i3/config'))
-    os.link(os.path.join(PATH, 'i3config.conf'), os.path.join(HOME, '.config/i3/config'))
-
-    with suppress(FileNotFoundError):
-        os.remove(os.path.join(HOME, '.Xresources'))
-    os.link(os.path.join(PATH, 'Xresources'), os.path.join(HOME, '.Xresources'))
-
-    os.makedirs('/etc/systemd/system/getty@tty1.service.d', exist_ok=True)
-    with suppress(FileNotFoundError):
-        os.remove('/etc/systemd/system/getty@tty1.service.d/override.conf')
-    os.link(os.path.join(PATH, 'tty1@override.conf'), '/etc/systemd/system/getty@tty1.service.d/override.conf')
     display.step_done()
 
     await asyncio.sleep(5)
