@@ -1,4 +1,7 @@
-class AMDAPI:
+from . import API
+
+
+class AMDAPI(API):
     def is_mine(self, gpu):
         return 'AMD' in gpu.vendor
 
