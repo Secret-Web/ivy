@@ -148,6 +148,9 @@ async def system_check():
     with suppress(FileNotFoundError):
         os.remove('/etc/systemd/system/getty@tty1.service.d/override.conf')
     os.link(os.path.join(PATH, 'tty1@override.conf'), '/etc/systemd/system/getty@tty1.service.d/override.conf')
+
+    await run_command('systemctl', 'daemon-reload')
+
     display.step_done()
 
     display.set_step('Verifying graphics drivers')
