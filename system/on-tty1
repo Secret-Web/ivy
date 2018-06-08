@@ -5,9 +5,13 @@ sudo python3.6 system/on-boot.py
 clear
 
 if [ -f data/config.json ]; then
-    sudo python3.6 start.py &
+    sudo python3.6 start.py &> output.log &
+    PID=$!
 
     startx
+
+    sudo kill $PID
+
     exit 0
 else
     python3.6 install.py
