@@ -1,5 +1,8 @@
 #!/bin/sh
 
+xset s off
+xset -dpms
+
 if $(cat ~/ivy/data/config.json | jq 'has("client")'); then
         i3-msg "exec xterm -fg white -bg black -e python3.6 ~/ivy/display.py"
 fi
