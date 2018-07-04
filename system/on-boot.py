@@ -180,7 +180,7 @@ async def system_check():
 
         await asyncio.sleep(1)
 
-        if not is_installed('amdgpu-pro'):
+        if not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
             display.set_step('Installing AMD drivers')
 
             #await run_command('apt', 'install', '-y', 'amdgpu-pros')
