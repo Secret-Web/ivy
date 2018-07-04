@@ -1,6 +1,8 @@
 import logging
 import os
+import sys
 import asyncio, concurrent
+import subprocess
 
 from ivy import Ivy
 
@@ -9,6 +11,9 @@ class LastPartFilter(logging.Filter):
     def filter(self, record):
         record.name_last = record.name.rsplit('.', 1)[-1]
         return True
+
+if not os.path.exists('data/config.json'):
+    subprocess.call([sys.executable, 'install.py'])
 
 if not os.path.exists('data/config.json'):
     exit()

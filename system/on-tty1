@@ -9,9 +9,6 @@ python3.6 start.py
 if [ -f data/config.json ]; then
     startx
     exit 0
-else
-    python3.6 install.py
-    exit 0
 fi
 
 exit 1
