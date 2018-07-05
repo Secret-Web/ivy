@@ -199,6 +199,20 @@ async def system_check():
             await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
             installed = True
+        
+        AMDCOVC_PATH = os.path.join('/opt', 'amdcovc/')
+        if not os.path.exists(AMDCOVC_PATH):
+            await run_command('git', 'clone', 'https://github.com/matszpk/amdcovc.git', cwd='/opt')
+        
+        await run_command('git', 'pull', cwd=AMDCOVC_PATH)
+
+        # TODO: Only run this if there was an update
+        await run_command('make', cwd=AMDCOVC_PATH)
+
+        AMDCOVC_USR_BIN = os.path.join('/usr', 'bin', 'amdcovc')
+        with suppress(FileNotFoundError):
+            os.remove(AMDCOVC_USR_BIN)
+        os.link(os.path.join(AMDCOVC_PATH, 'amdcovc'), AMDCOVC_USR_BIN)
 
     if installed:
         await run_command('shutdown', '-r', 'now')
