@@ -200,6 +200,8 @@ async def system_check():
 
             installed = True
         
+        display.set_step('Installing AMDCOVC')
+
         AMDCOVC_PATH = os.path.join('/opt', 'amdcovc/')
         if not os.path.exists(AMDCOVC_PATH):
             await run_command('git', 'clone', 'https://github.com/matszpk/amdcovc.git', cwd='/opt')
