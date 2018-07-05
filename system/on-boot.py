@@ -127,11 +127,11 @@ async def system_check():
     display.step_done()
 
     display.set_step('Installing tools')
-    await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
+    await run_command('apt', 'install', '-y', 'libcurl4-openssl-dev', 'libssl-dev', 'libjansson-dev', 'automake', 'autotools-dev', 'build-essential')
     await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
     await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
     await run_command('apt', 'install', '-y', 'software-properties-common')
-    await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
+    await run_command('apt', 'install', '-y', 'lshw', 'ocl-icd-opencl-dev', 'libcurl4-openssl-dev')
     display.step_done()
 
     display.set_step('Installing XOrg + i3')
@@ -199,13 +199,17 @@ async def system_check():
             await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
             installed = True
-        
+
         display.set_step('Installing AMDCOVC')
+
+        await asyncio.sleep(1)
+
+        await run_command('apt', 'install', '-y', 'libpci-dev')
 
         AMDCOVC_PATH = os.path.join('/opt', 'amdcovc/')
         if not os.path.exists(AMDCOVC_PATH):
             await run_command('git', 'clone', 'https://github.com/matszpk/amdcovc.git', cwd='/opt')
-        
+
         await run_command('git', 'pull', cwd=AMDCOVC_PATH)
 
         # TODO: Only run this if there was an update
