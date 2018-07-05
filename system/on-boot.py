@@ -200,25 +200,25 @@ async def system_check():
 
             installed = True
 
-        display.set_step('Installing AMDCOVC')
+        display.set_step('Installing OhGodATool')
 
         await asyncio.sleep(1)
 
         await run_command('apt', 'install', '-y', 'libpci-dev')
 
-        AMDCOVC_PATH = os.path.join('/opt', 'amdcovc/')
-        if not os.path.exists(AMDCOVC_PATH):
-            await run_command('git', 'clone', 'https://github.com/matszpk/amdcovc.git', cwd='/opt')
+        OHGODATOOL_PATH = os.path.join('/opt', 'OhGodATool/')
+        if not os.path.exists(OHGODATOOL_PATH):
+            await run_command('git', 'clone', 'https://github.com/OhGodACompany/OhGodATool.git', cwd='/opt')
 
-        await run_command('git', 'pull', cwd=AMDCOVC_PATH)
+        await run_command('git', 'pull', cwd=OHGODATOOL_PATH)
 
         # TODO: Only run this if there was an update
-        await run_command('make', cwd=AMDCOVC_PATH)
+        await run_command('make', cwd=OHGODATOOL_PATH)
 
-        AMDCOVC_USR_BIN = os.path.join('/usr', 'bin', 'amdcovc')
+        OHGODATOOL_USR_BIN = os.path.join('/usr', 'bin', 'ohgodatool')
         with suppress(FileNotFoundError):
-            os.remove(AMDCOVC_USR_BIN)
-        os.link(os.path.join(AMDCOVC_PATH, 'amdcovc'), AMDCOVC_USR_BIN)
+            os.remove(OHGODATOOL_USR_BIN)
+        os.link(os.path.join(OHGODATOOL_PATH, 'ohgodatool'), OHGODATOOL_USR_BIN)
 
     if installed:
         await run_command('shutdown', '-r', 'now')
