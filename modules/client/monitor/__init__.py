@@ -28,12 +28,12 @@ class Monitor:
         self.message_queue = asyncio.Queue()
         asyncio.ensure_future(self.process_messages())
 
-    async def process_messages(queue):
+    async def process_messages(self):
         while True:
             if not self.connector.socket:
                 await asyncio.sleep(1)
 
-            message = await queue.get()
+            message = await self.message_queue.get()
             message['machine'] = self.client.machine_id
 
             await self.connector.socket.send('messages', 'new', message)
