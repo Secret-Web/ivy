@@ -70,7 +70,7 @@ class Ivy:
         open(IVY_RUNNING_INDICATOR, 'a').close()
 
         if not self.is_safe:
-            self.logger.warning('Ivy did not gracefully shutdown. Some features may be disabled for safety reasons!')
+            self.logger.warning('Ivy did not gracefully shutdown. Some features may be disabled for safety reasons! %r' % [IVY_RUNNING_INDICATOR, self.is_safe])
 
         for id, module in self.modules.items():
             self.logger.debug('Loading module: %r' % id)
@@ -80,9 +80,10 @@ class Ivy:
         self.save_config()
 
         self.epyphany.begin()
-    
-    def stop():
-    
+
+    def stop(self):
+        pass
+
     def cleanup(self):
         os.remove(IVY_RUNNING_INDICATOR)
 

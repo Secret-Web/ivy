@@ -246,7 +246,7 @@ class ProcessWatchdog:
 
         open(STARTING_UP_INDICATOR, 'a').close()
 
-        self.logger.info('Detected an ungraceful shutdown of the process')
+        self.logger.info('Detected an ungraceful shutdown of the process. %r' % [STARTING_UP_INDICATOR, self.is_safe])
     
     def startup_complete(self):
         self.first_start = False
