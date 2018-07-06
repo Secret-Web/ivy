@@ -9,7 +9,7 @@ class AMDAPI(API):
         for i, gpu in gpus:
             await self.run_cmd('STP', 'sudo sh -c "echo manual > /sys/class/drm/card%d/device/power_dpm_force_performance_level"' % i)
 
-    async def apply(self, hardware, overclock):
+    async def apply(self, gpus, overclock):
         for i, gpu in gpus:
             await self.apply_gpu(i, gpu, overclock.amd)
 
