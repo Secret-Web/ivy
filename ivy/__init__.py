@@ -85,6 +85,8 @@ class Ivy:
         os.remove(IVY_RUNNING_INDICATOR)
 
     async def graceful_shutdown(self):
+        self.logger.critical('Shutting down...')
+
         for id, module in self.modules.items():
             self.logger.debug('Stopping module: %r' % id)
 

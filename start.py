@@ -50,5 +50,3 @@ try:
     asyncio.get_event_loop().run_forever()
 except KeyboardInterrupt:
     pass
-
-logger.critical('Shutting down...')
