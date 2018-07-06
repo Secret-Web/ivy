@@ -26,6 +26,9 @@ s = Ivy(config_file='/etc/ivy/config.json')
 
 def graceful_shutdown(*args):
     asyncio.get_event_loop().create_task(s.graceful_shutdown())
+
+    while asyncio.get_event_loop().is_running():
+        os.sleep(1)
 signal.signal(signal.SIGINT, graceful_shutdown)
 signal.signal(signal.SIGTERM, graceful_shutdown)
 
