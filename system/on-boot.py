@@ -16,8 +16,8 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 SYMLINKS = [
     ('ivy.service', '/etc/systemd/system/ivy.service'),
     ('i3status.conf', '/etc/i3status.conf'),
-    ('i3config.conf', '~/.config/i3/config'),
-    ('Xresources', '~/.Xresources'),
+    ('i3config.conf', os.path.expanduser('~/.config/i3/config')),
+    ('Xresources', os.path.expanduser('~/.Xresources')),
     ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
 ]
 
@@ -118,7 +118,8 @@ async def system_check():
     for f, t in SYMLINKS:
         os.makedirs(os.path.dirname(os.path.realpath(t)), exist_ok=True)
         with suppress(FileNotFoundError):
-            os.remove(os.path.realpath(t))
+            display.add_line(os.path.abspath(t))
+            os.remove(os.path.abspath(t))
     display.step_done()
 
     display.set_step('Checking for system patches')
@@ -147,7 +148,8 @@ async def system_check():
 
     display.set_step('Creating symlinks')
     for f, t in SYMLINKS:
-        os.link(os.path.join(PATH, f), os.path.realpath(t))
+        display.add_line(os.path.join(PATH, f) + ' -> ' + os.path.abspath(t))
+        os.link(os.path.join(PATH, f), os.path.abspath(t))
     await run_command('systemctl', 'daemon-reload')
     display.step_done()
 

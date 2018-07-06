@@ -8,6 +8,7 @@ sudo service ivy start
 
 if [ -f data/config.json ]; then
     startx
+
     exit 0
 fi
 

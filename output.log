@@ -1,0 +1,178 @@
+2018-07-06 10:37 [INFO:Ivy.master] Starting master service...
+2018-07-06 10:37 [INFO:Epyphany] Initializing discovery...
+2018-07-06 10:37 [INFO:GPU Controller] Setting up nvidia GPUs
+2018-07-06 10:37 [INFO:Ivy.client] Connecting to primary MASTER <192.168.1.103:29203>...
+2018-07-06 10:37 [INFO:Ivy.storage] Connecting to primary MASTER <192.168.1.103:29203>...
+2018-07-06 10:37 [INFO:IOC] Enabled persistence mode for GPU 00000000:01:00.0.
+2018-07-06 10:37 [INFO:IOC] Enabled persistence mode for GPU 00000000:02:00.0.
+2018-07-06 10:37 [INFO:IOC] Enabled persistence mode for GPU 00000000:03:00.0.
+2018-07-06 10:37 [INFO:IOC] All done.
+2018-07-06 10:37 [INFO:IOC] 
+2018-07-06 10:37 [INFO:IOC] Using X configuration file: "/etc/X11/xorg.conf".
+2018-07-06 10:37 [INFO:IOC] Option "AllowEmptyInitialConfiguration" "True" added to Screen "Screen0".
+2018-07-06 10:37 [INFO:IOC] Option "AllowEmptyInitialConfiguration" "True" added to Screen "Screen1".
+2018-07-06 10:37 [INFO:IOC] Option "AllowEmptyInitialConfiguration" "True" added to Screen "Screen2".
+2018-07-06 10:37 [INFO:IOC] Backed up file '/etc/X11/xorg.conf' as '/etc/X11/xorg.conf.backup'
+2018-07-06 10:37 [INFO:IOC] New X configuration file written to '/etc/X11/xorg.conf'
+2018-07-06 10:37 [INFO:IOC] 
+2018-07-06 10:37 [INFO:GPU Controller] Applying overclock on nvidia GPUs
+2018-07-06 10:37 [ERRO:SOC] Failed to connect to Mir: Failed to connect to server socket: No such file or directory
+2018-07-06 10:37 [ERRO:SOC] Unable to init server: Could not connect: Connection refused
+2018-07-06 10:37 [ERRO:SOC] XIO:  fatal IO error 11 (Resource temporarily unavailable) on X server ":0"
+2018-07-06 10:37 [ERRO:SOC] after 17 requests (17 known processed) with 0 events remaining.
+2018-07-06 10:37 [INFO:Ivy.client.Process] Starting miner: ./zm --server us1-zcash.flypool.org --port 3333 --user t1KU9wdouYaLqSihVsmE2TWZ3Km9AiP8xJW --pass x --telemetry
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  zm 0.6
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  GPU0 + GeForce GTX 1080 Ti      MB: 11176 PCI: 1:0
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  GPU1 + GeForce GTX 1080 Ti      MB: 11178 PCI: 2:0
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  GPU2 + GeForce GTX 1080 Ti      MB: 11178 PCI: 3:0
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  pool1 us1-zcash.flypool.org:3333
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  telemetry server listening on 127.0.0.1:2222
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  connected to: us1-zcash.flypool.org:3333 [1/1]
+2018-07-06 10:37 [INFO:DSTM v0.6.0] #  server set difficulty to: 0000aec33e1f671529a485cd...
+2018-07-06 10:37 [CRIT:DSTM v0.6.0] SIGINT received - exiting
+2018-07-06 10:38 [WARN:websockets.server] Invalid handshake
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/websockets/server.py", line 193, in read_http_request
+    path, headers = yield from read_request(self.reader)
+  File "/usr/local/lib/python3.6/dist-packages/websockets/http.py", line 77, in read_request
+    request_line = yield from read_line(stream)
+  File "/usr/local/lib/python3.6/dist-packages/websockets/http.py", line 195, in read_line
+    raise ValueError("Line without CRLF")
+ValueError: Line without CRLF
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/websockets/server.py", line 88, in handler
+    extra_headers=self.extra_headers,
+  File "/usr/local/lib/python3.6/dist-packages/websockets/server.py", line 426, in handshake
+    path, request_headers = yield from self.read_http_request()
+  File "/usr/local/lib/python3.6/dist-packages/websockets/server.py", line 195, in read_http_request
+    raise InvalidMessage("Malformed HTTP message") from exc
+websockets.exceptions.InvalidMessage: Malformed HTTP message
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+2018-07-06 10:40 [ERRO:Ivy.master.socket] Traceback (most recent call last):
+  File "/home/ivy/ivy/ivy/net.py", line 110, in call_event
+    await listener(packet)
+  File "/home/ivy/ivy/modules/master/service.py", line 73, in event
+    await self.connections[id]['socket'].send(packet.event, packet.method, payload=packet.payload, sender=packet.socket.id)
+  File "/home/ivy/ivy/ivy/net.py", line 31, in send
+    await self.ws.send(json.dumps(packet))
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 334, in send
+    yield from self.ensure_open()
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 470, in ensure_open
+    raise ConnectionClosed(self.close_code, self.close_reason)
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+Traceback (most recent call last):
+  File "/home/ivy/ivy/ivy/net.py", line 110, in call_event
+    await listener(packet)
+  File "/home/ivy/ivy/modules/master/service.py", line 73, in event
+    await self.connections[id]['socket'].send(packet.event, packet.method, payload=packet.payload, sender=packet.socket.id)
+  File "/home/ivy/ivy/ivy/net.py", line 31, in send
+    await self.ws.send(json.dumps(packet))
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 334, in send
+    yield from self.ensure_open()
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 470, in ensure_open
+    raise ConnectionClosed(self.close_code, self.close_reason)
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+2018-07-06 10:40 [ERRO:Ivy.master.socket] Traceback (most recent call last):
+  File "/home/ivy/ivy/ivy/net.py", line 110, in call_event
+    await listener(packet)
+  File "/home/ivy/ivy/modules/master/service.py", line 73, in event
+    await self.connections[id]['socket'].send(packet.event, packet.method, payload=packet.payload, sender=packet.socket.id)
+  File "/home/ivy/ivy/ivy/net.py", line 31, in send
+    await self.ws.send(json.dumps(packet))
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 334, in send
+    yield from self.ensure_open()
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 470, in ensure_open
+    raise ConnectionClosed(self.close_code, self.close_reason)
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+Traceback (most recent call last):
+  File "/home/ivy/ivy/ivy/net.py", line 110, in call_event
+    await listener(packet)
+  File "/home/ivy/ivy/modules/master/service.py", line 73, in event
+    await self.connections[id]['socket'].send(packet.event, packet.method, payload=packet.payload, sender=packet.socket.id)
+  File "/home/ivy/ivy/ivy/net.py", line 31, in send
+    await self.ws.send(json.dumps(packet))
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 334, in send
+    yield from self.ensure_open()
+  File "/usr/local/lib/python3.6/dist-packages/websockets/protocol.py", line 470, in ensure_open
+    raise ConnectionClosed(self.close_code, self.close_reason)
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+2018-07-06 10:40 [ERRO:Ivy.storage] 
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
+Traceback (most recent call last):
+  File "/home/ivy/ivy/modules/storage/__init__.py", line 67, in new_snapshot
+    self.stats.save(snapshot)
+  File "/home/ivy/ivy/modules/storage/statistics.py", line 137, in save
+    self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
+sqlite3.IntegrityError: UNIQUE constraint failed: snapshots.machine_id, snapshots.date
