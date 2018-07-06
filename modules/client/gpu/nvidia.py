@@ -56,7 +56,7 @@ class NvidiaAPI(API):
         yield '[gpu:%d]/GPUGraphicsClockOffset[3]=0' % i
         yield '[gpu:%d]/GPUMemoryTransferRateOffset[3]=0' % i
 
-    async def get_stats(self, gpu):
+    async def get_stats(self, i, gpu):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
 
         try:

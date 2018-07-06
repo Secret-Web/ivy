@@ -36,13 +36,26 @@ class AMDAPI(API):
         # Not yet implemented.
         pass
 
-    async def get_stats(self, gpu):
+    async def get_stats(self, i, gpu):
         print('fetching stats for:', gpu.as_obj())
 
+        temp = 0
+        fan = [None, None]
+        watts = 0
+
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/temp1_input' % i, 'r') as f:
+            temp = (float(f.read()) / 1000.0) + 273.15
+        
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/pwm1' % i, 'r') as f:
+            fan[0] = float(f.read())
+        
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/pwm1_max' % i, 'r') as f:
+            fan[1] = float(f.read())
+
         return {
-            'temp': 0,
-            'fan': 0,
-            'watts': 0
+            'temp': temp,
+            'fan': (fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0,
+            'watts': watts
         }
 
 __api__ = AMDAPI
