@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import signal
+import time
 import asyncio, concurrent
 import subprocess
 
@@ -28,7 +29,7 @@ def graceful_shutdown(*args):
     asyncio.get_event_loop().create_task(s.graceful_shutdown())
 
     while asyncio.get_event_loop().is_running():
-        os.sleep(1)
+        time.sleep(1)
 signal.signal(signal.SIGINT, graceful_shutdown)
 signal.signal(signal.SIGTERM, graceful_shutdown)
 
