@@ -49,6 +49,9 @@ class AMDAPI(API):
         
         with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_max' % (i, i), 'r') as f:
             fan[1] = float(f.read())
+        
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/power1_average' % (i, i), 'r') as f:
+            watts = int(f.read()) / 1000000
 
         return {
             'temp': temp,
