@@ -81,8 +81,17 @@ class Ivy:
 
         self.epyphany.begin()
     
+    def stop():
+    
     def cleanup(self):
         os.remove(IVY_RUNNING_INDICATOR)
+
+    def graceful_shutdown(self, *args):
+        self.stop()
+
+        self.cleanup()
+
+        asyncio.get_event_loop().stop()
 
     async def upgrade_script(self, version):
         self.logger.info('Upgrading script to commit %s...' % version['commit'])

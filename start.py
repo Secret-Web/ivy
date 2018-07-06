@@ -21,10 +21,8 @@ if not os.path.exists('/etc/ivy/config.json'):
 
 s = Ivy(config_file='/etc/ivy/config.json')
 
-def graceful_shutdown(*args):
-    asyncio.get_event_loop().stop()
-signal.signal(signal.SIGINT, graceful_shutdown)
-signal.signal(signal.SIGTERM, graceful_shutdown)
+signal.signal(signal.SIGINT, s.graceful_shutdown)
+signal.signal(signal.SIGTERM, s.graceful_shutdown)
 
 for id, config in s.config.items():
     s.add_module(id, config)
@@ -44,4 +42,4 @@ try:
 except KeyboardInterrupt:
     logger.critical('Shutting down...')
 
-s.cleanup()
+    s.graceful_shutdown()
