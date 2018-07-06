@@ -17,7 +17,7 @@ class Process:
 
         self.logger = module.logger.getChild('Process')
 
-        self.watchdog = ProcessWatchdog()
+        self.watchdog = ProcessWatchdog(self.logger)
 
         self.config = None
 
@@ -232,7 +232,9 @@ class Process:
             await self.module.gpus.revert(self.client.hardware)
 
 class ProcessWatchdog:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger.getChild('Process Watchdog')
+
         self.first_start = True
 
         self.online = False
@@ -243,11 +245,18 @@ class ProcessWatchdog:
         self.is_safe = not os.path.exists(STARTING_UP_INDICATOR)
 
         open(STARTING_UP_INDICATOR, 'a').close()
+
+        self.logger.info('Detected an ungraceful shutdown of the process')
     
     def startup_complete(self):
         self.first_start = False
 
+        self.logger.info('Process starting up. Waiting for success confirmation.')
+
     def ping(self):
+        if not self.online:
+            self.logger.info('Process successfully started')
+
         self.online = True
 
         if os.path.exists(STARTING_UP_INDICATOR):
