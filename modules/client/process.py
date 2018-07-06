@@ -233,7 +233,7 @@ class Process:
 
 class ProcessWatchdog:
     def __init__(self, logger):
-        self.logger = logger.getChild('Process Watchdog')
+        self.logger = logger.getChild('Watchdog')
 
         self.first_start = True
 
