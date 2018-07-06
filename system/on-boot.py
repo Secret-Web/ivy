@@ -14,6 +14,7 @@ HOME = expanduser('~')
 PATH = os.path.dirname(os.path.realpath(__file__))
 
 SYMLINKS = [
+    ('ivy.service', '/etc/systemd/system/ivy.service'),
     ('i3status.conf', '/etc/i3status.conf'),
     ('i3config.conf', '~/.config/i3/config'),
     ('Xresources', '~/.Xresources'),
@@ -135,7 +136,7 @@ async def system_check():
     display.step_done()
 
     display.set_step('Installing XOrg + i3')
-    await run_command('apt', 'install', '-y', 'xorg', 'i3', 'jq', 'chromium-browser')
+    await run_command('apt', 'install', '-y', 'xorg', 'xvfb', 'i3', 'jq', 'chromium-browser')
     await run_command('systemctl', 'set-default', 'multi-user.target')
     await run_command('usermod', '-a', '-G', 'video', 'ivy')
     display.step_done()

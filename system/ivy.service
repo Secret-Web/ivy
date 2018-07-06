@@ -7,9 +7,9 @@ User=root
 Group=ivy
 Type=simple
 WorkingDirectory=/home/ivy/ivy/
-ExecStart=/usr/bin/python3.6 /home/ivy/ivy/start.py
+ExecStart=/usr/bin/xvfb-run /usr/bin/python3.6 /opt/ivy/start.py
 Restart=always
-RestartSec=3
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
