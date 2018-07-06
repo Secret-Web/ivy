@@ -44,7 +44,7 @@ class Process:
 
     @property
     def miner_dir(self):
-        cwd = os.path.join(os.getcwd(), 'data', 'miners')
+        cwd = os.path.join('/etc', 'ivy', 'miners')
         if not os.path.exists(cwd):
             os.mkdir(cwd)
         return cwd
