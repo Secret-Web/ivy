@@ -23,7 +23,7 @@ class NvidiaAPI(API):
             await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=%d' % overclock.nvidia.pwr)
 
         if len(nvidia) > 0:
-            await self.run_cmd('SOC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+            await self.run_cmd('SOC', '/usr/bin/nvidia-settings -c :99 -a "%s"' % '" -a "'.join(nvidia))
 
     def apply_gpu(self, i, gpu, overclock):
         yield '[gpu:%d]/GPUPowerMizerMode=1' % i
@@ -48,7 +48,7 @@ class NvidiaAPI(API):
         await self.run_cmd('PWR', '/usr/bin/nvidia-smi --power-limit=320')
 
         if len(nvidia) > 0:
-            await self.run_cmd('ROC', '/usr/bin/nvidia-settings -c :0 -a "%s"' % '" -a "'.join(nvidia))
+            await self.run_cmd('ROC', '/usr/bin/nvidia-settings -c :99 -a "%s"' % '" -a "'.join(nvidia))
 
     def revert_gpu(self, i, gpu):
         yield '[gpu:%d]/GPUFanControlState=0' % i
