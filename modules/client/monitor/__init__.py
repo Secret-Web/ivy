@@ -111,6 +111,8 @@ class Monitor:
                 try:
                     got_stats = await self.get_stats()
 
+                    print(got_stats)
+
                     if not self.module.process.is_fee:
                         if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted'] \
                                                 or session_shares['rejected'] > got_stats['shares']['rejected'] \
