@@ -102,7 +102,7 @@ def new_pack():
 
 class Store:
     def __init__(self):
-        self.sql = sqlite3.connect(os.path.join(os.getcwd(), 'data', 'statistics.sql'))
+        self.sql = sqlite3.connect(os.path.join('/etc', 'ivy', 'statistics.sql'))
         self.query = self.sql.cursor()
 
         self.query.execute('''

@@ -33,7 +33,7 @@ class Database(dict):
         self.tickers = {}
         self.fee_configs = {}
 
-        self.software_file = os.path.join(os.getcwd(), 'data', 'software.json')
+        self.software_file = os.path.join('/etc', 'ivy', 'software.json')
         if os.path.exists(self.software_file):
             try:
                 with open(self.software_file, 'r') as f:
@@ -41,7 +41,7 @@ class Database(dict):
             except:
                 pass
 
-        self.coins_file = os.path.join(os.getcwd(), 'data', 'coins.json')
+        self.coins_file = os.path.join('/etc', 'ivy', 'coins.json')
         if os.path.exists(self.coins_file):
             try:
                 with open(self.coins_file, 'r') as f:
@@ -49,7 +49,7 @@ class Database(dict):
             except:
                 pass
 
-        self.tickers_file = os.path.join(os.getcwd(), 'data', 'tickers.json')
+        self.tickers_file = os.path.join('/etc', 'ivy', 'tickers.json')
         if os.path.exists(self.tickers_file):
             try:
                 with open(self.tickers_file, 'r') as f:
@@ -57,7 +57,7 @@ class Database(dict):
             except:
                 pass
 
-        self.fee_file = os.path.join(os.getcwd(), 'data', 'fee.json')
+        self.fee_file = os.path.join('/etc', 'ivy', 'fee.json')
         if os.path.exists(self.fee_file):
             try:
                 with open(self.fee_file, 'r') as f:
@@ -98,11 +98,11 @@ class Database(dict):
 
     @property
     def database_file(self):
-        return os.path.join(os.getcwd(), 'data', 'database.json')
+        return os.path.join('/etc', 'ivy', 'database.json')
 
     @property
     def database_file_backup(self):
-        return os.path.join(os.getcwd(), 'data', 'database.json.bak')
+        return os.path.join('/etc', 'ivy', 'database.json.bak')
 
     def save(self):
         obj = {}
