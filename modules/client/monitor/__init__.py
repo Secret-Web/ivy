@@ -32,6 +32,7 @@ class Monitor:
         while True:
             if not self.connector.socket:
                 await asyncio.sleep(1)
+                continue
 
             message = await self.message_queue.get()
             message['machine'] = self.client.machine_id
