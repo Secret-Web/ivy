@@ -81,18 +81,14 @@ class Ivy:
 
         self.epyphany.begin()
 
-    def stop(self):
-        for id, module in self.modules.items():
-            self.logger.debug('Stopping module: %r' % id)
-
-            module.on_stop()
-
-
     def cleanup(self):
         os.remove(IVY_RUNNING_INDICATOR)
 
-    def graceful_shutdown(self, *args):
-        self.stop()
+    async def graceful_shutdown(self):
+        for id, module in self.modules.items():
+            self.logger.debug('Stopping module: %r' % id)
+
+            await module.on_stop()
 
         self.cleanup()
 

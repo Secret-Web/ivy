@@ -35,8 +35,8 @@ class ClientModule(Module):
 
         asyncio.ensure_future(api_server.start(self))
 
-    def on_stop(self):
-        asyncio.run_coroutine_threadsafe(self.process.stop())
+    async def on_stop(self):
+        await self.process.stop()
 
     def on_discovery_master(self, protocol, service):
         if self.master_priority is None or service.payload['priority'] < self.master_priority:
