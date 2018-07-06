@@ -6,7 +6,7 @@ import asyncio
 import traceback
 
 
-STARTING_UP_INDICATOR = os.path.join('/tmp', '.starting-up')
+STARTING_UP_INDICATOR = os.path.join('/etc/', '.ivy-starting-up')
 
 class Process:
     def __init__(self, module):
