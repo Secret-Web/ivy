@@ -16,4 +16,3 @@ if pid is not None:
 
     while os.kill(pid, 0):
         time.sleep(1)
-
