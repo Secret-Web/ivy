@@ -6,6 +6,8 @@ import asyncio
 import traceback
 
 
+STARTING_UP_INDICATOR = os.path.join('/etc/', '.ivy-starting-up')
+
 class Process:
     def __init__(self, module):
         self.module = module
@@ -122,6 +124,10 @@ class Process:
         await self.start_miner(config, config.program.execute['args'])
 
     async def start_miner(self, config, args, forward_output=True):
+        last_startup_success = not os.path.exists(STARTING_UP_INDICATOR)
+
+        open(STARTING_UP_INDICATOR, 'a').close()
+
         self.config = config
 
         if config.wallet:
@@ -159,8 +165,14 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            await self.module.gpus.setup(config.hardware)
-            await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
+            if last_startup_success:
+                await self.module.gpus.setup(config.hardware)
+                await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
+            else:
+                self.logger.warning('Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
+                
+                if self.connector.socket:
+                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'title': 'Startup Failure', 'text': 'Miner failed to start. Overclock settings were not been applied this time!', 'machine': self.client.machine_id})
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
@@ -168,6 +180,12 @@ class Process:
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
         self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
+
+        # If the system stayed up for 10 seconds, we assume it was successful.
+        # Does this create a potential race condition?
+        await asyncio.sleep(10)
+
+        os.remove(STARTING_UP_INDICATOR)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)

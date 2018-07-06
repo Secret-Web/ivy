@@ -128,11 +128,11 @@ async def system_check():
     display.step_done()
 
     display.set_step('Installing tools')
-    await run_command('apt', 'install', '-y', *'libcurl4-openssl-dev libssl-dev libjansson-dev automake autotools-dev build-essential'.split(' '))
+    await run_command('apt', 'install', '-y', 'libcurl4-openssl-dev', 'libssl-dev', 'libjansson-dev', 'automake', 'autotools-dev', 'build-essential')
     await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
     await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
     await run_command('apt', 'install', '-y', 'software-properties-common')
-    await run_command('apt', 'install', '-y', *'lshw ocl-icd-opencl-dev libcurl4-openssl-dev'.split(' '))
+    await run_command('apt', 'install', '-y', 'lshw', 'ocl-icd-opencl-dev', 'libcurl4-openssl-dev')
     display.step_done()
 
     display.set_step('Installing XOrg + i3')
@@ -182,7 +182,7 @@ async def system_check():
 
         await asyncio.sleep(1)
 
-        if not is_installed('amdgpu-pro'):
+        if not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
             display.set_step('Installing AMD drivers')
 
             #await run_command('apt', 'install', '-y', 'amdgpu-pros')
@@ -201,6 +201,27 @@ async def system_check():
             await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
             installed = True
+
+        # For AMD table overriding
+        display.set_step('Installing OhGodATool')
+
+        await asyncio.sleep(1)
+
+        await run_command('apt', 'install', '-y', 'libpci-dev')
+
+        OHGODATOOL_PATH = os.path.join('/opt', 'OhGodATool/')
+        if not os.path.exists(OHGODATOOL_PATH):
+            await run_command('git', 'clone', 'https://github.com/OhGodACompany/OhGodATool.git', cwd='/opt')
+
+        await run_command('git', 'pull', cwd=OHGODATOOL_PATH)
+
+        # TODO: Only run this if there was an update
+        await run_command('make', cwd=OHGODATOOL_PATH)
+
+        OHGODATOOL_USR_BIN = os.path.join('/usr', 'bin', 'ohgodatool')
+        with suppress(FileNotFoundError):
+            os.remove(OHGODATOOL_USR_BIN)
+        os.link(os.path.join(OHGODATOOL_PATH, 'ohgodatool'), OHGODATOOL_USR_BIN)
 
     if installed:
         await run_command('shutdown', '-r', 'now')

@@ -75,6 +75,10 @@ class ClientModule(Module):
                 self.ivy.save_config()
 
                 await self.process.start()
+            elif packet.payload['id'] == 'shutdown':
+                os.system('sudo /sbin/shutdown now')
+            elif packet.payload['id'] == 'reboot':
+                os.system('sudo /sbin/shutdown -r now')
 
         @l.listen_event('fee', 'update')
         async def event(packet):

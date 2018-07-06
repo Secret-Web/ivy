@@ -102,7 +102,7 @@ class Database(dict):
 
     @property
     def database_file_backup(self):
-        return os.path.join(os.getcwd(), 'data', 'database.bak.json')
+        return os.path.join(os.getcwd(), 'data', 'database.json.bak')
 
     def save(self):
         obj = {}
@@ -115,14 +115,14 @@ class Database(dict):
         obj['groups'] = {k: v.as_obj() for k, v in self.groups.items()}
         obj['machines'] = {k: v.as_obj() for k, v in self.machines.items()}
 
-        with open(self.database_file, 'w') as f:
-            f.write(json.dumps(obj, indent=2))
-
         if os.path.exists(self.database_file_backup):
             os.remove(self.database_file_backup)
 
         if os.path.exists(self.database_file):
             copyfile(self.database_file, self.database_file_backup)
+
+        with open(self.database_file, 'w') as f:
+            f.write(json.dumps(obj, indent=2))
 
     async def periodic_save(self):
         last_update = 0
