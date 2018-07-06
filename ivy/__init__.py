@@ -13,7 +13,7 @@ from epyphany import Epyphany
 
 # This file is created when Ivy boots up, and is deleted when it gracefully shuts down.
 # If this exists on start, some features will be disabled due to potential issues.
-IVY_RUNNING_INDICATOR = os.path.join('/etc', 'ivy', '.ivy-running')
+IVY_RUNNING_INDICATOR = '/etc/ivy/.ivy-running'
 
 def get_mac():
   mac_num = hex(uuid.getnode()).replace('0x', '').upper()
@@ -81,9 +81,6 @@ class Ivy:
 
         self.epyphany.begin()
 
-    def cleanup(self):
-        os.remove(IVY_RUNNING_INDICATOR)
-
     async def graceful_shutdown(self):
         self.logger.critical('Shutting down...')
 
@@ -92,7 +89,11 @@ class Ivy:
 
             await module.on_stop()
 
-        self.cleanup()
+        self.logger.info('Cleaning up files...')
+
+        os.remove(IVY_RUNNING_INDICATOR)
+
+        self.logger.info('Shutdown successful.')
 
         asyncio.get_event_loop().stop()
 
