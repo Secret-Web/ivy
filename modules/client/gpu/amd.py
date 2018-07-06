@@ -11,9 +11,9 @@ class AMDAPI(API):
 
     async def apply(self, hardware, overclock):
         for i, gpu in gpus:
-            self.apply_gpu(i, gpu, overclock.amd)
+            await self.apply_gpu(i, gpu, overclock.amd)
 
-    def apply_gpu(self, i, gpu, overclock):
+    async def apply_gpu(self, i, gpu, overclock):
         if overclock.pwr:
             await self.run_cmd('PWR', 'sudo /usr/bin/ohgodatool --set-max-power %d' % overclock.amd.pwr)
 
