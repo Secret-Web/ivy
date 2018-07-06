@@ -221,10 +221,18 @@ class Process:
         self.is_collecting = False
 
         if self.is_running:
+            wait_time = 0
+
             while self.is_running:
-                self.process.terminate()
+                if wait_time > 30:
+                    self.process.kill()
+                else:
+                    self.process.terminate()
 
                 self.logger.info('Waiting for miner to stop...')
+                
                 await asyncio.sleep(5)
+
+                wait_time += 5
 
             await self.module.gpus.revert(self.client.hardware)

@@ -166,33 +166,33 @@ class Monitor:
 
                         online = gpu.rate > 0
 
-                        if len(gpu_status) > i:
-                            if gpu.online and not online:
-                                # Begin timer for "confirmed dead"
-                                gpu_status[i] = time.time()
+                        if i not in gpu_status:
+                            gpu_status[i] = {'type': 'starting'}
 
-                            if not gpu.online and online:
-                                if isinstance(gpu_status[i], int):
-                                    gpu_status[i] = True
-                                else:
-                                    new_online += 1
+                        if gpu.online and not online:
+                            # Begin timer for "confirmed dead"
+                            gpu_status[i] = {'type': 'unstable', 'time': time.time()}
+
+                        if not gpu.online and online:
+                            if gpu_status[i]['type'] == 'offline':
+                                new_online += 1
+
+                            gpu_status[i] = {'type': 'online'}
 
                         gpu.online = online
 
-                        if len(gpu_status) > i and not isinstance(gpu_status[i], bool):
-                            # If the GPU has been offline for 60 seconds, it's dead. Notify the master.
-                            if time.time() - gpu_status[i] > 60:
-                                gpu_status[i] = False
+                        if gpu_status[i]['type'] == 'unstable':
+                            # If the GPU has been unstable for 60 seconds, it's dead. Notify the master.
+                            if time.time() - gpu_status[i]['time'] > 60:
+                                gpu_status[i] = {'type': 'offline'}
                                 new_offline += 1
 
                     if not self.module.process.is_fee:
                         if new_offline > 0:
                             await self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
 
-                        confirmed_dead = sum([1 if len(gpu_status) > i and isinstance(gpu_status[i], bool) and not gpu_status[i] else 0])
-
-                        if confirmed_dead > 0 and new_online > 0 and self.connector.socket:
-                            await self.new_message(level='success', text='%d GPUs have come online!' % min(confirmed_dead, new_online))
+                        if new_online > 0:
+                            await self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
 
                     # If the miner is offline, set it online and force an update
                     if not new_stats.online or new_offline > 0 or new_online > 0:
@@ -219,8 +219,6 @@ class Monitor:
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
-                    else:
-                        self.logger.warning('Not connected to any MASTER SERVER.')
 
                     if new_stats.shares['accepted'] + new_stats.shares['rejected'] + new_stats.shares['invalid'] > 0:
                         self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
@@ -234,8 +232,8 @@ class Monitor:
 
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            if self.connector.socket:
-                await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
+            
+            await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
 class API:
     async def get_stats(self, host):
