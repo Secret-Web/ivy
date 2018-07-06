@@ -43,13 +43,13 @@ class AMDAPI(API):
         fan = [None, None]
         watts = 0
 
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/temp1_input' % i, 'r') as f:
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/temp1_input' % (i, i), 'r') as f:
             temp = (float(f.read()) / 1000.0) + 273.15
         
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/pwm1' % i, 'r') as f:
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1' % (i, i), 'r') as f:
             fan[0] = float(f.read())
         
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon1/pwm1_max' % i, 'r') as f:
+        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_max' % (i, i), 'r') as f:
             fan[1] = float(f.read())
 
         return {
