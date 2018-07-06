@@ -37,8 +37,6 @@ class AMDAPI(API):
         pass
 
     async def get_stats(self, i, gpu):
-        print('fetching stats for:', gpu.as_obj())
-
         temp = 0
         fan = [None, None]
         watts = 0
