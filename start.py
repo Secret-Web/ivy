@@ -46,5 +46,3 @@ except KeyboardInterrupt:
     pass
 
 logger.critical('Shutting down...')
-
-    s.graceful_shutdown()

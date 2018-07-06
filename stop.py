@@ -2,6 +2,9 @@ import os
 import signal
 
 
+if not os.path.exists('/etc/ivy/.pid'):
+    exit(0)
+
 pid = None
 
 with open('/etc/ivy/.pid', 'r') as f:
