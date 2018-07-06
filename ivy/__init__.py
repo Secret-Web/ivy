@@ -81,7 +81,7 @@ class Ivy:
 
         self.epyphany.begin()
     
-    def safe_shutdown(self):
+    def cleanup(self):
         os.remove(IVY_RUNNING_INDICATOR)
 
     async def upgrade_script(self, version):

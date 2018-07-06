@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import signal
 import asyncio, concurrent
 import subprocess
 
@@ -20,6 +21,9 @@ if not os.path.exists('/etc/ivy/config.json'):
 
 s = Ivy(config_file='/etc/ivy/config.json')
 
+signal.signal(signal.SIGINT, asyncio.get_event_loop().stop)
+signal.signal(signal.SIGTERM, asyncio.get_event_loop().stop)
+
 for id, config in s.config.items():
     s.add_module(id, config)
 
@@ -38,4 +42,4 @@ try:
 except KeyboardInterrupt:
     logger.critical('Shutting down...')
 
-s.safe_shutdown()
+s.cleanup()
