@@ -49,6 +49,12 @@ class AMDAPI(API):
         
         with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_max' % (i, i), 'r') as f:
             fan[1] = float(f.read())
+        
+        print({
+            'temp': temp,
+            'fan': (fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0,
+            'watts': watts
+        })
 
         return {
             'temp': temp,
