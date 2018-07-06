@@ -6,8 +6,6 @@ import asyncio
 import traceback
 
 
-STARTING_UP_INDICATOR = os.path.join('/etc', 'ivy', '.process-starting-up')
-
 class Process:
     def __init__(self, module):
         self.module = module
@@ -231,6 +229,10 @@ class Process:
 
             await self.module.gpus.revert(self.client.hardware)
 
+            self.watchdog.cleanup()
+
+STARTING_UP_INDICATOR = '/etc/ivy/.process-starting-up'
+
 class ProcessWatchdog:
     def __init__(self, logger):
         self.logger = logger.getChild('Watchdog')
@@ -259,5 +261,8 @@ class ProcessWatchdog:
 
         self.online = True
 
+        self.cleanup()
+
+    def cleanup(self):
         if os.path.exists(STARTING_UP_INDICATOR):
             os.remove(STARTING_UP_INDICATOR)
