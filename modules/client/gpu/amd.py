@@ -30,7 +30,7 @@ class AMDAPI(API):
             await self.run_cmd('MVT', 'sudo /usr/bin/ohgodatool -i %d --volt-state 0 --mvdd %d' % (i, overclock.mem['vlt']))
 
         if overclock.fan['min']:
-            await self.run_cmd('FAN', 'sudo /usr/bin/ohgodatool -i %d --set-fan-speed %d' % (i, overclock.fan['min']))
+            await self.run_cmd('FAN', 'sudo /usr/bin/ohgodatool -i %d --set-fanspeed %d' % (i, overclock.fan['min']))
 
     async def revert(self, hardware):
         # Not yet implemented.
