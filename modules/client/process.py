@@ -17,7 +17,7 @@ class Process:
 
         self.logger = module.logger.getChild('Process')
 
-        self.first_start = True
+        self.watchdog = ProcessWatchdog()
 
         self.config = None
 
@@ -126,14 +126,12 @@ class Process:
         await self.start_miner(config, config.program.execute['args'])
 
     async def start_miner(self, config, args, forward_output=True):
-        is_safe = not os.path.exists(STARTING_UP_INDICATOR)
+        self.watchdog.init()
 
-        # If this is the first time a process was started, and Ivy did not gracefully shut down
-        # then assume this boot is unsafe.
-        if self.first_start and not self.module.ivy.is_safe:
-            is_safe = False
-
-        open(STARTING_UP_INDICATOR, 'a').close()
+        # If this is the first time a process was started, and Ivy
+        # did not gracefully shut down then assume this boot is unsafe.
+        if self.watchdog.first_start and not self.module.ivy.is_safe:
+            self.watchdog.is_safe = False
 
         self.config = config
 
@@ -172,7 +170,7 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            if is_safe:
+            if self.watchdog.is_safe:
                 await self.module.gpus.setup(config.hardware)
                 await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
             else:
@@ -185,11 +183,7 @@ class Process:
 
         self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
 
-        # If the system stayed up for 10 seconds, we assume it was successful.
-        # Does this create a potential race condition?
-        await asyncio.sleep(10)
-
-        os.remove(STARTING_UP_INDICATOR)
+        self.watchdog.startup_complete()
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -236,3 +230,25 @@ class Process:
                 wait_time += 5
 
             await self.module.gpus.revert(self.client.hardware)
+
+class ProcessWatchdog:
+    def __init__(self):
+        self.first_start = True
+
+        self.online = False
+
+    def init(self):
+        self.online = False
+        
+        self.is_safe = not os.path.exists(STARTING_UP_INDICATOR)
+
+        open(STARTING_UP_INDICATOR, 'a').close()
+    
+    def startup_complete(self):
+        self.first_start = False
+
+    def ping(self):
+        self.online = True
+
+        if os.path.exists(STARTING_UP_INDICATOR):
+            os.remove(STARTING_UP_INDICATOR)

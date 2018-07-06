@@ -187,6 +187,9 @@ class Monitor:
                             if time.time() - gpu_status[i]['time'] > 60:
                                 gpu_status[i] = {'type': 'offline'}
                                 new_offline += 1
+                    
+                    if new_online > 0:
+                        self.process.watchdog.ping()
 
                     if not self.module.process.is_fee:
                         if new_offline > 0:
