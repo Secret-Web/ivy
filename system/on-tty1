@@ -5,6 +5,9 @@ sudo python3.6 system/on-boot.py
 clear
 
 if [ -f data/config.json ]; then
+    rm -f output.log.1
+    mv output.log output.log.1
+
     sudo python3.6 start.py &> output.log &
     PID=$!
 
