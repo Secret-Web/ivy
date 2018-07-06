@@ -18,5 +18,5 @@ if pid is not None:
         while True:
             os.kill(pid, 0)
             time.sleep(1)
-    except EOFError:
+    except ProcessLookupError:
         pass
