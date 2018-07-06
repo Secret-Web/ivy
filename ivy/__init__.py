@@ -69,6 +69,9 @@ class Ivy:
 
         open(IVY_RUNNING_INDICATOR, 'a').close()
 
+        if not self.is_safe:
+            self.logger.warning('Ivy did not gracefully shutdown. Some features may be disabled for safety reasons!')
+
         for id, module in self.modules.items():
             self.logger.debug('Loading module: %r' % id)
 
