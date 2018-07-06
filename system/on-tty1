@@ -1,4 +1,4 @@
-cd ivy
+cd /opt/ivy
 
 sudo python3.6 system/on-boot.py
 
