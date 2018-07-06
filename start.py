@@ -25,8 +25,7 @@ with open('/etc/ivy/.pid', 'w') as f:
 
 s = Ivy(config_file='/etc/ivy/config.json')
 
-for signame in ('SIGINT', 'SIGTERM'):
-    asyncio.get_event_loop().add_signal_handler(getattr(signal, signame), lambda: asyncio.async(s.graceful_shutdown()))
+asyncio.get_event_loop().add_signal_handler(signal.SIGINT, lambda: asyncio.async(s.graceful_shutdown()))
 
 for id, config in s.config.items():
     s.add_module(id, config)
