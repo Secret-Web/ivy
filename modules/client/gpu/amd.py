@@ -52,7 +52,7 @@ class AMDAPI(API):
 
         return {
             'temp': temp,
-            'fan': ((fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0) * 100,
+            'fan': int(((fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0) * 100),
             'watts': watts
         }
 
