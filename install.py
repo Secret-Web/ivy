@@ -139,10 +139,10 @@ if is_storage:
 
 print('Saving configuration...')
 
-if not os.path.exists('data/'):
-    os.makedirs('data/')
+if not os.path.exists('/etc/ivy/'):
+    os.makedirs('etc/ivy/')
 
-with open('data/config.json', 'w') as f:
+with open('/etc/ivy/config.json', 'w') as f:
     json.dump(data, f)
 
 print('Done. Ivy has been installed.')

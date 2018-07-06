@@ -76,9 +76,9 @@ class ClientModule(Module):
 
                 await self.process.start()
             elif packet.payload['id'] == 'shutdown':
-                os.system('sudo /sbin/shutdown now')
+                os.system('/sbin/shutdown now')
             elif packet.payload['id'] == 'reboot':
-                os.system('sudo /sbin/shutdown -r now')
+                os.system('/sbin/shutdown -r now')
 
         @l.listen_event('fee', 'update')
         async def event(packet):

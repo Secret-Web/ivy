@@ -6,7 +6,7 @@ clear
 
 sudo service ivy start
 
-if [ -f data/config.json ]; then
+if [ -f /etc/ivy/config.json ]; then
     startx
 
     exit 0

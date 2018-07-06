@@ -12,13 +12,13 @@ class LastPartFilter(logging.Filter):
         record.name_last = record.name.rsplit('.', 1)[-1]
         return True
 
-if not os.path.exists('data/config.json'):
+if not os.path.exists('/etc/ivy/config.json'):
     subprocess.call([sys.executable, 'install.py'])
 
-if not os.path.exists('data/config.json'):
+if not os.path.exists('/etc/ivy/config.json'):
     exit()
 
-s = Ivy(config_file='data/config.json')
+s = Ivy(config_file='/etc/ivy/config.json')
 
 for id, config in s.config.items():
     s.add_module(id, config)
@@ -37,3 +37,5 @@ try:
     asyncio.get_event_loop().run_forever()
 except KeyboardInterrupt:
     logger.critical('Shutting down...')
+
+s.safe_shutdown()

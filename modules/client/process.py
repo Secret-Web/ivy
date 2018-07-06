@@ -6,7 +6,7 @@ import asyncio
 import traceback
 
 
-STARTING_UP_INDICATOR = os.path.join('.', '.ivy-starting-up')
+STARTING_UP_INDICATOR = os.path.join('/etc', 'ivy', '.process-starting-up')
 
 class Process:
     def __init__(self, module):
@@ -16,6 +16,8 @@ class Process:
         self.connector = module.connector
 
         self.logger = module.logger.getChild('Process')
+
+        self.first_start = True
 
         self.config = None
 
@@ -107,8 +109,8 @@ class Process:
                     await self.start()
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            if self.connector.socket:
-                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
+            
+            await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
     async def start(self):
         config = self.module.client
@@ -124,7 +126,12 @@ class Process:
         await self.start_miner(config, config.program.execute['args'])
 
     async def start_miner(self, config, args, forward_output=True):
-        last_startup_success = not os.path.exists(STARTING_UP_INDICATOR)
+        is_safe = not os.path.exists(STARTING_UP_INDICATOR)
+
+        # If this is the first time a process was started, and Ivy did not gracefully shut down
+        # then assume this boot is unsafe.
+        if self.first_start and not self.module.ivy.is_safe:
+            is_safe = False
 
         open(STARTING_UP_INDICATOR, 'a').close()
 
@@ -165,14 +172,11 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            if last_startup_success:
+            if is_safe:
                 await self.module.gpus.setup(config.hardware)
                 await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
             else:
-                self.logger.warning('Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
-
-                if self.connector.socket:
-                    await self.connector.socket.send('messages', 'new', {'level': 'danger', 'title': 'Startup Failure', 'text': 'Miner failed to start. Overclock settings were not been applied this time!', 'machine': self.client.machine_id})
+                await self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 

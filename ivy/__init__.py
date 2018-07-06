@@ -11,6 +11,10 @@ import asyncio
 from epyphany import Epyphany
 
 
+# This file is created when Ivy boots up, and is deleted when it gracefully shuts down.
+# If this exists on start, some features will be disabled due to potential issues.
+IVY_RUNNING_INDICATOR = os.path.join('/etc', 'ivy', '.ivy-running')
+
 def get_mac():
   mac_num = hex(uuid.getnode()).replace('0x', '').upper()
   mac = '-'.join(mac_num[i : i + 2] for i in range(0, 11, 2))
@@ -61,6 +65,10 @@ class Ivy:
         self.modules[module_id] = mod.__plugin__(self, config=config, logger=self.logger.getChild(module_id))
 
     def start(self):
+        self.is_safe = not os.path.exists(IVY_RUNNING_INDICATOR)
+
+        open(IVY_RUNNING_INDICATOR, 'a').close()
+
         for id, module in self.modules.items():
             self.logger.debug('Loading module: %r' % id)
 
@@ -69,6 +77,9 @@ class Ivy:
         self.save_config()
 
         self.epyphany.begin()
+    
+    def safe_shutdown(self):
+        os.remove(IVY_RUNNING_INDICATOR)
 
     async def upgrade_script(self, version):
         self.logger.info('Upgrading script to commit %s...' % version['commit'])

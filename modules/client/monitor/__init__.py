@@ -25,6 +25,26 @@ class Monitor:
 
         asyncio.ensure_future(self.ping_miner())
 
+        self.message_queue = asyncio.Queue()
+        asyncio.ensure_future(self.process_messages())
+
+    async def process_messages(queue):
+        while True:
+            if not self.connector.socket:
+                await asyncio.sleep(1)
+
+            message = await queue.get()
+            message['machine'] = self.client.machine_id
+
+            await self.connector.socket.send('messages', 'new', message)
+
+    def new_message(self, level=None, title=None, text=None):
+        if level is None: raise Exception('Level not specified!')
+        if text is None: raise Exception('Text not specified!')
+        pack = {'level': level, 'text': text}
+        if title: pack['title'] = title
+        self.message_queue.put_nowait(pack)
+
     @property
     def api(self):
         if not self.process.config:
@@ -79,7 +99,7 @@ class Monitor:
             return await self.module.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': str(e), 'machine': self.client.machine_id})
+            await self.new_message(level='bug', title='Miner Exception', text=str(e))
             return []
 
     async def ping_miner(self):
@@ -166,13 +186,13 @@ class Monitor:
                                 new_offline += 1
 
                     if not self.module.process.is_fee:
-                        if new_offline > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'warning', 'text': '%d GPUs have gone offline!' % new_offline, 'machine': self.client.machine_id})
+                        if new_offline > 0:
+                            await self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
 
                         confirmed_dead = sum([1 if len(gpu_status) > i and isinstance(gpu_status[i], bool) and not gpu_status[i] else 0])
 
                         if confirmed_dead > 0 and new_online > 0 and self.connector.socket:
-                            await self.connector.socket.send('messages', 'new', {'level': 'success', 'text': '%d GPUs have come online!' % min(confirmed_dead, new_online), 'machine': self.client.machine_id})
+                            await self.new_message(level='success', text='%d GPUs have come online!' % min(confirmed_dead, new_online))
 
                     # If the miner is offline, set it online and force an update
                     if not new_stats.online or new_offline > 0 or new_online > 0:
@@ -215,7 +235,7 @@ class Monitor:
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             if self.connector.socket:
-                await self.connector.socket.send('messages', 'new', {'level': 'bug', 'title': 'Miner Exception', 'text': traceback.format_exc(), 'machine': self.client.machine_id})
+                await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
 class API:
     async def get_stats(self, host):
