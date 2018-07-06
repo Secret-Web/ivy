@@ -35,6 +35,9 @@ class ClientModule(Module):
 
         asyncio.ensure_future(api_server.start(self))
 
+    def on_stop(self):
+        asyncio.get_event_loop().run_until_complete(self.process.stop())
+
     def on_discovery_master(self, protocol, service):
         if self.master_priority is None or service.payload['priority'] < self.master_priority:
             self.logger.info('Connecting to primary %r...' % service)

@@ -7,3 +7,6 @@ class Module:
 
     def on_load(self):
         pass
+
+    def on_stop(self):
+        pass

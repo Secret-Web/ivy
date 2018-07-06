@@ -82,7 +82,11 @@ class Ivy:
         self.epyphany.begin()
 
     def stop(self):
-        pass
+        for id, module in self.modules.items():
+            self.logger.debug('Stopping module: %r' % id)
+
+            module.on_stop()
+
 
     def cleanup(self):
         os.remove(IVY_RUNNING_INDICATOR)
