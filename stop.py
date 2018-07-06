@@ -1,4 +1,5 @@
 import os
+import time
 import signal
 
 
@@ -12,4 +13,7 @@ with open('/etc/ivy/.pid', 'r') as f:
 
 if pid is not None:
 	os.kill(pid, signal.SIGINT)
+
+    while os.kill(pid, 0):
+        time.sleep(1)
 
