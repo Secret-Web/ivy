@@ -176,7 +176,7 @@ class Process:
                 await self.module.gpus.setup(config.hardware)
                 await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
             else:
-                await self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
+                self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 

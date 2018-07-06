@@ -99,7 +99,7 @@ class Monitor:
             return await self.module.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            await self.new_message(level='bug', title='Miner Exception', text=str(e))
+            self.new_message(level='bug', title='Miner Exception', text=str(e))
             return []
 
     async def ping_miner(self):
@@ -189,10 +189,10 @@ class Monitor:
 
                     if not self.module.process.is_fee:
                         if new_offline > 0:
-                            await self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
+                            self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
 
                         if new_online > 0:
-                            await self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
+                            self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
 
                     # If the miner is offline, set it online and force an update
                     if not new_stats.online or new_offline > 0 or new_online > 0:
@@ -233,7 +233,7 @@ class Monitor:
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             
-            await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
+            self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
 class API:
     async def get_stats(self, host):
