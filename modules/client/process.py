@@ -192,7 +192,7 @@ class Process:
 
         install = [
             'rm -rf *',
-            'wget -c "%s" -O download.file' % config.program.install['url']
+            'wget -c "%s" --limit-rate 1m -O download.file' % config.program.install['url']
         ]
 
         for cmd in config.program.install['execute']:

@@ -26,6 +26,8 @@ GFX_VERSION = {
     'AMD': '180.10-572953'
 }
 
+KERNEL_VERSION = '4.15.0'
+
 palette = [
     ('header', '', '', '', '#FFF,bold', '#558'),
     ('footer', '', '', '', '#FFF,italics', '#558'),
@@ -122,11 +124,16 @@ async def system_check():
             os.remove(os.path.abspath(t))
     display.step_done()
 
-    display.set_step('Checking for system patches')
+    display.set_step('Checking for new system patches')
     await run_command('apt', 'update')
+
+    display.set_step('Applying system patches')
     await run_command('apt', 'upgrade', '-y')
-    await run_command('apt', 'autoremove', '-y')
     display.step_done()
+
+    #display.set_step('Updating Kernel')
+    #await run_command('apt', 'install', '-y', 'linux-image-' + KERNEL_VERSION, 'linux-headers-' + KERNEL_VERSION, 'linux-image-extra-' + KERNEL_VERSION)
+    #display.step_done()
 
     display.set_step('Installing tools')
     await run_command('apt', 'install', '-y', 'libcurl4-openssl-dev', 'libssl-dev', 'libjansson-dev', 'automake', 'autotools-dev', 'build-essential')
@@ -140,6 +147,10 @@ async def system_check():
     await run_command('apt', 'install', '-y', 'xorg', 'i3', 'jq', 'chromium-browser')
     await run_command('systemctl', 'set-default', 'multi-user.target')
     await run_command('usermod', '-a', '-G', 'video', 'ivy')
+    display.step_done()
+
+    display.set_step('Removing unnecessary packages')
+    await run_command('apt', 'autoremove', '-y')
     display.step_done()
 
     display.set_step('Installing python requirements')
@@ -183,26 +194,28 @@ async def system_check():
 
         await asyncio.sleep(1)
 
-        if not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
+        '''if not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
             display.set_step('Installing AMD drivers')
 
-            #await run_command('apt', 'install', '-y', 'amdgpu-pros')
-
-            await run_command('wget', '--referer=http://support.amd.com', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            await run_command('wget', '--referer=http://support.amd.com', '--limit-rate 1m', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
 
             TMP_DIR = '/tmp/amdgpu-pro'
             with suppress(FileNotFoundError):
                 shutil.rmtree(TMP_DIR)
             os.mkdir(TMP_DIR)
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
-            await run_command('./amdgpu-install', '-y', '--opencl=rocm', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+            await run_command('./amdgpu-install', '-y', '--opencl=legacy', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
             await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
             await run_command('apt', 'update')
             await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
-            installed = True
+            display.set_step('Installing HWE Kernel')
 
+            await run_command('apt', 'install', '--install-recommends', 'linux-generic-hwe-16.04', 'xserver-xorg-hwe-16.04')
+
+            installed = True
+'''
         # For AMD table overriding
         display.set_step('Installing OhGodATool')
 
