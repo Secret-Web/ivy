@@ -222,7 +222,7 @@ class Process:
                     self.process.terminate()
 
                 self.logger.info('Waiting for miner to stop...')
-                
+
                 await asyncio.sleep(5)
 
                 wait_time += 5
@@ -243,13 +243,13 @@ class ProcessWatchdog:
 
     def init(self):
         self.online = False
-        
+
         self.is_safe = not os.path.exists(STARTING_UP_INDICATOR)
 
         open(STARTING_UP_INDICATOR, 'a').close()
 
         self.logger.info('Detected an ungraceful shutdown of the process. %r' % [STARTING_UP_INDICATOR, self.is_safe])
-    
+
     def startup_complete(self):
         self.first_start = False
 

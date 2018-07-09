@@ -181,7 +181,13 @@ async def update_stats():
         try:
             data = json.loads(url_content('http://' + IP + ':29205'))
 
-            display.name.set_text(data['config']['name'])
+            if not data['online']:
+                display.output_lines.append(urwid.Text('No program running. Is one configured or did it crash?'))
+
+            if 'name' in data['config']:
+                display.name.set_text(data['config']['name'])
+            else:
+                display.name.set_text('- N/A -')
 
             if 'wallet' in data['config']:
                 display.wallet_name.set_text('Wallet: ' + data['config']['wallet']['name'])
@@ -192,8 +198,12 @@ async def update_stats():
                 display.wallet_address.set_text('')
                 display.wallet_crypto.set_text('- N/A -')
 
-            display.pool_name.set_text('Pool: ' + data['config']['pool']['endpoint']['name'])
-            display.pool_url.set_text(data['config']['pool']['endpoint']['url'])
+            if 'pool' in data['config']:
+                display.pool_name.set_text('Pool: ' + data['config']['pool']['endpoint']['name'])
+                display.pool_url.set_text(data['config']['pool']['endpoint']['url'])
+            else:
+                display.pool_name.set_text('Pool: None')
+                display.pool_url.set_text('- N/A -')
 
             display.accepted.set_text('Accepted: %d shares' % data['shares']['accepted'])
             display.rejected.set_text('Rejected: %d shares' % data['shares']['rejected'])

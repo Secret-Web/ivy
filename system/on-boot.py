@@ -194,10 +194,12 @@ async def system_check():
 
         await asyncio.sleep(1)
 
-        '''if not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
+        if not is_installed('amdgpu-pro-core') and not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
             display.set_step('Installing AMD drivers')
 
-            await run_command('wget', '--referer=http://support.amd.com', '--limit-rate 1m', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+            await run_command('apt', 'install', '-y', 'amdgpu-dkms', 'libdrm-amdgpu-amdgpu1', 'libdrm-amdgpu1', 'libdrm2-amdgpu')
+
+            await run_command('wget', '--referer=http://support.amd.com', '--limit-rate', '1024k', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
 
             TMP_DIR = '/tmp/amdgpu-pro'
             with suppress(FileNotFoundError):
@@ -206,7 +208,7 @@ async def system_check():
             await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
             await run_command('./amdgpu-install', '-y', '--opencl=legacy', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
 
-            await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
+            '''await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
             await run_command('apt', 'update')
             await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
 
@@ -214,8 +216,9 @@ async def system_check():
 
             await run_command('apt', 'install', '--install-recommends', 'linux-generic-hwe-16.04', 'xserver-xorg-hwe-16.04')
 
+            '''
             installed = True
-'''
+
         # For AMD table overriding
         display.set_step('Installing OhGodATool')
 
