@@ -41,22 +41,29 @@ class AMDAPI(API):
         fan = [None, None]
         watts = 0
 
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/temp1_input' % (i, i), 'r') as f:
-            temp = (float(f.read()) / 1000.0) + 273.15
-        
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1' % (i, i), 'r') as f:
-            fan[0] = float(f.read())
-        
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_max' % (i, i), 'r') as f:
-            fan[1] = float(f.read())
-        
-        with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/power1_average' % (i, i), 'r') as f:
-            watts = int(f.read()) / 1000000
+        try:
+            with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/temp1_input' % (i, i), 'r') as f:
+                temp = (float(f.read()) / 1000.0) + 273.15
 
-        return {
-            'temp': temp,
-            'fan': int(((fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0) * 100),
-            'watts': watts
-        }
+            with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1' % (i, i), 'r') as f:
+                fan[0] = float(f.read())
+
+            with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_max' % (i, i), 'r') as f:
+                fan[1] = float(f.read())
+
+            with open('/sys/class/drm/card%d/device/hwmon/hwmon%d/power1_average' % (i, i), 'r') as f:
+                watts = int(f.read()) / 1000000
+
+            return {
+                'temp': temp,
+                'fan': int(((fan[0] / fan[1]) if fan[0] is not None and fan[1] is not None else 0) * 100),
+                'watts': watts
+            }
+        except:
+            return {
+                'temp': 0,
+                'fan': 0,
+                'watts': 0
+            }
 
 __api__ = AMDAPI
