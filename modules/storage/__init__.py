@@ -34,11 +34,11 @@ class StorageModule(Module):
         self.database = Database(self.logger)
         self.stats = statistics.Store()
 
-        self.master_priority = None
+        self.relay_priority = None
         self.connector = NetConnector(self.logger.getChild('socket'))
         self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
 
-        self.ivy.register_listener('master')(self.on_discovery_master)
+        self.ivy.register_listener('relay')(self.on_discovery_relay)
         self.register_events(self.connector)
 
         self.task = asyncio.ensure_future(self.update())
@@ -68,8 +68,8 @@ class StorageModule(Module):
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
 
-    def on_discovery_master(self, protocol, service):
-        if self.master_priority is None or service.payload['priority'] < self.master_priority:
+    def on_discovery_relay(self, protocol, service):
+        if self.relay_priority is None or service.payload['priority'] < self.relay_priority:
             self.logger.info('Connecting to primary %r...' % service)
             self.connector.open(service.ip, service.port, {
                 'Subscribe': {
@@ -93,11 +93,11 @@ class StorageModule(Module):
                 }
             })
 
-            self.master_priority = service.payload['priority']
+            self.relay_priority = service.payload['priority']
 
     async def event_connection_closed(self, packet):
         if packet.dummy:
-            self.master_priority = None
+            self.relay_priority = None
 
     def register_events(self, l):
         @l.listen_event('connection', 'open')

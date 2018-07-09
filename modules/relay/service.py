@@ -17,9 +17,9 @@ from ivy.net import NetListener
 # network lag on large farms.
 IMMEDIATE_STAT_CUTOFF = 1000
 
-class MasterService(Service):
+class RelayService(Service):
     def __init__(self, module, port):
-        super(MasterService, self).__init__('master', port)
+        super().__init__('relay', port)
 
         self.module = module
         self.listener = NetListener(module.logger.getChild('socket'))
@@ -33,7 +33,7 @@ class MasterService(Service):
         self.subscriptions = {}
 
     def start_service(self):
-        self.module.logger.info('Starting master service...')
+        self.module.logger.info('Starting relay service...')
 
         self.listener.serve('', self.port)
 

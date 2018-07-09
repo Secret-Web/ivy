@@ -183,7 +183,7 @@ class Monitor:
                         gpu.online = online
 
                         if gpu_status[i]['type'] == 'unstable':
-                            # If the GPU has been unstable for 60 seconds, it's dead. Notify the master.
+                            # If the GPU has been unstable for 60 seconds, it's dead. Notify the relay.
                             if time.time() - gpu_status[i]['time'] > 60:
                                 gpu_status[i] = {'type': 'offline'}
                                 new_offline += 1

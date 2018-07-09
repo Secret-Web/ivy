@@ -30,16 +30,16 @@ class ClientModule(Module):
         self.process = Process(self)
         self.monitor = Monitor(self)
 
-        self.master_priority = None
-        self.ivy.register_listener('master')(self.on_discovery_master)
+        self.relay_priority = None
+        self.ivy.register_listener('relay')(self.on_discovery_relay)
 
         asyncio.ensure_future(api_server.start(self))
 
     async def on_stop(self):
         await self.process.stop()
 
-    def on_discovery_master(self, protocol, service):
-        if self.master_priority is None or service.payload['priority'] < self.master_priority:
+    def on_discovery_relay(self, protocol, service):
+        if self.relay_priority is None or service.payload['priority'] < self.relay_priority:
             self.logger.info('Connecting to primary %r...' % service)
 
             self.connector.open(service.ip, service.port, {
@@ -50,13 +50,13 @@ class ClientModule(Module):
                 }
             })
 
-            self.master_priority = service.payload['priority']
+            self.relay_priority = service.payload['priority']
 
     async def event_connection_open(self, packet):
         await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
     async def event_connection_closed(self, packet):
-        self.master_priority = None
+        self.relay_priority = None
 
     def register_events(self, l):
         @l.listen_event('machine', 'action')
