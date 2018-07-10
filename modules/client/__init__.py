@@ -1,7 +1,6 @@
 import asyncio
 
 from ivy.module import Module
-from ivy.net import NetConnector
 from ivy.model.client import Client
 from ivy.model.hardware import get_hardware
 
@@ -15,13 +14,8 @@ class ClientModule(Module):
     def on_load(self):
         if 'worker_id' not in self.config:
             self.config['worker_id'] = self.ivy.id
-        self.config['hardware'] = get_hardware()
 
-        self.client = Client(**dict({'machine_id': self.ivy.id}, **self.config))
-
-        self.connector = NetConnector(self.logger.getChild('socket'))
-        self.connector.listen_event('connection', 'open')(self.event_connection_open)
-        self.connector.listen_event('connection', 'closed')(self.event_connection_closed)
+        self.client = Client(**dict({'machine_id': self.ivy.id, 'hardware': get_hardware()}, **self.config))
 
         self.register_events(self.connector)
 
@@ -30,32 +24,30 @@ class ClientModule(Module):
         self.process = Process(self)
         self.monitor = Monitor(self)
 
-        self.relay_priority = None
-        self.ivy.register_listener('relay')(self.on_discovery_relay)
-
         asyncio.ensure_future(api_server.start(self))
 
     async def on_stop(self):
         await self.process.stop()
 
-    def on_discovery_relay(self, protocol, service):
-        if self.relay_priority is None or service.payload['priority'] < self.relay_priority:
-            self.logger.info('Connecting to primary %r...' % service)
-
-            self.connector.open(service.ip, service.port, {
-                'Miner-ID': self.ivy.id,
-                'Subscribe': {
-                    'machine': ['action'],
-                    'fee': ['update']
-                }
-            })
-
-            self.relay_priority = service.payload['priority']
+    def on_connect_relay(self, service):
+        self.connector.open(service.ip, service.port, {
+            'Miner-ID': self.ivy.id,
+            'Subscribe': {
+                'machine': ['action'],
+                'fee': ['update']
+            }
+        })
 
     async def event_connection_open(self, packet):
+        await super().event_connection_open(packet)
+
+        self.monitor.stats.connected = True
         await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
     async def event_connection_closed(self, packet):
+        await super().event_connection_closed(packet)
+
+        self.monitor.stats.connected = False
         self.relay_priority = None
 
     def register_events(self, l):

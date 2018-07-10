@@ -8,6 +8,8 @@ from .service import RelayService
 
 
 class RelayModule(Module):
+    IS_RELAY = True
+
     def on_load(self):
         self.service = RelayService(self, port=29203)
         self.ivy.register_service(self.service)

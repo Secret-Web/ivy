@@ -3,6 +3,7 @@ class MinerStats:
         self.update(**kwargs)
 
     def update(self, **kwargs):
+        self.connected = False
         self.online = kwargs['online'] if 'online' in kwargs else False
         self.shares = kwargs['shares'] if 'shares' in kwargs else {'invalid': 0, 'accepted': 0, 'rejected': 0}
         self.hardware = MinerHardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
@@ -10,6 +11,7 @@ class MinerStats:
     def as_obj(self):
         obj = {}
 
+        if self.connected is not None: obj['connected'] = self.connected
         if self.online is not None: obj['online'] = self.online
         if self.shares is not None: obj['shares'] = self.shares
         if self.hardware is not None: obj['hardware'] = self.hardware.as_obj()
@@ -26,6 +28,10 @@ class MinerHardware:
         if 'gpus' in kwargs:
             for gpu in kwargs['gpus']:
                 self.gpus.append(GPUStats(**gpu))
+
+    def reset(self, **kwargs):
+        for gpu in self.gpus:
+            gpu.update()
 
     def as_obj(self):
         obj = {}

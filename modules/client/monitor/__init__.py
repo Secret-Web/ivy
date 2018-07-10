@@ -124,6 +124,7 @@ class Monitor:
             new_stats = MinerStats(hardware=self.client.hardware.as_obj())
 
             # Has three states. True for online, False for offline, and int while it's waiting to be confirmed offline. (unstable)
+            #gpu_status = {}
             gpu_status = {}
 
             while True:
@@ -145,6 +146,18 @@ class Monitor:
 
                         session_shares = got_stats['shares']
 
+                    # If the miner is newly online, force an update
+                    if not new_stats.online:
+                        update = new_stats.online = True
+                except Exception as e:
+                    new_stats.online = False
+                    
+                    update = True
+
+                    if not isinstance(e, ConnectionRefusedError):
+                        self.logger.exception('\n' + traceback.format_exc())
+
+                try:
                     hw_stats = await self.get_hw_stats()
 
                     new_online = 0
@@ -168,48 +181,58 @@ class Monitor:
                         online = gpu.rate > 0
 
                         if i not in gpu_status:
-                            gpu_status[i] = {'type': 'starting'}
+                            #gpu_status[i] = {'type': 'starting'}
+                            gpu_status[i] = False
 
-                        if gpu.online and not online:
-                            # Begin timer for "confirmed dead"
-                            gpu_status[i] = {'type': 'unstable', 'time': time.time()}
-
-                        if not gpu.online and online:
-                            if gpu_status[i]['type'] == 'offline':
+                        if gpu.online is not online:
+                            if not online:
+                                new_offline += 1
+                            else:
                                 new_online += 1
+                            gpu_status[i] = online
 
-                            gpu_status[i] = {'type': 'online'}
+                        #if gpu.online and not online:
+                        #    # Begin timer for "confirmed dead"
+                        #    gpu_status[i] = {'type': 'unstable', 'time': time.time()}
+
+                        #if not gpu.online and online:
+                        #    if gpu_status[i]['type'] == 'offline':
+                        #        new_online += 1
+
+                        #    gpu_status[i] = {'type': 'online'}
 
                         gpu.online = online
 
-                        if gpu_status[i]['type'] == 'unstable':
+                        #if gpu_status[i]['type'] == 'unstable':
                             # If the GPU has been unstable for 60 seconds, it's dead. Notify the relay.
-                            if time.time() - gpu_status[i]['time'] > 60:
-                                gpu_status[i] = {'type': 'offline'}
-                                new_offline += 1
+                        #    if time.time() - gpu_status[i]['time'] > 60:
+                        #        gpu_status[i] = {'type': 'offline'}
+                        #        new_offline += 1
                     
                     if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
                         self.process.watchdog.ping()
 
-                    if not self.module.process.is_fee:
-                        if new_offline > 0:
-                            self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
+                    #if not self.module.process.is_fee:
+                    #    if new_offline > 0:
+                    #        self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
 
-                        if new_online > 0:
-                            self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
+                    #    if new_online > 0:
+                    #        self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
 
-                    # If the miner is offline, set it online and force an update
-                    if not new_stats.online or new_offline > 0 or new_online > 0:
-                        update = new_stats.online = True
-                    else:
-                        # Otherwise, push an update every minute
-                        update = time.time() - last_poke > 60
+                    # If a GPU changed state, force an update
+                    if new_online > 0 or new_offline > 0:
+                        update = True
                 except Exception as e:
                     new_stats.online = False
+
                     update = True
 
                     if not isinstance(e, ConnectionRefusedError):
                         self.logger.exception('\n' + traceback.format_exc())
+                
+                # Force an update every 60 seconds
+                if not update:
+                    update = time.time() - last_poke > 60
 
                 if update:
                     update = False

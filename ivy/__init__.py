@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import asyncio
+import traceback
 
 from epyphany import Epyphany
 
@@ -29,6 +30,8 @@ def gen_id():
 class Ivy:
     def __init__(self, config_file, epyphany_port=29204):
         self.logger = logging.getLogger('Ivy')
+
+        self.shutting_down = False
 
         self.id = gen_id()
         self.config_file = config_file
@@ -70,7 +73,7 @@ class Ivy:
         open(IVY_RUNNING_INDICATOR, 'a').close()
 
         if not self.is_safe:
-            self.logger.warning('Ivy did not gracefully shutdown. Some features may be disabled for safety reasons! %r' % [IVY_RUNNING_INDICATOR, self.is_safe])
+            self.logger.warning('Ivy did not gracefully shutdown. Some features may be disabled for safety reasons!')
 
         for id, module in self.modules.items():
             self.logger.debug('Loading module: %r' % id)
@@ -82,18 +85,26 @@ class Ivy:
         self.epyphany.begin()
 
     async def graceful_shutdown(self):
-        self.logger.critical('Shutting down...')
+        if self.shutting_down:
+            return
+        self.shutting_down = True
 
-        for id, module in self.modules.items():
-            self.logger.debug('Stopping module: %r' % id)
+        try:
+            self.logger.critical('Shutting down...')
 
-            await module.on_stop()
+            for id, module in self.modules.items():
+                self.logger.debug('Stopping module: %r' % id)
 
-        self.logger.info('Cleaning up files...')
+                await module.on_stop()
 
-        os.remove(IVY_RUNNING_INDICATOR)
+            self.logger.info('Cleaning up files...')
 
-        self.logger.info('Shutdown successful.')
+            os.remove(IVY_RUNNING_INDICATOR)
+
+            self.logger.info('Shutdown successful.')
+        except:
+            self.logger.severe('Shutdown failure.')
+            self.logger.exception(traceback.format_exc())
 
         asyncio.get_event_loop().stop()
 
