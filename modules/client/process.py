@@ -108,7 +108,7 @@ class Process:
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             
-            await self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
+            await self.module.monitor.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
     async def start(self):
         config = self.module.client
@@ -172,7 +172,7 @@ class Process:
                 await self.module.gpus.setup(config.hardware)
                 await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
             else:
-                self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
+                await self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
