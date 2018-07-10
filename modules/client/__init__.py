@@ -59,15 +59,17 @@ class ClientModule(Module):
             elif packet.payload['id'] == 'patch':
                 self.client.update(**packet.payload)
 
-                self.config.update(self.client.as_obj())
+                self.config.update(**packet.payload)
+
                 self.ivy.save_config()
             elif packet.payload['id'] == 'refresh':
                 self.client.update(**packet.payload)
 
-                await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
+                self.config = packet.payload
 
-                self.config.update(self.client.as_obj())
                 self.ivy.save_config()
+
+                await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
                 await self.process.start()
             elif packet.payload['id'] == 'shutdown':

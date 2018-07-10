@@ -278,6 +278,8 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'update')
         async def event(packet):
+            updated_machines = {}
+
             for id, data in packet.payload.items():
                 miner = Client(**data)
 
@@ -289,8 +291,9 @@ class ComputeModule(Module):
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
-                    await self.send_action(packet, {'id': 'patch'}, machine_id=id)
-            await packet.send('machines', 'patch', {id: (await self.database.machines.get(id)).as_obj() for id in packet.payload})
+                    async for machine_id, machine in self.send_action(packet, {'id': 'patch'}, machine_id=id):
+                        updated_machines[machine_id] = machine.as_obj()
+            await packet.send('machines', 'patch', updated_machines)
 
         @l.listen_event('machines', 'action')
         async def event(packet):
@@ -346,7 +349,7 @@ class ComputeModule(Module):
         machines = {}
 
         if machine_id:
-            machines[machine_id] = await self.database.get(machine_id)
+            machines[machine_id] = await self.database.machines.get(machine_id)
         else:
             async for machine_id, machine in self.database.machines.all():
                 if group_id == '*' or machine.group.id == group_id:
