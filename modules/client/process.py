@@ -168,7 +168,7 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            if self.watchdog.is_safe:
+            if self.ivy.is_safe and self.watchdog.is_safe:
                 await self.module.gpus.setup(config.hardware)
                 await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
             else:

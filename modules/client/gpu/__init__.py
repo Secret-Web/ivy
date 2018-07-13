@@ -26,7 +26,9 @@ class GPUControl:
         for controller_id, controller in self.controllers.items():
             if controller.has_gpu(hardware):
                 self.logger.info('Applying overclock on %s GPUs' % controller_id.upper())
-                self.logger.info(repr(overclock.as_obj()))
+                data = overclock.as_obj()
+                if controller_id in data:
+                    self.logger.info(repr(data[controller_id]))
                 await controller.apply([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)], overclock)
 
     async def revert(self, hardware):
