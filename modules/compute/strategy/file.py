@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import inspect
 from shutil import copyfile
 
 from ivy.model.message import Message
@@ -12,10 +13,25 @@ from ivy.model.client import Client
 from . import new_id, Strategy, Query
 
 
+is_syncing = False
+
+async def wait_for_synced():
+    while is_syncing:
+        asyncio.sleep(1)
+
 class DictQuery:
     def __init__(self, clazz, data: dict):
         self.clazz = clazz
         self.data = {k: self.clazz(**v) for k, v in data.items()}
+
+        for name, func in inspect.getmembers(self, predicate=inspect.iscoroutinefunction):
+            def wrap_func(name, func):
+                async def ensure_synced(*args, **kwargs):
+                    await wait_for_synced()
+
+                    await func(*args, **kwargs)
+                setattr(self, name, ensure_synced)
+            wrap_func(name, func)
 
     async def all(self):
         for k, v in self.data.items():
@@ -53,13 +69,22 @@ class DictQuery:
     async def get(self, k):
         return self.data[k]
 
-    def delete(self, k):
+    async def delete(self, k):
         del self.data[k]
 
 class ListQuery:
     def __init__(self, clazz, data: list):
         self.clazz = clazz
         self.data = [self.clazz(**v) for v in data]
+
+        for name, func in inspect.getmembers(self, predicate=inspect.iscoroutinefunction):
+            def wrap_func(name, func):
+                async def ensure_synced(*args, **kwargs):
+                    await wait_for_synced()
+
+                    await func(*args, **kwargs)
+                setattr(self, name, ensure_synced)
+            wrap_func(name, func)
     
     async def all(self):
         for v in self.data:
@@ -153,5 +178,32 @@ class FileStrategy(Strategy):
 
     async def save_snapshot(self, snapshot):
         pass
+    
+    def on_bind(self, l):
+        l.listen_event('connection', 'open')(self.on_sync_request)
+        l.listen_event('connection', 'closed')(self.on_sync_request)
+        l.listen_event('sync', 'request')(self.on_sync_request)
+        l.listen_event('sync', 'lock')(self.on_sync_lock)
+        l.listen_event('sync', 'data')(self.on_sync_request)
+    
+    def on_unbind(self, l):
+        self.on_connected.__dict__['unregister_event']()
+        self.on_disconnected.__dict__['unregister_event']()
+        self.on_sync_request.__dict__['unregister_event']()
+    
+    async def on_connected(self, packet):
+        if not packet.dummy: return
+
+        is_syncing = False
+
+        await packet.send('sync', 'discover')
+    
+    async def on_disconnected(self, packet):
+        if not packet.dummy: return
+
+        is_syncing = False
+    
+    async def on_sync_discover(self, packet):
+        print('Received sync discovery', packet)
 
 __strategy__ = FileStrategy

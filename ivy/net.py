@@ -76,6 +76,9 @@ class Net:
             if method not in self.events[listen]: self.events[listen][method] = []
 
         def inner(func):
+            def unregister(self):
+                self.events[listen][method].remove(func)
+            func.__dict__['unregister_event'] = unregister
             self.events[listen][method].append(func)
             return func
         return inner

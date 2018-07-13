@@ -31,7 +31,7 @@ class ComputeModule(Module):
         if 'type' not in self.config['database']:
             self.config['database'] ['type'] = 'file'
 
-        self.database = Database(self.ivy, self.logger, self.config['database'])
+        self.database = Database(self.ivy, self.logger, self.connector, self.config['database'])
 
         self.register_events(self.connector)
 

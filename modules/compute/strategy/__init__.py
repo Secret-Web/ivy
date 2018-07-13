@@ -18,6 +18,12 @@ class Strategy:
     
     def save_snapshot(self, snap):
         pass
+    
+    def on_bind(self, l):
+        pass
+    
+    def on_unbind(self, l):
+        pass
 
 class Query:
     def __init__(self):

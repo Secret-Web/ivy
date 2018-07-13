@@ -19,20 +19,17 @@ def url_content(url):
     return response.read().decode('utf-8')
 
 class Database(dict):
-    def __init__(self, ivy, logger, config):
+    def __init__(self, ivy, logger, connector, config):
         self.ivy = ivy
         self.logger = logger.getChild('db')
+        self.connector = connector
         self.config = config
 
         if 'last_check' not in self.config:
             self.config['last_check'] = 0
 
-        self.strategy = self.load_strategy(config['type'])(self.ivy, self.logger, self.config)
-        for thing in ['messages', 'pools', 'wallets', 'groups', 'machines']:
-            if not hasattr(self.strategy, thing):
-                raise Exception('Strategy does not implement a "%s" field.' % thing)
-
-            setattr(self, thing, getattr(self.strategy, thing))
+        self.strategy = None
+        self.apply_strategy(config['type'])
 
         self.fee = Fee()
         self.stats = {}
@@ -94,6 +91,20 @@ class Database(dict):
             self.logger.warning('Failed to load "%s" strategy. Falling back to "file".' % strategy_id)
             self.logger.exception('\n' + traceback.format_exc())
             return strategy_id('file')
+    
+    def apply_strategy(self, strategy_id):
+        if self.strategy is not None:
+            self.strategy.on_unbind(self.connector)
+
+        self.strategy = self.load_strategy(strategy_id)(self.ivy, self.logger, self.config)
+
+        for thing in ['messages', 'pools', 'wallets', 'groups', 'machines']:
+            if not hasattr(self.strategy, thing):
+                raise Exception('Strategy does not implement a "%s" field.' % thing)
+
+            setattr(self, thing, getattr(self.strategy, thing))
+        
+        self.strategy.on_bind(self.connector)
 
     async def update(self):
         last_update = 0
