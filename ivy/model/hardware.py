@@ -103,8 +103,8 @@ class Hardware:
             if self.memory is not None: obj['memory'] = [x.as_obj() for x in self.memory]
             if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
 
-        if self.overclock:
-            self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs and kwargs['overclock'] else {})
+        if self.overclock is not None:
+            self.overclock = obj['mac'] = self.overclock.as_obj()
 
         return obj
 
