@@ -109,10 +109,6 @@ class Process:
             self.module.monitor.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
     async def start(self):
-        if not self.module.ivy.is_safe or not self.watchdog.is_safe:
-            self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
-            return
-
         config = self.module.client
 
         if not config.program:
@@ -132,6 +128,10 @@ class Process:
         # did not gracefully shut down then assume this boot is unsafe.
         if self.watchdog.first_start and not self.module.ivy.is_safe:
             self.watchdog.is_safe = False
+
+        if not self.watchdog.is_safe:
+            self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
+            return
 
         self.config = config
 
@@ -237,6 +237,7 @@ class ProcessWatchdog:
         self.logger = logger.getChild('Watchdog')
 
         self.first_start = True
+        self.is_safe = True
 
         self.online = False
 
