@@ -180,8 +180,8 @@ class FileStrategy(Strategy):
         pass
     
     def on_bind(self, l):
-        l.listen_event('connection', 'open')(self.on_sync_request)
-        l.listen_event('connection', 'closed')(self.on_sync_request)
+        l.listen_event('connection', 'open')(self.on_connected)
+        l.listen_event('connection', 'closed')(self.on_disconnected)
         l.listen_event('sync', 'discover')(self.on_sync_discover)
     
     def on_unbind(self, l):
