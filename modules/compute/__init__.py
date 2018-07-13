@@ -323,9 +323,8 @@ class ComputeModule(Module):
                 await self.database.save_snapshot(updated_stats)
 
         async def new_message(packet, data):
-            self.logger.info(repr(data))
             if isinstance(data, dict):
-                msg = await self.database.messages.new(data)
+                id, msg = await self.database.messages.new(data)
                 await packet.send('messages', 'patch', [msg.as_obj()])
             elif isinstance(data, list):
                 for d in data:
