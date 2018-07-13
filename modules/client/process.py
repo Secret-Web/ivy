@@ -33,6 +33,8 @@ class Process:
 
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
+        else:
+            asyncio.ensure_future(self.start())
 
     @property
     def uptime_path(self):
@@ -126,7 +128,7 @@ class Process:
 
         # If this is the first time a process was started, and Ivy
         # did not gracefully shut down then assume this boot is unsafe.
-        if self.watchdog.first_start and not self.module.ivy.is_safe:
+        if not self.watchdog.was_successful and not self.module.ivy.is_safe:
             self.watchdog.is_safe = False
 
         if not self.watchdog.is_safe:
@@ -238,7 +240,7 @@ class ProcessWatchdog:
     def __init__(self, logger):
         self.logger = logger.getChild('Watchdog')
 
-        self.first_start = True
+        self.was_successful = False
         self.is_safe = True
 
         self.online = False
@@ -253,7 +255,7 @@ class ProcessWatchdog:
         self.logger.info('Detected an ungraceful shutdown of the process.')
 
     def startup_complete(self):
-        self.first_start = False
+        self.was_successful = True
 
         self.logger.info('Process starting up. Waiting for success confirmation.')
 

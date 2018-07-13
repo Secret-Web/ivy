@@ -24,8 +24,6 @@ class ClientModule(Module):
         self.process = Process(self)
         self.monitor = Monitor(self)
 
-        asyncio.ensure_future(self.process.start())
-
         asyncio.ensure_future(api_server.start(self))
 
     async def on_stop(self):
