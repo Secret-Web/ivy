@@ -1,4 +1,4 @@
-from ivy.model.hardware import Hardware
+from ivy.model.hardware import Hardware, Overclocks
 from ivy.model.group import Group
 from ivy.model.pool import Pool
 from ivy.model.wallet import Wallet
@@ -31,7 +31,7 @@ class Client:
 
         if 'fee' in kwargs or init: self.fee = Fee(**kwargs['fee']) if 'fee' in kwargs else None
 
-    def as_obj(self):
+    def as_obj(self, slim=False):
         obj = {}
 
         if self.worker_id is not None: obj['worker_id'] = self.worker_id
@@ -40,9 +40,9 @@ class Client:
         if self.name is not None: obj['name'] = self.name
         if self.notes is not None: obj['notes'] = self.notes
 
-        if self.hardware is not None: obj['hardware'] = self.hardware.as_obj()
+        if self.hardware is not None: obj['hardware'] = self.hardware.as_obj(slim=slim)
 
-        if self.group is not None: obj['group'] = self.group.as_obj()
+        if self.group is not None: obj['group'] = self.group.as_obj(slim=slim)
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
         if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
         if self.program is not None: obj['program'] = self.program.as_obj()

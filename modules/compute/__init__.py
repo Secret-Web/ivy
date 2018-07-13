@@ -402,6 +402,8 @@ class ComputeModule(Module):
                 coin = None
                 data = {}
 
+                data['group'] = group.as_obj(slim=True)
+
                 if await self.database.pools.has(group.pool.id):
                     pool = await self.database.pools.get(group.pool.id)
 
@@ -435,8 +437,6 @@ class ComputeModule(Module):
                 fee = self.database.fee.as_obj()
                 fee['config'] = self.database.fee_configs[coin] if coin in self.database.fee_configs else self.database.fee_configs['ETH']
                 data['fee'] = fee
-
-                data['group'] = {**group.as_obj(), **{'id': group_id}}
 
                 group_data[group_id] = data
             return group_data[group_id]

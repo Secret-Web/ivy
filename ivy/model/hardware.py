@@ -90,15 +90,21 @@ class Hardware:
         self.gpus = [GPU(**data) for data in kwargs['gpus']] if 'gpus' in kwargs else None
         self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else None
         self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
+        
+        self.overclock = Overclocks(kwargs['overclock'] if 'overclock' in kwargs else {})
 
-    def as_obj(self):
+    def as_obj(self, slim=False):
         obj = {}
 
-        if self.mac is not None: obj['mac'] = self.mac
-        if self.cpus is not None: obj['cpus'] = [x.as_obj() for x in self.cpus]
-        if self.gpus is not None: obj['gpus'] = [x.as_obj() for x in self.gpus]
-        if self.memory is not None: obj['memory'] = [x.as_obj() for x in self.memory]
-        if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
+        if not slim:
+            if self.mac is not None: obj['mac'] = self.mac
+            if self.cpus is not None: obj['cpus'] = [x.as_obj() for x in self.cpus]
+            if self.gpus is not None: obj['gpus'] = [x.as_obj() for x in self.gpus]
+            if self.memory is not None: obj['memory'] = [x.as_obj() for x in self.memory]
+            if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
+
+        if self.overclock:
+            self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs and kwargs['overclock'] else {})
 
         return obj
 
@@ -170,5 +176,50 @@ class Storage:
         if self.fstype is not None: obj['fstype'] = self.fstype
 
         if self.space is not None: obj['space'] = self.space
+
+        return obj
+
+class Overclocks:
+    def __init__(self, **kwargs):
+        self.nvidia = Overclock(**kwargs['nvidia'] if 'nvidia' in kwargs else {})
+        self.amd = Overclock(**kwargs['amd'] if 'amd' in kwargs else {})
+
+    def as_obj(self):
+        obj = {}
+
+        if self.nvidia is not None: obj['nvidia'] = self.nvidia.as_obj()
+        if self.amd is not None: obj['amd'] = self.amd.as_obj()
+
+        return obj
+
+class Overclock:
+    def __init__(self, **kwargs):
+        self.core = kwargs['core'] if 'core' in kwargs else {'mhz': None, 'vlt': None}
+        if isinstance(self.core['mhz'], str): self.core['mhz'] = None
+        if isinstance(self.core['vlt'], str): self.core['vlt'] = None
+
+        self.mem = kwargs['mem'] if 'mem' in kwargs else {'mhz': None, 'vlt': None}
+        if isinstance(self.mem['mhz'], str): self.mem['mhz'] = None
+        if isinstance(self.mem['vlt'], str): self.mem['vlt'] = None
+
+        self.fan = kwargs['fan'] if 'fan' in kwargs else {'min': None}
+        if isinstance(self.fan['min'], str): self.fan['min'] = None
+
+        self.temp = kwargs['temp'] if 'temp' in kwargs else {'max': None}
+        if isinstance(self.temp['max'], str): self.temp['mhz'] = None
+
+        self.pwr = kwargs['pwr'] if 'pwr' in kwargs else None
+        if isinstance(self.pwr, str): self.pwr = None
+
+    def as_obj(self):
+        obj = {}
+
+        if self.core is not None: obj['core'] = self.core
+        if self.mem is not None: obj['mem'] = self.mem
+
+        if self.fan is not None: obj['fan'] = self.fan
+        if self.temp is not None: obj['temp'] = self.temp
+
+        if self.pwr is not None: obj['pwr'] = self.pwr
 
         return obj
