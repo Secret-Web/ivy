@@ -182,14 +182,12 @@ class FileStrategy(Strategy):
     def on_bind(self, l):
         l.listen_event('connection', 'open')(self.on_sync_request)
         l.listen_event('connection', 'closed')(self.on_sync_request)
-        l.listen_event('sync', 'request')(self.on_sync_request)
-        l.listen_event('sync', 'lock')(self.on_sync_lock)
-        l.listen_event('sync', 'data')(self.on_sync_request)
+        l.listen_event('sync', 'discover')(self.on_sync_request)
     
     def on_unbind(self, l):
         self.on_connected.__dict__['unregister_event']()
         self.on_disconnected.__dict__['unregister_event']()
-        self.on_sync_request.__dict__['unregister_event']()
+        self.on_sync_discover.__dict__['unregister_event']()
     
     async def on_connected(self, packet):
         if not packet.dummy: return
