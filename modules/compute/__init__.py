@@ -327,7 +327,7 @@ class ComputeModule(Module):
 
         async def new_message(packet, data):
             if isinstance(data, dict):
-                msg = await self.database.messages.add(data)
+                msg = await self.database.messages.new(data)
                 await packet.send('messages', 'patch', [msg.as_obj()])
             elif isinstance(data, list):
                 for d in data:
