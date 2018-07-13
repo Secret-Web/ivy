@@ -158,6 +158,12 @@ class FileStrategy(Strategy):
     async def periodic_save(self):
         last_update = 0
 
+        if os.path.exists(self.database_file_backup):
+            os.remove(self.database_file_backup)
+
+        if os.path.exists(self.database_file):
+            copyfile(self.database_file, self.database_file_backup)
+
         while True:
             # Wait 5 seconds between each save
             await asyncio.sleep(5)
@@ -169,12 +175,6 @@ class FileStrategy(Strategy):
             obj['wallets'] = {k: v.as_obj() async for k, v in self.wallets.all()}
             obj['groups'] = {k: v.as_obj() async for k, v in self.groups.all()}
             obj['machines'] = {k: v.as_obj() async for k, v in self.machines.all()}
-
-            if os.path.exists(self.database_file_backup):
-                os.remove(self.database_file_backup)
-
-            if os.path.exists(self.database_file):
-                copyfile(self.database_file, self.database_file_backup)
 
             with open(self.database_file, 'w') as f:
                 f.write(json.dumps(obj, indent=2))
