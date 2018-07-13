@@ -29,6 +29,8 @@ class DictQuery:
                 async def ensure_synced(*args, **kwargs):
                     await wait_for_synced()
 
+                    print(args)
+
                     await func(*args, **kwargs)
                 setattr(self, name, ensure_synced)
             wrap_func(name, func)
