@@ -148,13 +148,12 @@ class ComputeModule(Module):
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
+            self.logger.info('delet: %r' % packet.payload)
+
             if isinstance(packet.payload, int):
-                self.logger.info('delet: %r' % packet.payload)
                 await self.database.messages.delete(packet.payload if packet.payload else 0)
             elif isinstance(packet.payload, str):
                 o = 0
-                size = await self.database.messages.size()
-                self.logger.info('size: %r' % size)
                 for i in range(0, await self.database.messages.size()):
                     if (await self.database.messages.get(i - o)).level == packet.payload:
                         await self.database.messages.delete(i - o)

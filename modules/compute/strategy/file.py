@@ -29,7 +29,7 @@ class DictQuery:
                 async def ensure_synced(*args, **kwargs):
                     await wait_for_synced()
 
-                    await func(*args, **kwargs)
+                    return await func(*args, **kwargs)
                 setattr(self, name, ensure_synced)
             wrap_func(name, func)
 
@@ -85,10 +85,10 @@ class ListQuery:
                 async def ensure_synced(*args, **kwargs):
                     await wait_for_synced()
 
-                    await func(*args, **kwargs)
+                    return await func(*args, **kwargs)
                 setattr(self, name, ensure_synced)
             wrap_func(name, func)
-    
+
     async def size(self):
         return len(self.data)
 
