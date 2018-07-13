@@ -173,9 +173,9 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        '''if hasattr(config, 'hardware'):
+        if hasattr(config, 'hardware'):
             await self.module.gpus.setup(config.hardware)
-            await self.module.gpus.apply(config.hardware, config.overclock)'''
+            await self.module.gpus.apply(config.hardware, config.overclock)
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
