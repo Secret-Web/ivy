@@ -132,6 +132,8 @@ class Process:
         if not self.watchdog.is_safe:
             self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
             return
+        
+        return
 
         self.config = config
 
