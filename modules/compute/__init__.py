@@ -148,9 +148,7 @@ class ComputeModule(Module):
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
-            self.logger.info('delet: %r' % packet.payload)
-
-            if isinstance(packet.payload, int):
+            if packet.payload is None or isinstance(packet.payload, int):
                 await self.database.messages.delete(packet.payload if packet.payload else 0)
             elif isinstance(packet.payload, str):
                 o = 0
