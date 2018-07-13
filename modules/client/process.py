@@ -264,6 +264,8 @@ class ProcessWatchdog:
 
         self.logger.info('Process startup failed.')
 
+        self.cleanup()
+
     def ping(self):
         if not self.online:
             self.logger.info('Process successfully started')
