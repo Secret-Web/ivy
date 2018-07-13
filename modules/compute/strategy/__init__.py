@@ -29,6 +29,9 @@ class Query:
     def __init__(self):
         pass
 
+    async def size(self):
+        raise NotImplementedError()
+
     async def all(self):
         raise NotImplementedError()
 

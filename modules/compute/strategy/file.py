@@ -29,11 +29,12 @@ class DictQuery:
                 async def ensure_synced(*args, **kwargs):
                     await wait_for_synced()
 
-                    print(args)
-
-                    await func(*args, **kwargs)
+                    await func(self, *args, **kwargs)
                 setattr(self, name, ensure_synced)
             wrap_func(name, func)
+
+    async def size(self):
+        return len(self.data)
 
     async def all(self):
         for k, v in self.data.items():
@@ -84,10 +85,13 @@ class ListQuery:
                 async def ensure_synced(*args, **kwargs):
                     await wait_for_synced()
 
-                    await func(*args, **kwargs)
+                    await func(self, *args, **kwargs)
                 setattr(self, name, ensure_synced)
             wrap_func(name, func)
     
+    async def size(self):
+        return len(self.data)
+
     async def all(self):
         for v in self.data:
             yield v
