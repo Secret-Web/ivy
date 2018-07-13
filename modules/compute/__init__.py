@@ -99,8 +99,7 @@ class ComputeModule(Module):
                     stats.online = False
                     stats.runtime = 0
 
-                    for gpu in stats.hardware.gpus:
-                        gpu.reset()
+                    stats.hardware.reset()
 
                     await packet.send('machines', 'stats', {miner_id: stats.as_obj()})
 
