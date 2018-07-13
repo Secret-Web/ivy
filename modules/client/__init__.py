@@ -59,7 +59,7 @@ class ClientModule(Module):
             elif packet.payload['id'] == 'patch':
                 self.client.update(**packet.payload)
 
-                self.config.update(**packet.payload)
+                self.config.update(**self.client.as_obj(slim=True))
 
                 self.ivy.save_config()
             elif packet.payload['id'] == 'refresh':
