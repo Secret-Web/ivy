@@ -129,6 +129,8 @@ class Monitor:
             while True:
                 await asyncio.sleep(1)
 
+                got_stats = None
+
                 try:
                     got_stats = await self.get_stats()
 
@@ -169,7 +171,7 @@ class Monitor:
                         gpu.fan = 0
                         gpu.watts = 0
 
-                        if i < len(got_stats['hashrate']):
+                        if got_stats is not None and i < len(got_stats['hashrate']):
                             gpu.rate = got_stats['hashrate'][i]
 
                         if i < len(hw_stats):
