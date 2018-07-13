@@ -96,20 +96,17 @@ class ListQuery:
         for v in self.data:
             yield v
 
-    async def put(self, k, v):
-        if not isinstance(v, self.clazz):
-            v = self.clazz(**v)
-
-        self.data.insert(k, v)
-
     async def new(self, v):
         return await self.add(0, v)
+
+    async def put(self, k, v):
+        return await self.add(k, v)
 
     async def add(self, k, v):
         if not isinstance(v, self.clazz):
             v = self.clazz(**v)
 
-        self.data[k] = v
+        self.data.insert(k, v)
         return k, v
 
     async def has(self, v):
