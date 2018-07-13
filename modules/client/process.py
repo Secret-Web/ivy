@@ -34,7 +34,7 @@ class Process:
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
-            if self.ivy.is_safe and self.watchdog.is_safe:
+            if self.module.ivy.is_safe and self.watchdog.is_safe:
                 asyncio.ensure_future(self.start())
             else:
                 self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
