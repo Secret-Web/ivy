@@ -296,8 +296,6 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'action')
         async def event(packet):
-            print(packet.payload)
-
             for id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
                     await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
@@ -325,6 +323,7 @@ class ComputeModule(Module):
                 await self.database.save_snapshot(updated_stats)
 
         async def new_message(packet, data):
+            self.logger.info(repr(data))
             if isinstance(data, dict):
                 msg = await self.database.messages.new(data)
                 await packet.send('messages', 'patch', [msg.as_obj()])
