@@ -34,7 +34,10 @@ class Process:
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
-            asyncio.ensure_future(self.start())
+            if self.ivy.is_safe and self.watchdog.is_safe:
+                asyncio.ensure_future(self.start())
+            else:
+                self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
     @property
     def uptime_path(self):
@@ -168,11 +171,8 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            if self.ivy.is_safe and self.watchdog.is_safe:
-                await self.module.gpus.setup(config.hardware)
-                await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
-            else:
-                self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, overclock settings were not applied!')
+            await self.module.gpus.setup(config.hardware)
+            await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
