@@ -128,7 +128,7 @@ class Process:
 
         # If this is the first time a process was started, and Ivy
         # did not gracefully shut down then assume this boot is unsafe.
-        if not self.watchdog.first_start and not self.module.ivy.is_safe:
+        if self.watchdog.first_start and not self.module.ivy.is_safe:
             self.watchdog.is_safe = False
 
         if not self.watchdog.is_safe:
