@@ -41,12 +41,14 @@ class Client:
         if self.name is not None: obj['name'] = self.name
         if self.notes is not None: obj['notes'] = self.notes
 
-        if self.hardware is not None: obj['hardware'] = self.hardware.as_obj(slim=slim)
+        if not slim:
+            if self.hardware is not None: obj['hardware'] = self.hardware.as_obj(slim=slim)
 
         if self.group is not None: obj['group'] = self.group.as_obj(slim=slim)
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
         if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
         if self.program is not None: obj['program'] = self.program.as_obj()
+        if self.overclock is not None: obj['overclock'] = self.overclock.as_obj()
 
         if self.fee is not None: obj['fee'] = self.fee.as_obj()
 
