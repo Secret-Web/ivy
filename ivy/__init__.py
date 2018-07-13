@@ -86,7 +86,9 @@ class Ivy:
 
     async def graceful_shutdown(self):
         if self.shutting_down:
+            asyncio.get_event_loop().stop()
             return
+
         self.shutting_down = True
 
         try:

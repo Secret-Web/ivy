@@ -28,7 +28,8 @@ class Client:
         if 'pool' in kwargs or init: self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs and kwargs['pool'] else None
         if 'wallet' in kwargs or init: self.wallet = Wallet(**kwargs['wallet']) if 'wallet' in kwargs and kwargs['wallet'] else None
         if 'program' in kwargs or init: self.program = Program(**kwargs['program']) if 'program' in kwargs and kwargs['program'] else None
-
+        if 'overclock' in kwargs or init: self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs else {})
+        
         if 'fee' in kwargs or init: self.fee = Fee(**kwargs['fee']) if 'fee' in kwargs else None
 
     def as_obj(self, slim=False):

@@ -175,7 +175,7 @@ class Process:
 
         '''if hasattr(config, 'hardware'):
             await self.module.gpus.setup(config.hardware)
-            await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)'''
+            await self.module.gpus.apply(config.hardware, config.overclock)'''
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 

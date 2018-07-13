@@ -403,6 +403,7 @@ class ComputeModule(Module):
                 data = {}
 
                 data['group'] = group.as_obj(slim=True)
+                data['overclock'] = group.hardware.overclock.as_obj()
 
                 if await self.database.pools.has(group.pool.id):
                     pool = await self.database.pools.get(group.pool.id)
