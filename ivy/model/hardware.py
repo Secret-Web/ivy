@@ -104,7 +104,7 @@ class Hardware:
             if self.storage is not None: obj['storage'] = [x.as_obj() for x in self.storage]
 
         if self.overclock is not None:
-            self.overclock = obj['mac'] = self.overclock.as_obj()
+            obj['overclock'] = self.overclock.as_obj()
 
         return obj
 
