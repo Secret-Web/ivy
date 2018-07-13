@@ -19,19 +19,20 @@ class GPUControl:
     async def setup(self, hardware):
         for controller_id, controller in self.controllers.items():
             if controller.has_gpu(hardware):
-                self.logger.info('Setting up %s GPUs' % controller_id)
+                self.logger.info('Setting up %s GPUs' % controller_id.upper())
                 await controller.setup([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)])
 
     async def apply(self, hardware, overclock):
         for controller_id, controller in self.controllers.items():
             if controller.has_gpu(hardware):
-                self.logger.info('Applying overclock on %s GPUs' % controller_id)
+                self.logger.info('Applying overclock on %s GPUs' % controller_id.upper())
+                self.logger.info(repr(overclock.as_obj()))
                 await controller.apply([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)], overclock)
 
     async def revert(self, hardware):
         for controller_id, controller in self.controllers.items():
             if controller.has_gpu(hardware):
-                self.logger.info('Reverting overclock on %s GPUs' % controller_id)
+                self.logger.info('Reverting overclock on %s GPUs' % controller_id.upper())
                 await controller.revert([(i, gpu) for i, gpu in enumerate(hardware.gpus) if controller.is_mine(gpu)])
 
     async def get_stats(self, hardware):
