@@ -158,10 +158,10 @@ class FileStrategy(Strategy):
     async def periodic_save(self):
         last_update = 0
 
-        if os.path.exists(self.database_file_backup):
-            os.remove(self.database_file_backup)
-
         if os.path.exists(self.database_file):
+            if os.path.exists(self.database_file_backup):
+                os.remove(self.database_file_backup)
+
             copyfile(self.database_file, self.database_file_backup)
 
         while True:
