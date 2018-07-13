@@ -117,10 +117,6 @@ class Ivy:
                     stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await updater.wait()
 
-        updater = await asyncio.create_subprocess_exec(*['git', 'reset', '--hard'], cwd=os.getcwd(),
-                    stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        await updater.wait()
-
         updater = await asyncio.create_subprocess_exec(*['git', 'pull'], cwd=os.getcwd(),
                     stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         await updater.wait()
