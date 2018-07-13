@@ -128,14 +128,14 @@ class Process:
 
         # If this is the first time a process was started, and Ivy
         # did not gracefully shut down then assume this boot is unsafe.
-        if not self.watchdog.was_successful and not self.module.ivy.is_safe:
+        if not self.watchdog.first_start and not self.module.ivy.is_safe:
             self.watchdog.is_safe = False
 
         if not self.watchdog.is_safe:
+            self.watchdog.startup_failure()
+
             self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
             return
-        
-        return
 
         self.config = config
 
@@ -173,9 +173,9 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        if hasattr(config, 'hardware'):
+        '''if hasattr(config, 'hardware'):
             await self.module.gpus.setup(config.hardware)
-            await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)
+            await self.module.gpus.apply(config.hardware, self.client.group.hardware.overclock)'''
 
         self.logger.info('Starting miner: %s' % ' '.join(args))
 
@@ -240,7 +240,7 @@ class ProcessWatchdog:
     def __init__(self, logger):
         self.logger = logger.getChild('Watchdog')
 
-        self.was_successful = False
+        self.first_start = True
         self.is_safe = True
 
         self.online = False
@@ -255,9 +255,14 @@ class ProcessWatchdog:
         self.logger.info('Detected an ungraceful shutdown of the process.')
 
     def startup_complete(self):
-        self.was_successful = True
+        self.first_start = False
 
         self.logger.info('Process starting up. Waiting for success confirmation.')
+
+    def startup_failure(self):
+        self.first_start = False
+
+        self.logger.info('Process startup failed.')
 
     def ping(self):
         if not self.online:
