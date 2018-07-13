@@ -91,7 +91,7 @@ class Hardware:
         self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else None
         self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
         
-        self.overclock = Overclocks(kwargs['overclock'] if 'overclock' in kwargs else {})
+        self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs else {})
 
     def as_obj(self, slim=False):
         obj = {}
