@@ -60,7 +60,7 @@ class NvidiaAPI(API):
         stdout, stderr = await self.run_cmd('stats', 'nvidia-smi -q -x', quiet=True)
 
         try:
-            root = ElementTree.fromstring(stdout)
+            root = ElementTree.fromstring('\n'.join(stdout))
             for g in root.findall('gpu'):
                 # Strip off "pci@"
                 if gpu.bus_id[4:] == g.get('id')[4:]:

@@ -79,12 +79,14 @@ class API:
         stdout, stderr = ([], [])
 
         logger = logging.getLogger(action)
+        logger.info(cmd)
+
         asyncio.ensure_future(self._read_stream(logger, proc.stdout, stdout, quiet=quiet, error=False))
         asyncio.ensure_future(self._read_stream(logger, proc.stderr, stderr, quiet=quiet, error=True))
 
         await proc.wait()
 
-        return ('\n'.join(stdout), '\n'.join(stderr))
+        return (stdout, stderr)
 
     async def _read_stream(self, logger, stream, to, quiet, error):
         while True:

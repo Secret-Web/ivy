@@ -6,35 +6,66 @@ class AMDAPI(API):
         return 'AMD' in gpu.vendor
 
     async def setup(self, gpus):
+        self.defaults = []
         for i, gpu in gpus:
-            await self.run_cmd('STP', 'echo manual > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
+            settings = {'core': {'mhz': [], 'vlt_table': []}, 'mem': {'mhz': [], 'vlt_table': []}}
+
+            stdout, stderr = await self.run_cmd('OVC', '/usr/bin/ohgodatool -i %d --show-core' % i)
+            for line in stdout:
+                if 'voltage table entry' in line:
+                    settings['core']['vlt_table'].append(int(line.split('voltage table entry')[1].split(')')[0].strip()))
+                elif 'Core clock' in line:
+                    settings['core']['mhz'].append(int(line.split(':')[1].strip()))
+
+            stdout, stderr = await self.run_cmd('OVC', '/usr/bin/ohgodatool -i %d --show-mem' % i)
+            for line in stdout:
+                if 'voltage table entry' in line:
+                    settings['core']['vlt_table'].append(int(line.split('voltage table entry')[1].split(')')[0].strip()))
+                elif 'Core clock' in line:
+                    settings['core']['mhz'].append(int(line.split(':')[1].strip()))
+
+            self.defaults.append({
+                'core': {
+
+                }, 'mem': {
+
+                }
+            })
+
+            await self.run_cmd('PWR', 'echo "performance" >/sys/class/drm/card%d/device/power_dpm_state' % i)
+            await self.run_cmd('FPL', 'echo "high" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
     async def apply(self, gpus, overclock):
         for i, gpu in gpus:
             await self.apply_gpu(i, gpu, overclock.amd)
 
     async def apply_gpu(self, i, gpu, overclock):
+        async def ogat(tag, args):
+            await self.run_cmd(tag, '/usr/bin/ohgodatool -i %d %s' % (i, args))
+
         if overclock.pwr:
-            await self.run_cmd('PWR', '/usr/bin/ohgodatool -i %d --set-max-power %d' % (i, overclock.pwr))
+            await ogat('OVC', '--set-max-power %d' % overclock.pwr)
 
         if overclock.core['mhz']:
-            await self.run_cmd('CMZ', '/usr/bin/ohgodatool -i %d --core-state 0 --core-clock %d' % (i, overclock.core['mhz']))
+            await ogat('MCC', '--set-max-core-clock %d' % overclock.core['mhz'])
+            await ogat('SCC', '--core-state -1 --core-clock %d' % overclock.core['mhz'])
 
         if overclock.core['vlt']:
-            await self.run_cmd('CVT', '/usr/bin/ohgodatool -i %d --volt-state 0 --vddci %d' % (i, overclock.core['vlt']))
+            await ogat('SCV', '--mem-state -1 --vddci %d' % overclock.core['vlt'])
 
         if overclock.mem['mhz']:
-            await self.run_cmd('MMZ', '/usr/bin/ohgodatool -i %d --mem-state 0 --mem-clock %d' % (i, overclock.mem['mhz']))
+            await ogat('MMC', '--set-max-mem-clock %d' % overclock.mem['mhz'])
+            await ogat('SMC', '--mem-state -1 --mem-clock %d' % overclock.mem['mhz'])
 
         if overclock.mem['vlt']:
-            await self.run_cmd('MVT', '/usr/bin/ohgodatool -i %d --volt-state 0 --mvdd %d' % (i, overclock.mem['vlt']))
+            await ogat('SMV', '--mem-state -1 --mvdd %d' % overclock.mem['vlt'])
 
         if overclock.fan['min']:
-            await self.run_cmd('FAN', '/usr/bin/ohgodatool -i %d --set-fanspeed %d' % (i, overclock.fan['min']))
+            await ogat('SFS', '--set-fanspeed %d' % overclock.fan['min'])
 
     async def revert(self, hardware):
-        # Not yet implemented.
-        pass
+        await self.run_cmd('PWR', 'echo 2 > /sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_enable' % (i, i))
+        await self.run_cmd('FPL', 'echo "auto" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
     async def get_stats(self, i, gpu):
         temp = 0
