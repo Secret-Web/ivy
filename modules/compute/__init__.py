@@ -252,7 +252,7 @@ class ComputeModule(Module):
 
         @l.listen_event('groups', 'action')
         async def event(packet):
-            print(packet.payload)
+            self.logger.info('group action: %r' % packet.payload)
 
             updated_machines = {}
 
