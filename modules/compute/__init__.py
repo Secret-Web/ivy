@@ -254,8 +254,6 @@ class ComputeModule(Module):
         async def event(packet):
             self.logger.info('group action: %r' % packet.payload)
 
-            updated_machines = {}
-
             for group_id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
                     if group_id == '*':
@@ -263,11 +261,7 @@ class ComputeModule(Module):
                     else:
                         await new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
 
-                async for machine_id, machine in self.send_action(packet, action, group_id=group_id):
-                    updated_machines[machine_id] = machine.as_obj()
-
-            if len(updated_machines) > 0:
-                await packet.send('machines', 'patch', updated_machines)
+                self.send_action(packet, action, group_id=group_id)
 
 
         @l.listen_event('machines', 'get')
@@ -301,26 +295,17 @@ class ComputeModule(Module):
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
-                    async for machine_id, machine in self.send_action(packet, {'id': 'patch'}, machine_id=id):
-                        updated_machines[machine_id] = machine.as_obj()
-
-            await packet.send('machines', 'patch', updated_machines)
+                    self.send_action(packet, {'id': 'patch'}, machine_id=id)
 
         @l.listen_event('machines', 'action')
         async def event(packet):
             self.logger.info('machine action: %r' % packet.payload)
 
-            updated_machines = {}
-
             for id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
                     await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
-                async for id, machine in self.send_action(packet, action, machine_id=id):
-                    if action['id'] == 'refresh':
-                        updated_machines[id] = machine
-
-            await packet.send('machines', 'patch', {id: machine.as_obj() for id, machine in updated_machines.items()})
+                self.send_action(packet, action, machine_id=id)
 
         @l.listen_event('machines', 'stats')
         async def event(packet):
@@ -394,7 +379,7 @@ class ComputeModule(Module):
 
         if action['id'] == 'patch':
             for machine_id, machine in machines.items():
-                data = {'id': action['id']}
+                data = {}
 
                 data['name'] = machine.name
                 data['notes'] = machine.notes
@@ -404,9 +389,7 @@ class ComputeModule(Module):
                 if group is not None:
                     data['group'] = {**group.as_obj(), **{'id': group_id}}
                 
-                await packet.send('machine', 'action', data, to=machine_id)
-
-                yield machine_id, machine
+                await packet.send('machine', 'action', {**data, **{'id': action['id']}}, to=machine_id)
             return
         
         group_data = {}
@@ -462,13 +445,11 @@ class ComputeModule(Module):
 
         if action['id'] == 'refresh':
             for machine_id, machine in machines.items():
-                if group_id == '*' or machine.group.id == group_id:
-                    machine_group_id = machine.group.id if machine.group else None
+                self.logger.info('refresh: %r' % machine_id)
 
-                    await packet.send('machine', 'action', {**await get_group_data(machine_group_id), **{'id': 'refresh'}}, to=machine_id)
+                machine_group_id = machine.group.id if machine.group else None
 
-                    yield machine_id, machine
-
+                await packet.send('machine', 'action', {**await get_group_data(machine_group_id), **{'id': 'refresh'}}, to=machine_id)
             return
 
 __plugin__ = ComputeModule
