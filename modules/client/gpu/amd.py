@@ -6,8 +6,18 @@ class AMDAPI(API):
         return 'AMD' in gpu.vendor
 
     async def setup(self, gpus):
+        self.sclks = []
+        self.mclks = []
+
         for i, gpu in gpus:
-            await self.run_cmd('PWR', 'echo "performance" >/sys/class/drm/card%d/device/power_dpm_state' % i)
+            await self.run_cmd('PWR', 'cat /sys/class/drm/card%d/device/pp_table > /tmp/pp_table.%d' % (i, i))
+
+            with open('/sys/class/drm/card%d/device/pp_dpm_sclk' % i, 'r') as f:
+                self.sclks.append(len(f.readlines()))
+            with open('/sys/class/drm/card%d/device/pp_dpm_mclk' % i, 'r') as f:
+                self.mclks.append(len(f.readlines()))
+
+            await self.run_cmd('PWR', 'echo "performance" > /sys/class/drm/card%d/device/power_dpm_state' % i)
             await self.run_cmd('FPL', 'echo "high" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
     async def apply(self, gpus, overclock):
@@ -22,14 +32,12 @@ class AMDAPI(API):
             await ogat('OVC', '--set-max-power %d' % overclock.pwr)
 
         if overclock.core['mhz']:
-            await ogat('MCC', '--set-max-core-clock %d' % overclock.core['mhz'])
             await ogat('SCC', '--core-state -1 --core-clock %d' % overclock.core['mhz'])
 
         if overclock.core['vlt']:
             await ogat('SCV', '--mem-state -1 --vddci %d' % overclock.core['vlt'])
 
         if overclock.mem['mhz']:
-            await ogat('MMC', '--set-max-mem-clock %d' % overclock.mem['mhz'])
             await ogat('SMC', '--mem-state -1 --mem-clock %d' % overclock.mem['mhz'])
 
         if overclock.mem['vlt']:
@@ -40,6 +48,8 @@ class AMDAPI(API):
 
     async def revert(self, gpus):
         for i, gpu in gpus:
+            await self.run_cmd('PWR', 'cat /tmp/pp_table.%d > /sys/class/drm/card%d/device/pp_table' % (i, i))
+
             await self.run_cmd('PWR', 'echo 2 > /sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_enable' % (i, i))
             await self.run_cmd('FPL', 'echo "auto" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
