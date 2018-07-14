@@ -308,6 +308,8 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'action')
         async def event(packet):
+            self.logger.info('machine action: %r' % packet.payload)
+
             updated_machines = {}
 
             for id, action in packet.payload.items():
@@ -368,6 +370,8 @@ class ComputeModule(Module):
             async for machine_id, machine in self.database.machines.all():
                 if group_id == '*' or machine.group.id == group_id:
                     machines[machine_id] = machine
+
+        self.logger.info('machines: %r' % machines)
 
         if action['id'] == 'wake':
             for machine_id, machine in machines.items():
