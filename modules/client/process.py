@@ -131,8 +131,8 @@ class Process:
         # if self.watchdog.first_start and not self.module.ivy.is_safe:
         #     self.watchdog.is_safe = False
 
-        if not self.module.ivy.is_safe:
-            # self.watchdog.startup_failure()
+        if self.watchdog.first_start and not self.module.ivy.is_safe:
+            self.watchdog.startup_failure()
 
             self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
             return
