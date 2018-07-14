@@ -347,12 +347,8 @@ class ComputeModule(Module):
             machines[machine_id] = await self.database.machines.get(machine_id)
         else:
             async for machine_id, machine in self.database.machines.all():
-                self.logger.info('checking: %r' % [group_id, machine.group.id, machine.group.id == group_id])
-
                 if group_id == '*' or machine.group.id == group_id:
                     machines[machine_id] = machine
-
-        self.logger.info('machines: %r' % machines)
 
         if action['id'] == 'wake':
             for machine_id, machine in machines.items():
@@ -450,8 +446,6 @@ class ComputeModule(Module):
 
         if action['id'] == 'refresh':
             for machine_id, machine in machines.items():
-                self.logger.info('refresh: %r' % machine_id)
-
                 machine_group_id = machine.group.id if machine.group else None
 
                 await packet.send('machine', 'action', {**await get_group_data(machine_group_id), **{'id': 'refresh'}}, to=machine_id)
