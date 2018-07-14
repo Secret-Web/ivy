@@ -39,8 +39,9 @@ class AMDAPI(API):
             await ogat('SFS', '--set-fanspeed %d' % overclock.fan['min'])
 
     async def revert(self, hardware):
-        await self.run_cmd('PWR', 'echo 2 > /sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_enable' % (i, i))
-        await self.run_cmd('FPL', 'echo "auto" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
+        for i, gpu in gpus:
+            await self.run_cmd('PWR', 'echo 2 > /sys/class/drm/card%d/device/hwmon/hwmon%d/pwm1_enable' % (i, i))
+            await self.run_cmd('FPL', 'echo "auto" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
     async def get_stats(self, i, gpu):
         temp = 0
