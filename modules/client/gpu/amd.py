@@ -6,32 +6,7 @@ class AMDAPI(API):
         return 'AMD' in gpu.vendor
 
     async def setup(self, gpus):
-        self.defaults = []
         for i, gpu in gpus:
-            settings = {'core': {'mhz': [], 'vlt_table': []}, 'mem': {'mhz': [], 'vlt_table': []}}
-
-            stdout, stderr = await self.run_cmd('OVC', '/usr/bin/ohgodatool -i %d --show-core' % i)
-            for line in stdout:
-                if 'voltage table entry' in line:
-                    settings['core']['vlt_table'].append(int(line.split('voltage table entry')[1].split(')')[0].strip()))
-                elif 'Core clock' in line:
-                    settings['core']['mhz'].append(int(line.split(':')[1].strip()))
-
-            stdout, stderr = await self.run_cmd('OVC', '/usr/bin/ohgodatool -i %d --show-mem' % i)
-            for line in stdout:
-                if 'voltage table entry' in line:
-                    settings['core']['vlt_table'].append(int(line.split('voltage table entry')[1].split(')')[0].strip()))
-                elif 'Core clock' in line:
-                    settings['core']['mhz'].append(int(line.split(':')[1].strip()))
-
-            self.defaults.append({
-                'core': {
-
-                }, 'mem': {
-
-                }
-            })
-
             await self.run_cmd('PWR', 'echo "performance" >/sys/class/drm/card%d/device/power_dpm_state' % i)
             await self.run_cmd('FPL', 'echo "high" > /sys/class/drm/card%d/device/power_dpm_force_performance_level' % i)
 
