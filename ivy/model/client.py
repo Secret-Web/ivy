@@ -18,11 +18,7 @@ class Client:
         if 'name' in kwargs or init: self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
         if 'notes' in kwargs or init: self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
 
-        if 'hardware' in kwargs or init:
-            if not hasattr(self, 'hardware'):
-                self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
-            else:
-                self.hardware.update(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
+        if 'hardware' in kwargs or init: self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
 
         if 'group' in kwargs or init: self.group = Group(**kwargs['group'] if 'group' in kwargs and kwargs['group'] else {})
         if 'pool' in kwargs or init: self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs and kwargs['pool'] else None
