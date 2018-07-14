@@ -40,13 +40,6 @@ class DictQuery:
         for k, v in self.data.items():
             yield (k, v)
 
-    async def put(self, k, v):
-        if not isinstance(v, self.clazz):
-            v = self.clazz(**v)
-
-        self.data[k] = v
-        return k, v
-
     async def new(self, v):
         return await self.add(new_id(), v)
 
@@ -99,9 +92,6 @@ class ListQuery:
     async def new(self, v):
         return await self.add(0, v)
 
-    async def put(self, k, v):
-        return await self.add(k, v)
-
     async def add(self, k, v):
         if not isinstance(v, self.clazz):
             v = self.clazz(**v)
@@ -119,7 +109,7 @@ class ListQuery:
         del self.data[k]
 
 class FileStrategy(Strategy):
-    def on_load(self, config):
+    async def on_load(self, config):
         loaded = {}
         if os.path.exists(self.database_file):
             with open(self.database_file, 'r') as f:
@@ -182,12 +172,12 @@ class FileStrategy(Strategy):
     async def save_snapshot(self, snapshot):
         pass
     
-    def on_bind(self, l):
+    async def on_bind(self, l):
         l.listen_event('connection', 'open')(self.on_connected)
         l.listen_event('connection', 'closed')(self.on_disconnected)
         l.listen_event('sync', 'discover')(self.on_sync_discover)
     
-    def on_unbind(self, l):
+    async def on_unbind(self, l):
         self.on_connected.__dict__['unregister_event']()
         self.on_disconnected.__dict__['unregister_event']()
         self.on_sync_discover.__dict__['unregister_event']()

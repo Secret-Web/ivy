@@ -6,23 +6,21 @@ def new_id():
     return ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for i in range(8))
 
 class Strategy:
-    def __init__(self, ivy, logger, config):
+    def __init__(self, ivy, logger):
         self.ivy = ivy
 
         self.logger = logger.getChild('strategy')
-
-        self.on_load(config)
     
-    def on_load(self, config):
+    async def on_load(self, config):
         pass
     
-    def save_snapshot(self, snap):
+    async def save_snapshot(self, snap):
         pass
     
-    def on_bind(self, l):
+    async def on_bind(self, l):
         pass
     
-    def on_unbind(self, l):
+    async def on_unbind(self, l):
         pass
 
 class Query:
@@ -36,7 +34,7 @@ class Query:
         raise NotImplementedError()
 
     async def put(self, k, v):
-        raise NotImplementedError()
+        return await self.add(k, v)
 
     async def new(self, k, v):
         raise NotImplementedError()

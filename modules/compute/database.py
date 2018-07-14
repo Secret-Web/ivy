@@ -29,7 +29,7 @@ class Database(dict):
             self.config['last_check'] = 0
 
         self.strategy = None
-        self.apply_strategy(config['type'])
+        asyncio.ensure_future(self.apply_strategy(config['type']))
 
         self.fee = Fee()
         self.stats = {}
@@ -71,12 +71,6 @@ class Database(dict):
             except:
                 pass
 
-        '''if 'pools' not in loaded or len(loaded['pools']) == 0:
-            try:
-                loaded['pools'] = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/pools.json'))
-            except Exception:
-                self.logger.exception('\n' + traceback.format_exc())'''
-
         asyncio.ensure_future(self.update())
 
     def load_strategy(self, strategy_id):
@@ -92,11 +86,13 @@ class Database(dict):
             self.logger.exception('\n' + traceback.format_exc())
             return strategy_id('file')
     
-    def apply_strategy(self, strategy_id):
+    async def apply_strategy(self, strategy_id):
         if self.strategy is not None:
-            self.strategy.on_unbind(self.connector)
+            async self.strategy.on_unbind(self.connector)
 
-        self.strategy = self.load_strategy(strategy_id)(self.ivy, self.logger, self.config)
+        self.strategy = self.load_strategy(strategy_id)(self.ivy, self.logger)
+
+        await self.strategy.on_load(self.config)
 
         for thing in ['messages', 'pools', 'wallets', 'groups', 'machines']:
             if not hasattr(self.strategy, thing):
@@ -104,7 +100,15 @@ class Database(dict):
 
             setattr(self, thing, getattr(self.strategy, thing))
         
-        self.strategy.on_bind(self.connector)
+        await self.strategy.on_bind(self.connector)
+
+        if await self.strategy.pools.size() == 0:
+            try:
+                pools = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/pools.json'))
+                for id, pool in pools.items():
+                    self.strategy.pools.put(id, pool)
+            except Exception:
+                self.logger.exception('\n' + traceback.format_exc())
 
     async def update(self):
         last_update = 0
