@@ -255,13 +255,7 @@ class ComputeModule(Module):
             self.logger.info('group action: %r' % packet.payload)
 
             for group_id, action in packet.payload.items():
-                if action['id'] == 'upgrade':
-                    if group_id == '*':
-                        await new_message(packet, {'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
-                    else:
-                        await new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
-
-                self.send_action(packet, action, group_id=group_id)
+                await self.send_action(packet, action, group_id=group_id)
 
 
         @l.listen_event('machines', 'get')
@@ -295,7 +289,7 @@ class ComputeModule(Module):
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
-                    self.send_action(packet, {'id': 'patch'}, machine_id=id)
+                    await self.send_action(packet, {'id': 'patch'}, machine_id=id)
 
         @l.listen_event('machines', 'action')
         async def event(packet):
@@ -305,7 +299,7 @@ class ComputeModule(Module):
                 if action['id'] == 'upgrade':
                     await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
-                self.send_action(packet, action, machine_id=id)
+                await self.send_action(packet, action, machine_id=id)
 
         @l.listen_event('machines', 'stats')
         async def event(packet):
@@ -353,6 +347,8 @@ class ComputeModule(Module):
             machines[machine_id] = await self.database.machines.get(machine_id)
         else:
             async for machine_id, machine in self.database.machines.all():
+                self.logger.info('checking: %r' % [group_id, machine.group.id, machine.group.id == group_id])
+
                 if group_id == '*' or machine.group.id == group_id:
                     machines[machine_id] = machine
 
@@ -364,8 +360,17 @@ class ComputeModule(Module):
             return
 
         if action['id'] == 'reboot' or action['id'] == 'shutdown' or action['id'] == 'upgrade':
+            if action['id'] == 'upgrade':
+                if group_id == '*':
+                    await new_message(packet, {'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
+                elif group_id:
+                    await new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
+                else:
+                    await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': machine_id})
+
             for machine_id, machine in machines.items():
                 await packet.send('machine', 'action', action, to=machine_id)
+
             return
 
         groups = {}
