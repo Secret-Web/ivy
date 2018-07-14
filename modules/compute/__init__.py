@@ -292,10 +292,10 @@ class ComputeModule(Module):
                 client.update(**data)
 
                 # If the group no longer exists, set it back to default
-                if not await self.database.groups.has(miner.group.id):
-                    miner.group.reset()
+                if not await self.database.groups.has(client.group.id):
+                    client.group.reset()
 
-                await self.database.machines.put(id, miner)
+                await self.database.machines.put(id, client)
 
                 # The update was pushed by a non-miner. Patch the miner's configuration.
                 if isinstance(packet.sender, int):
