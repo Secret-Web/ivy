@@ -320,13 +320,13 @@ class ComputeModule(Module):
                 await packet.send('machines', 'stats', updated_stats)
                 await self.database.save_snapshot(updated_stats)
 
-        async def new_message(packet, data):
-            if isinstance(data, dict):
-                id, msg = await self.database.messages.new(data)
-                await packet.send('messages', 'patch', [msg.as_obj()])
-            elif isinstance(data, list):
-                for d in data:
-                    new_message(packet, d)
+    async def new_message(packet, data):
+        if isinstance(data, dict):
+            id, msg = await self.database.messages.new(data)
+            await packet.send('messages', 'patch', [msg.as_obj()])
+        elif isinstance(data, list):
+            for d in data:
+                new_message(packet, d)
 
     async def send_action(self, packet, action, machine_id=None, group_id=None):
         # The 'patch' action alters miner configuration without restarting
