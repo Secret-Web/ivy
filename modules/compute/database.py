@@ -88,7 +88,7 @@ class Database(dict):
     
     async def apply_strategy(self, strategy_id):
         if self.strategy is not None:
-            async self.strategy.on_unbind(self.connector)
+            await self.strategy.on_unbind(self.connector)
 
         self.strategy = self.load_strategy(strategy_id)(self.ivy, self.logger)
 
