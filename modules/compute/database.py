@@ -107,7 +107,7 @@ class Database(dict):
             try:
                 pools = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/pools.json'))
                 for id, pool in pools.items():
-                    self.strategy.pools.put(id, pool)
+                    await self.strategy.pools.put(id, pool)
             except Exception:
                 self.logger.exception('\n' + traceback.format_exc())
 
