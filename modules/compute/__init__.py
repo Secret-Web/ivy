@@ -303,7 +303,7 @@ class ComputeModule(Module):
                     await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
                 async for id, machine in self.send_action(packet, action, machine_id=id):
-                    if action['id'] == 'refresh'
+                    if action['id'] == 'refresh':
                         updated_machines[id] = machine
 
             await packet.send('machines', 'patch', {id: machine.as_obj() for id, machine in updated_machines.items()})
