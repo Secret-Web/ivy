@@ -102,10 +102,14 @@ class Database(dict):
         
         await self.strategy.on_bind(self.connector)
 
+        # Load default pools and insert if needed.
+        self.logger.info('size: %d' % (await self.strategy.pools.size()))
         if await self.strategy.pools.size() == 0:
             try:
                 pools = json.loads(url_content('https://gist.githubusercontent.com/Stumblinbear/39d5643a45029ba99d8a410e6c110cd1/raw/pools.json'))
+                self.logger.info('size: %r' % (len(pools)))
                 for id, pool in pools.items():
+                    self.logger.info('adding: %r' % (id))
                     self.strategy.pools.put(id, pool)
             except Exception:
                 self.logger.exception('\n' + traceback.format_exc())
