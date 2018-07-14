@@ -296,12 +296,17 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'action')
         async def event(packet):
+            updated_machines = {}
+
             for id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
                     await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
-                await self.send_action(packet, action, machine_id=id)
-            await packet.send('machines', 'patch', {id: (await self.database.machines.get(id)).as_obj() for id, action in packet.payload.items() if action['id'] == 'refresh'})
+                async for id, machine in self.send_action(packet, action, machine_id=id):
+                    if action['id'] == 'refresh'
+                        updated_machines[id] = machine
+
+            await packet.send('machines', 'patch', {id: machine.as_obj() for id, machine in updated_machines.items()})
 
         @l.listen_event('machines', 'stats')
         async def event(packet):
