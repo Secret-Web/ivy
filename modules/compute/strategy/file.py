@@ -160,6 +160,9 @@ class FileStrategy(Strategy):
             obj['groups'] = {k: v.as_obj() async for k, v in self.groups.all()}
             obj['machines'] = {k: v.as_obj() async for k, v in self.machines.all()}
 
+            self.logger.info('pools size: %d': self.pools.size())
+            self.logger.info('pools dict: %r': obj['pools'])
+
             with open(self.database_file, 'w') as f:
                 f.write(json.dumps(obj, indent=2))
 
