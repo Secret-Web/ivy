@@ -283,7 +283,9 @@ class ComputeModule(Module):
                 client = None
 
                 if await self.database.machines.has(id):
-                    del data['group']
+                    # This update was pushed by a miner. Discard the group setting.
+                    if not isinstance(packet.sender, int):
+                        del data['group']
 
                     client = await self.database.machines.get(id)
                 else:
@@ -301,6 +303,7 @@ class ComputeModule(Module):
                 if isinstance(packet.sender, int):
                     async for machine_id, machine in self.send_action(packet, {'id': 'patch'}, machine_id=id):
                         updated_machines[machine_id] = machine.as_obj()
+
             await packet.send('machines', 'patch', updated_machines)
 
         @l.listen_event('machines', 'action')
