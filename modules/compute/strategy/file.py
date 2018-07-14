@@ -123,12 +123,6 @@ class FileStrategy(Strategy):
                         except:
                             self.logger.error('Failed to decode database file backup! Settings destroyed! Sorry!')
 
-        self.messages = [Message(**x) for x in loaded['messages']] if 'messages' in loaded else []
-        self.pools = {k: Pool(**v) for k, v in loaded['pools'].items()} if 'pools' in loaded else {}
-        self.wallets = {k: Wallet(**v) for k, v in loaded['wallets'].items()} if 'wallets' in loaded else {}
-        self.groups = {k: Group(**v) for k, v in loaded['groups'].items()} if 'groups' in loaded else {}
-        self.machines = {k: Client(**v) for k, v in loaded['machines'].items()} if 'machines' in loaded else {}
-
         self.messages = ListQuery(Message, loaded['messages'] if 'messages' in loaded else [])
         self.pools = DictQuery(Pool, loaded['pools'] if 'pools' in loaded else {})
         self.wallets = DictQuery(Wallet, loaded['wallets'] if 'wallets' in loaded else {})
