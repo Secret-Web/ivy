@@ -105,7 +105,7 @@ class Ivy:
 
             self.logger.info('Shutdown successful.')
         except:
-            self.logger.severe('Shutdown failure.')
+            self.logger.exception('Shutdown failure.')
             self.logger.exception(traceback.format_exc())
 
         asyncio.get_event_loop().stop()

@@ -32,19 +32,19 @@ class AMDAPI(API):
             await ogat('OVC', '--set-max-power %d' % overclock.pwr)
 
         if overclock.core['mhz']:
-            for j in self.sclks:
+            for j in range(0, self.sclks[i]):
                 await ogat('SCC', '--core-state %d --core-clock %d' % (j, overclock.core['mhz']))
 
         if overclock.core['vlt']:
-            for j in self.mclks:
+            for j in range(0, self.mclks[i]):
                 await ogat('SCV', '--mem-state %d --vddci %d' % (j, overclock.core['vlt']))
 
         if overclock.mem['mhz']:
-            for j in self.mclks:
+            for j in range(0, self.mclks[i]):
                 await ogat('SMC', '--mem-state %d --mem-clock %d' % (j, overclock.mem['mhz']))
 
         if overclock.mem['vlt']:
-            for j in self.mclks:
+            for j in range(0, self.mclks[i]):
                 await ogat('SMV', '--mem-state %d --mvdd %d' % (j, overclock.mem['vlt']))
 
         if overclock.fan['min']:
