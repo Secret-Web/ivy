@@ -199,6 +199,9 @@ class Monitor:
                         if not gpu.online and online:
                             if gpu_status[i]['type'] == 'offline':
                                 new_online += 1
+                            elif gpu_status[i]['type'] == 'starting':
+                                if not self.module.process.is_fee:
+                                    update = True
                             gpu_status[i] = {'type': 'online'}
 
                         gpu.online = online
@@ -215,9 +218,11 @@ class Monitor:
                     if not self.module.process.is_fee:
                         if new_offline > 0:
                             self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
+                            update = True
 
                         if new_online > 0:
                             self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
+                            update = True
 
                     # If a GPU changed state, force an update
                     if new_online > 0 or new_offline > 0:
