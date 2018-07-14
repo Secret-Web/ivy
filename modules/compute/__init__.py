@@ -280,7 +280,16 @@ class ComputeModule(Module):
             updated_machines = {}
 
             for id, data in packet.payload.items():
-                miner = Client(**data)
+                client = None
+
+                if await self.database.machines.has(id):
+                    del data['group']
+
+                    client = await self.database.machines.get(id)
+                else:
+                    client = Client()
+                
+                client.update(**data)
 
                 # If the group no longer exists, set it back to default
                 if not await self.database.groups.has(miner.group.id):
