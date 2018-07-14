@@ -15,7 +15,7 @@ class Process:
 
         self.logger = module.logger.getChild('Process')
 
-        self.watchdog = ProcessWatchdog(self.logger)
+        # self.watchdog = ProcessWatchdog(self.logger)
 
         self.config = None
 
@@ -124,15 +124,15 @@ class Process:
         await self.start_miner(config, config.program.execute['args'])
 
     async def start_miner(self, config, args, forward_output=True):
-        self.watchdog.init()
+        # self.watchdog.init()
 
         # If this is the first time a process was started, and Ivy
         # did not gracefully shut down then assume this boot is unsafe.
-        if self.watchdog.first_start and not self.module.ivy.is_safe:
-            self.watchdog.is_safe = False
+        # if self.watchdog.first_start and not self.module.ivy.is_safe:
+        #     self.watchdog.is_safe = False
 
-        if not self.watchdog.is_safe:
-            self.watchdog.startup_failure()
+         if not self.module.ivy.is_safe:
+        #    self.watchdog.startup_failure()
 
             self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
             return
@@ -184,7 +184,7 @@ class Process:
 
         self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
 
-        self.watchdog.startup_complete()
+        # self.watchdog.startup_complete()
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -232,7 +232,7 @@ class Process:
 
             await self.module.gpus.revert(self.client.hardware)
 
-            self.watchdog.cleanup()
+            # self.watchdog.cleanup()
 
 STARTING_UP_INDICATOR = '/etc/ivy/.process-starting-up'
 
