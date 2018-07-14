@@ -19,7 +19,7 @@ async def wait_for_synced():
     while is_syncing:
         asyncio.sleep(1)
 
-class DictQuery:
+class DictQuery(Query):
     def __init__(self, clazz, data: dict):
         self.clazz = clazz
         self.data = {k: self.clazz(**v) for k, v in data.items()}
@@ -68,7 +68,7 @@ class DictQuery:
     async def delete(self, k):
         del self.data[k]
 
-class ListQuery:
+class ListQuery(Query):
     def __init__(self, clazz, data: list):
         self.clazz = clazz
         self.data = [self.clazz(**v) for v in data]
