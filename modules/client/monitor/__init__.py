@@ -209,8 +209,8 @@ class Monitor:
                                 gpu_status[i] = {'type': 'offline'}
                                 new_offline += 1
                     
-                    if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
-                        self.process.watchdog.ping()
+                    # if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
+                    #     self.process.watchdog.ping()
 
                     if not self.module.process.is_fee:
                         if new_offline > 0:
