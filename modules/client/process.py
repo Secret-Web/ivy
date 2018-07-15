@@ -154,7 +154,7 @@ class Process:
 
         self.task = (None, None)
 
-    async def stop(self):
+    async def stop_miner(self):
         killed = False
 
         if self.is_running:
