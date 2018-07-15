@@ -64,7 +64,7 @@ class Monitor:
         try:
             installer = await self.process.install(config=config)
 
-            self.read_stream(self.logger.getLogger('Install'), installer)
+            self.read_stream(logging.getLogger('install:' + config.program.name), installer)
 
             installer.wait()
         except Exception as e:
