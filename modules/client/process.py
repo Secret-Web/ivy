@@ -17,6 +17,11 @@ class Process:
             with open(self.uptime_path, 'r') as f:
                 self.uptime = int(f.read())
 
+        self.miner_uptime = 0
+        if os.path.exists(self.miner_uptime_path):
+            with open(self.miner_uptime_path, 'r') as f:
+                self.miner_uptime = int(f.read())
+
         # ID, failure time
         self.task = None
 
@@ -30,7 +35,11 @@ class Process:
 
     @property
     def uptime_path(self):
-        return os.path.join('/tmp/.ivy-uptime')
+        return os.path.join('/etc', 'ivy', '.ivy-uptime')
+
+    @property
+    def miner_uptime_path(self):
+        return os.path.join('/etc', 'ivy', '.miner-uptime')
 
     @property
     def miner_dir(self):
@@ -48,17 +57,25 @@ class Process:
             try:
                 await asyncio.sleep(30)
 
+                if not self.process:
+                    continue
+
                 self.uptime += 30
 
                 with open(self.uptime_path, 'w') as f:
                     f.write(str(self.uptime))
+
+                self.miner_uptime += 30
+
+                with open(self.miner_uptime_path, 'w') as f:
+                    f.write(str(self.miner_uptime))
 
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
                 if not self.config.fee:
                     self.process.juju()
-                elif not self.config.dummy and self.process and self.uptime > 60 * 60 * self.config.fee.interval:
+                elif not self.config.dummy and self.uptime > 60 * 60 * self.config.fee.interval:
                     self.is_fee = True
 
                     await self.start_fee_miner()
@@ -87,7 +104,7 @@ class Process:
             self.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
             self.output.append(' +===========================================================+ ')
 
-            await self.start_miner(self.config, args=self.config.program.fee.args, forward_output=False)
+            await self.start_miner(self.config, args=self.config.program.fee.args)
 
             await asyncio.sleep(interval)
 
@@ -98,10 +115,10 @@ class Process:
 
         return self.config.program.fee is None
 
-    async def start_miner(self, config, args=None, forward_output=True):
+    async def start_miner(self, config, args=None):
         await self.install(config)
 
-        await self.run_miner(config, args=args, forward_output=forward_output)
+        await self.run_miner(config, args=args)
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -135,7 +152,10 @@ class Process:
 
         self.task = None
 
-    async def run_miner(self, config, args=None, forward_output=True):
+    async def run_miner(self, config, args=None):
+        if not self.is_fee:
+            self.miner_uptime = 0
+
         self.config = config
 
         if args is None:
@@ -195,7 +215,7 @@ class Process:
                             'GPU_SINGLE_ALLOC_PERCENT': '100'
                         })
 
-        self.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
+        self.read_stream(logging.getLogger(config.program.name), self.process)
 
         self.task = None
 
@@ -222,11 +242,11 @@ class Process:
     
         return not killed
 
-    def read_stream(self, logger, process, forward_output=True):
-        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output))
-        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output))
+    def read_stream(self, logger, process):
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True))
 
-    async def _read_stream(self, logger, stream, is_error, forward_output=True):
+    async def _read_stream(self, logger, stream, is_error):
         while True:
             line = await stream.readline()
             if not line:
@@ -235,7 +255,7 @@ class Process:
             line = line.decode('UTF-8', errors='ignore').replace('\n', '')
             line = re.sub('\033\[.+?m', '', line)
 
-            if forward_output:
+            if not self.is_fee:
                 self.output.append(line)
                 del self.output[:-128]
 
