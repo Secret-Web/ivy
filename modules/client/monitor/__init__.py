@@ -5,7 +5,7 @@ import traceback
 import time
 
 from ivy.model.stats import MinerStats
-from .process import Process
+from ..process import Process
 
 
 class Monitor:
