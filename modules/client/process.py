@@ -3,7 +3,7 @@ import re
 import shlex
 import time
 import asyncio
-import traceback
+import logging
 
 
 class Process:
