@@ -34,7 +34,7 @@ class Monitor:
 
         asyncio.ensure_future(self.on_update())
 
-        self.process = Process(self)
+        self.process = Process(module)
 
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
