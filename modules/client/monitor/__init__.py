@@ -103,11 +103,8 @@ class Monitor:
             update = False
             last_update = 0
 
-            # Has three states. True for online, False for offline, and int while it's waiting to be confirmed offline. (unstable)
-            gpu_status = {}
-
             while True:
-                await asyncio.sleep(1)
+                await asyncio.sleep(5)
 
                 try:
                     got_stats = await self.get_stats()
@@ -137,39 +134,21 @@ class Monitor:
 
                         online = gpu.rate > 0
 
-                        if i not in gpu_status:
-                            gpu_status[i] = {'type': 'starting'}
-                            #gpu_status[i] = False
-
-                        #if gpu.online is not online:
-                        #    if not online:
-                        #        new_offline += 1
-                        #    else:
-                        #        new_online += 1
-                        #    gpu_status[i] = online
-
                         if gpu.online and not online:
-                            # Begin timer for "confirmed dead"
-                            gpu_status[i] = {'type': 'unstable', 'time': time.time()}
+                            gpu.status = {'type': 'unstable', 'time': time.time()}
 
                         if not gpu.online and online:
-                            if gpu_status[i]['type'] == 'offline':
+                            if gpu.status['type'] == 'offline':
                                 new_online += 1
-                            elif gpu_status[i]['type'] == 'starting':
-                                if not self.is_fee:
-                                    update = True
-                            gpu_status[i] = {'type': 'online'}
+                            elif gpu.status['type'] == 'idle':
+                                update = True
+                            gpu.status = {'type': 'online'}
 
-                        gpu.online = online
-
-                        if gpu_status[i]['type'] == 'unstable':
-                            # If the GPU has been unstable for 60 seconds, it's dead. Notify the relay.
-                            if time.time() - gpu_status[i]['time'] > 60:
-                                gpu_status[i] = {'type': 'offline'}
+                        if gpu.status['type'] == 'unstable':
+                            # If the GPU has been unstable for 60 seconds, it's dead. Notify the RELAY.
+                            if time.time() - gpu.status['time'] > 60:
+                                gpu.status = {'type': 'offline'}
                                 new_offline += 1
-                    
-                    # if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
-                    #     self.process.watchdog.ping()
 
                     if not self.is_fee:
                         if new_offline > 0:
@@ -184,7 +163,7 @@ class Monitor:
                     if new_online > 0 or new_offline > 0:
                         update = True
 
-                    self.is_mining = True
+                    self.is_mining = any([gpu.rate > 0 for gpu in self.stats.hardware.gpus])
                 except Exception as e:
                     self.is_mining = False
 
@@ -199,7 +178,7 @@ class Monitor:
                 if not update:
                     update = time.time() - last_update > 60
 
-                if update:
+                if update and not self.is_fee:
                     update = False
                     last_update = time.time()
 

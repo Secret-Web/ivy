@@ -9,16 +9,14 @@ import traceback
 class Process:
     def __init__(self, module):
         self.module = module
-
         self.client = module.client
-
         self.logger = module.logger.getChild('Process')
 
+        # ID, failure time
+        self.task = (None, None, None)
+
         self.config = None
-
         self.process = None
-        self.process_streams = None
-
         self.output = []
 
     @property
@@ -33,6 +31,41 @@ class Process:
         return self.process and self.process.returncode is None
 
     async def start_miner(self, config, args=None, forward_output=True):
+        await self.install(config)
+
+        await self.run_miner(config, args=args, forward_output=forward_output)
+
+    async def install(self, config):
+        miner_dir = os.path.join(self.miner_dir, config.program.name)
+        if os.path.exists(miner_dir): return
+        os.mkdir(miner_dir)
+
+        self.task = ('DOWNLOAD', None)
+
+        self.logger.info('Installing %s' % config.program.name)
+
+        install = [
+            'rm -rf *',
+            'wget -c "%s" --limit-rate 1m -O download.file' % config.program.install['url']
+        ]
+
+        for cmd in config.program.install['execute']:
+            install.append(cmd.replace('{file}', 'download.file'))
+
+        install.extend([
+            'rm -f download.file'
+        ])
+
+        self.task = ('INSTALL', None)
+
+        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
+                        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+        self.read_stream(logging.getLogger('install:' + config.program.name), installer)
+
+        installer.wait()
+
+    async def run_miner(self, config, args=None, forward_output=True):
         self.config = config
 
         if args is None:
@@ -73,8 +106,12 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
+            self.task = ('OVERCLOCK', time.time() + 30)
+
             await self.module.gpus.setup(config.hardware)
             await self.module.gpus.apply(config.hardware, config.overclock)
+
+        self.task = ('RUN', time.time() + 60)
 
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
@@ -88,31 +125,7 @@ class Process:
 
         self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
 
-    async def install(self, config):
-        miner_dir = os.path.join(self.miner_dir, config.program.name)
-        if os.path.exists(miner_dir): return
-        os.mkdir(miner_dir)
-
-        self.logger.info('Installing %s' % config.program.name)
-
-        install = [
-            'rm -rf *',
-            'wget -c "%s" --limit-rate 1m -O download.file' % config.program.install['url']
-        ]
-
-        for cmd in config.program.install['execute']:
-            install.append(cmd.replace('{file}', 'download.file'))
-
-        install.extend([
-            'rm -f download.file'
-        ])
-
-        installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
-                        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-
-        self.read_stream(logging.getLogger('install:' + config.program.name), installer)
-
-        installer.wait()
+        self.task = (None, None)
 
     async def stop(self):
         killed = False
