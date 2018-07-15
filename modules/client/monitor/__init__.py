@@ -51,7 +51,7 @@ class Monitor:
         await self.process.start_miner(*args, **kwargs)
 
     async def stop_miner(self):
-        await self.process.stop()
+        await self.process.stop_miner()
 
     @property
     def api(self):
