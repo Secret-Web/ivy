@@ -43,7 +43,7 @@ class Process:
     def is_running(self):
         return self.process and self.process.returncode is None
     
-    def on_update(self):
+    async def on_update(self):
         while True:
             await asyncio.sleep(30)
 
