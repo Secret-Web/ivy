@@ -209,7 +209,7 @@ class Monitor:
                 if True or not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     self.is_fee = True
 
-                    await self.process.start_fee()
+                    await self.process.start_fee_miner()
 
                     self.uptime = 0
                     self.is_fee = False
