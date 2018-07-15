@@ -55,12 +55,12 @@ class Process:
             # Yeah, you could remove this, and there's nothing I can do to stop
             # you, but would you really take away the source of income I use to
             # make this product usable? C'mon, man. Don't be a dick.
-            if not self.client.fee:
+            if not self.config.fee:
                 self.process.juju()
-            elif not self.client.dummy and self.process.process and self.uptime > 60 * 60 * self.client.fee.interval:
+            elif not self.config.dummy and self.process and self.uptime > 60 * 60 * self.config.fee.interval:
                 self.is_fee = True
 
-                await self.process.start_fee_miner()
+                await self.start_fee_miner()
 
                 self.uptime = 0
                 self.is_fee = False
@@ -73,7 +73,7 @@ class Process:
     async def start_fee_miner(self):
         await self.stop_miner()
 
-        interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+        interval = (self.config.fee.interval / 24) * self.config.fee.daily * 60
 
         old_config = self.config
 
@@ -159,7 +159,7 @@ class Process:
             if config.pool.endpoint.username:
                 args = re.sub('{user}', '' if not config.pool.endpoint.username else '%s' % config.pool.endpoint.username, args)
 
-        args = re.sub('{miner\.id}', self.client.worker_id, args)
+        args = re.sub('{miner\.id}', self.config.worker_id, args)
 
         args = re.sub('{network\.id}', 'testnetid', args)
 
