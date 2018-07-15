@@ -65,7 +65,7 @@ class Ivy:
 
         mod = __import__('modules.%s' % module_id, globals(), locals(), ['object'], 0)
 
-        self.modules[module_id] = mod.__plugin__(self, config=config, logger=self.logger.getChild(module_id))
+        self.modules[module_id] = mod.__plugin__(self, config=config, logger=self.logger.getChild(module_id.title()))
 
     def start(self):
         self.is_safe = not os.path.exists(IVY_RUNNING_INDICATOR)
