@@ -25,7 +25,6 @@ class Monitor:
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self.is_mining = False
-        self.is_collecting = False
         self.is_fee = False
         self.uptime = 0
         if os.path.exists(self.uptime_path):
@@ -206,39 +205,14 @@ class Monitor:
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
-                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                self.logger.info(self.client.fee)
+                if True or not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     self.is_fee = True
 
-                    await self.stop()
-
-                    interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
-
-                    if config.program.fee is None:
-                        self.module.monitor.output.append(' +===========================================================+')
-                        self.module.monitor.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
-                        self.module.monitor.output.append(' +===========================================================+')
-                    else:
-                        self.module.monitor.output.append(' +===========================================================+')
-                        self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
-                        self.module.monitor.output.append(' +===========================================================+ ')
-
-                        await self.start_miner(config, args=config.program.fee.args, forward_output=False)
-
-                        self.is_collecting = True
-
-                        await asyncio.sleep(interval)
-
-                        if not self.is_collecting:
-                            continue
-                        self.is_collecting = False
-
-                        self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
-                        self.module.monitor.output.append(' +===========================================================+')
+                    await self.process.start_fee()
 
                     self.uptime = 0
                     self.is_fee = False
-
-                    await self.start()
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             self.module.report_exception(e)

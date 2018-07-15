@@ -29,6 +29,33 @@ class Process:
     @property
     def is_running(self):
         return self.process and self.process.returncode is None
+    
+    async def start_fee_miner(self):
+        await self.stop_miner()
+
+        interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+
+        old_config = self.config
+
+        if self.config.program.fee is None:
+            self.output.append(' +===========================================================+')
+            self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
+            self.output.append(' +===========================================================+')
+        else:
+            self.output.append(' +===========================================================+')
+            self.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
+            self.output.append(' +===========================================================+ ')
+
+            await self.start_miner(self.config, args=self.config.program.fee.args, forward_output=False)
+
+            await asyncio.sleep(interval)
+
+            self.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
+            self.output.append(' +===========================================================+')
+
+        await self.start_miner(old_config)
+
+        return self.config.program.fee is None
 
     async def start_miner(self, config, args=None, forward_output=True):
         await self.install(config)
