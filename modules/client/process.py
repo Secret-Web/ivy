@@ -57,7 +57,7 @@ class Process:
             try:
                 await asyncio.sleep(30)
 
-                if not self.process:
+                if not self.process and self.is_running:
                     continue
 
                 self.uptime += 30
@@ -153,6 +153,8 @@ class Process:
         self.task = None
 
     async def run_miner(self, config, args=None):
+        self.process = None
+
         if not self.is_fee:
             self.miner_uptime = 0
 

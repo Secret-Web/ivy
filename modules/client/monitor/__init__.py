@@ -26,6 +26,7 @@ class Monitor:
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self.is_mining = False
+        self.last_hash_time = None
 
         asyncio.ensure_future(self.on_update())
 
@@ -106,10 +107,21 @@ class Monitor:
                     task, fail_time = self.process.task
 
                     if time.time() > fail_time:
-                        self.logger.info('%s has failed to complete. Did a GPU freeze?' % task)
-                        self.logger.info('  Regardless, as a safety percaution, I\'ll reboot the system')
+                        self.module.new_message(level='warning', title='Miner Frozen', text='Failed on task: %s. Rebooting system as a safety percaution.' % task)
 
-                        self.module.new_message(level='danger', title='Miner Frozen', text='Failed on task: %s. Rebooting system.' % task)
+                        await asyncio.sleep(5)
+
+                        # Force a reboot through the proper channel.
+                        await self.connector.call_event(Packet(self.connector.socket, 'machine', 'action', payload={'id': 'reboot'}, dummy=True))
+
+                        return
+
+                if not self.process.process:
+                    self.last_hash_time = time.time()
+                else:
+                    # If the miner has run for 5 minutes without hashing, reboot
+                    if time.time() - self.last_hash_time > 60 * 5:
+                        self.module.new_message(level='warning', title='Miner Frozen', text='Machine not hasing! Rebooting the system, now.')
 
                         await asyncio.sleep(5)
 
@@ -176,6 +188,8 @@ class Monitor:
                         update = True
 
                     self.is_mining = any([gpu.rate > 0 for gpu in self.stats.hardware.gpus])
+                    if self.is_mining:
+                        self.last_hash_time = time.time()
                 except Exception as e:
                     self.is_mining = False
 
