@@ -152,7 +152,9 @@ class Monitor:
                         update = new_stats.online = True
                 except Exception as e:
                     new_stats.online = False
-                    
+
+                    session_shares = None
+
                     update = True
 
                     if not isinstance(e, ConnectionRefusedError):
@@ -229,6 +231,8 @@ class Monitor:
                         update = True
                 except Exception as e:
                     new_stats.online = False
+
+                    session_shares = None
 
                     update = True
 
