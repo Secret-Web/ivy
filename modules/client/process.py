@@ -14,9 +14,6 @@ class Process:
 
         self.logger = module.logger.getChild('Process')
 
-        # self.watchdog = ProcessWatchdog(self.logger)
-        self.first_run = True
-
         self.config = None
 
         self.process = None
@@ -36,13 +33,6 @@ class Process:
         return self.process and self.process.returncode is None
 
     async def start_miner(self, config, args=None, forward_output=True):
-        if self.first_run and not self.module.ivy.is_safe:
-            self.first_run = False
-
-            raise Exception('Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
-
-        self.first_run = False
-
         self.config = config
 
         if args is None:

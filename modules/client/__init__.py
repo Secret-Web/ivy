@@ -48,6 +48,9 @@ class ClientModule(Module):
         pack = {'level': level, 'text': text}
         if title: pack['title'] = title
         self.message_queue.put_nowait(pack)
+    
+    def report_exception(self, e):
+        self.new_message(level='bug', title='Miner Exception', text=str(e))
 
     def on_connect_relay(self, service):
         self.connector.open(service.ip, service.port, {

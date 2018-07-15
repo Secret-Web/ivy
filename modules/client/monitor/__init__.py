@@ -39,7 +39,10 @@ class Monitor:
         if self.client.dummy is not False:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
-            asyncio.ensure_future(self.start_miner())
+            if self.module.ivy.is_safe:
+                asyncio.ensure_future(self.start_miner(self.client))
+            else:
+                self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
     @property
     def uptime_path(self):
@@ -81,7 +84,7 @@ class Monitor:
             return await self.module.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            self.module.new_message(level='bug', title='Miner Exception', text=str(e))
+            self.module.report_exception(e)
             return []
 
     async def on_update(self):
@@ -259,8 +262,7 @@ class Monitor:
                     await self.start()
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            
-            self.module.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
+            self.module.report_exception(e)
 
 class API:
     async def get_stats(self, host):
