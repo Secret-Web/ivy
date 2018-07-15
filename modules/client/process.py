@@ -82,7 +82,7 @@ class Process:
 
                     self.uptime = 0
                     self.is_fee = False
-            except:
+            except Exception as e:
                 self.module.report_exception(e)
     
     def juju(self):
