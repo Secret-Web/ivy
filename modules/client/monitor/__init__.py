@@ -134,7 +134,7 @@ class Monitor:
 
                         online = gpu.rate > 0
 
-                        if gpu.online and not online:
+                        if gpu.status['type'] == 'online' and not online:
                             gpu.status = {'type': 'unstable', 'time': time.time()}
 
                         if not gpu.status['type'] == 'online' and online:

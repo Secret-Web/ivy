@@ -123,7 +123,7 @@ class Process:
                             'GPU_SINGLE_ALLOC_PERCENT': '100'
                         })
 
-        self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
+        self.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
 
         self.task = (None, None)
 
