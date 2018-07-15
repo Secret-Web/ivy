@@ -12,6 +12,7 @@ ExecStop=/usr/bin/python3.6 /opt/ivy/stop.py
 ExecStopPost=/bin/rm -f /etc/ivy/.pid
 Restart=always
 RestartSec=5
+TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target
