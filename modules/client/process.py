@@ -2,7 +2,6 @@ import os
 import re
 import shlex
 import time
-import logging
 import asyncio
 import traceback
 

@@ -3,6 +3,7 @@ import re
 import asyncio
 import traceback
 import time
+import logging
 
 from ivy.model.stats import MinerStats
 from ..process import Process
@@ -68,7 +69,7 @@ class Monitor:
 
             installer.wait()
         except Exception as e:
-            self.module.new_message(level='danger', title='Install Failure', text=e.message)
+            self.module.new_message(level='danger', title='Install Failure', text=str(e))
             return
 
         try:
@@ -76,7 +77,7 @@ class Monitor:
 
             self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
         except Exception as e:
-            self.module.new_message(level='danger', title='Startup Failure', text=e.message)
+            self.module.new_message(level='danger', title='Startup Failure', text=str(e))
             return
 
     async def stop_miner(self):
