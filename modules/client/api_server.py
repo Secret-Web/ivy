@@ -10,8 +10,8 @@ module = None
 async def index(request):
     stats = module.monitor.stats.as_obj()
     stats.update({
-        'config': module.process.config.as_obj() if module.process.config is not None else {},
-        'output': module.monitor.output
+        'config': module.monitor.process.config.as_obj() if module.monitor.process.config is not None else {},
+        'output': module.monitor.process.output
     })
 
     return web.Response(text=json.dumps(stats), content_type='text/html')
