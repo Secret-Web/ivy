@@ -57,13 +57,15 @@ class Process:
             while True:
                 await asyncio.sleep(30)
 
-                if not self.is_running: continue
-
                 config = self.module.client
 
                 if not config.program:
                     self.logger.error('No program configured.')
                     return
+
+                if not self.is_running:
+                    self.logger.error('Program no running. Did it kill itself?')
+                    continue
 
                 self.uptime += 30
 
