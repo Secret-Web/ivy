@@ -189,11 +189,11 @@ class Process:
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
                         env={
-                            'GPU_FORCE_64BIT_PTR': 0,
-                            'GPU_MAX_HEAP_SIZE': 100,
-                            'GPU_USE_SYNC_OBJECTS': 1,
-                            'GPU_MAX_ALLOC_PERCENT': 100,
-                            'GPU_SINGLE_ALLOC_PERCENT': 100
+                            'GPU_FORCE_64BIT_PTR': '0',
+                            'GPU_MAX_HEAP_SIZE': '100',
+                            'GPU_USE_SYNC_OBJECTS': '1',
+                            'GPU_MAX_ALLOC_PERCENT': '100',
+                            'GPU_SINGLE_ALLOC_PERCENT': '100'
                         })
 
         self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
