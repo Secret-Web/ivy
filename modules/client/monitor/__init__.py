@@ -118,8 +118,6 @@ class Monitor:
 
                         return
 
-                self.logging.info(str(time.time() - self.last_hash_time))
-
                 if not self.process.process:
                     self.last_hash_time = time.time()
                 else:
