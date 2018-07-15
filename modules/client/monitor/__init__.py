@@ -109,6 +109,8 @@ class Monitor:
                     if time.time() > fail_time:
                         self.module.new_message(level='warning', title='Miner Frozen', text='Failed on task: %s. Rebooting system as a safety percaution.' % task)
 
+                        self.process.process.kill()
+
                         await asyncio.sleep(5)
 
                         # Force a reboot through the proper channel.
@@ -122,6 +124,8 @@ class Monitor:
                     # If the miner has run for 5 minutes without hashing, reboot
                     if time.time() - self.last_hash_time > 60 * 5:
                         self.module.new_message(level='warning', title='Miner Frozen', text='Machine not hasing! Rebooting the system, now.')
+
+                        self.process.process.kill()
 
                         await asyncio.sleep(5)
 
