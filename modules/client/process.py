@@ -30,6 +30,11 @@ class Process:
     def is_running(self):
         return self.process and self.process.returncode is None
     
+    def juju(self):
+        self.output.append(' +===========================================================+')
+        self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
+        self.output.append(' +===========================================================+')
+
     async def start_fee_miner(self):
         await self.stop_miner()
 
@@ -38,9 +43,7 @@ class Process:
         old_config = self.config
 
         if self.config.program.fee is None:
-            self.output.append(' +===========================================================+')
-            self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
-            self.output.append(' +===========================================================+')
+            self.juju()
         else:
             self.output.append(' +===========================================================+')
             self.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')

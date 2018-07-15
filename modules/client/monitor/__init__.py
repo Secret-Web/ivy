@@ -206,7 +206,9 @@ class Monitor:
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
                 self.logger.info(self.client.fee.as_obj())
-                if True or not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                if not self.client.fee:
+                    self.process.juju()
+                elif True or not self.client.dummy and self.process.process and self.uptime > 60 * 60 * self.client.fee.interval:
                     self.is_fee = True
 
                     await self.process.start_fee_miner()
