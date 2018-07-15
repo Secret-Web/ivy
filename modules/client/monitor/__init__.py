@@ -120,7 +120,7 @@ class Monitor:
 
                 if not self.process.process:
                     self.last_hash_time = time.time()
-                else:
+                elif self.last_hash_time is not None:
                     # If the miner has run for 5 minutes without hashing, reboot
                     if time.time() - self.last_hash_time > 60 * 5:
                         self.module.new_message(level='warning', title='Miner Frozen', text='Machine not hasing! Rebooting the system, now.')
