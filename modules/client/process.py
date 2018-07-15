@@ -17,6 +17,7 @@ class Process:
 
         # self.watchdog = ProcessWatchdog(self.logger)
         self.first_run = True
+        self.successful_start = False
 
         self.config = None
 
@@ -63,7 +64,7 @@ class Process:
                     self.logger.error('No program configured.')
                     return
 
-                if not self.is_running:
+                if self.successful_start:
                     self.logger.error('Program no running. Did it kill itself?')
                     continue
 
@@ -136,6 +137,7 @@ class Process:
 
         if self.first_run and not self.module.ivy.is_safe:
             self.first_run = False
+            self.successful_start = False
 
             self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
             return
@@ -195,6 +197,8 @@ class Process:
                         })
 
         self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
+
+        self.successful_start = True
 
         # self.watchdog.startup_complete()
 
