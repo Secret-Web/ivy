@@ -45,25 +45,28 @@ class Process:
     
     async def on_update(self):
         while True:
-            await asyncio.sleep(30)
+            try:
+                await asyncio.sleep(30)
 
-            self.uptime += 30
+                self.uptime += 30
 
-            with open(self.uptime_path, 'w') as f:
-                f.write(str(self.uptime))
+                with open(self.uptime_path, 'w') as f:
+                    f.write(str(self.uptime))
 
-            # Yeah, you could remove this, and there's nothing I can do to stop
-            # you, but would you really take away the source of income I use to
-            # make this product usable? C'mon, man. Don't be a dick.
-            if not self.config.fee:
-                self.process.juju()
-            elif not self.config.dummy and self.process and self.uptime > 60 * 60 * self.config.fee.interval:
-                self.is_fee = True
+                # Yeah, you could remove this, and there's nothing I can do to stop
+                # you, but would you really take away the source of income I use to
+                # make this product usable? C'mon, man. Don't be a dick.
+                if not self.config.fee:
+                    self.process.juju()
+                elif not self.config.dummy and self.process and self.uptime > 60 * 60 * self.config.fee.interval:
+                    self.is_fee = True
 
-                await self.start_fee_miner()
+                    await self.start_fee_miner()
 
-                self.uptime = 0
-                self.is_fee = False
+                    self.uptime = 0
+                    self.is_fee = False
+            except:
+                self.module.report_exception(e)
     
     def juju(self):
         self.output.append(' +===========================================================+')
