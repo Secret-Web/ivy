@@ -16,13 +16,21 @@ class Monitor:
 
         self.logger = module.logger.getChild('Monitor')
 
+        self._api = {
+            '_': API()
+        }
+
         self.output = []
         self.shares = Shares()
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
-        self._api = {
-            '_': API()
-        }
+        self.is_mining = False
+        self.is_collecting = False
+        self.is_fee = False
+        self.uptime = 0
+        if os.path.exists(self.uptime_path):
+            with open(self.uptime_path, 'r') as f:
+                self.uptime = int(f.read())
 
         asyncio.ensure_future(self.on_update())
 
@@ -32,6 +40,10 @@ class Monitor:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
             asyncio.ensure_future(self.start_miner())
+
+    @property
+    def uptime_path(self):
+        return os.path.join('/tmp/.ivy-uptime')
 
     async def start_miner(self):
         if self.process.is_running:
@@ -152,7 +164,7 @@ class Monitor:
                 try:
                     got_stats = await self.get_stats()
 
-                    if not self.process.is_fee:
+                    if not self.is_fee:
                         self.shares.update(got_stats['shares'])
 
                     hw_stats = await self.get_hw_stats()
@@ -196,7 +208,7 @@ class Monitor:
                             if gpu_status[i]['type'] == 'offline':
                                 new_online += 1
                             elif gpu_status[i]['type'] == 'starting':
-                                if not self.process.is_fee:
+                                if not self.is_fee:
                                     update = True
                             gpu_status[i] = {'type': 'online'}
 
@@ -211,7 +223,7 @@ class Monitor:
                     # if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
                     #     self.process.watchdog.ping()
 
-                    if not self.process.is_fee:
+                    if not self.is_fee:
                         if new_offline > 0:
                             self.module.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
                             update = True
@@ -224,9 +236,9 @@ class Monitor:
                     if new_online > 0 or new_offline > 0:
                         update = True
 
-                    self.process.is_mining = True
+                    self.is_mining = True
                 except Exception as e:
-                    self.process.is_mining = False
+                    self.is_mining = False
 
                     self.shares.reset_session()
 
@@ -245,7 +257,7 @@ class Monitor:
 
                     # Update the newest stats (since last attempted update)
                     packet = {
-                        'online': self.process.is_mining,
+                        'online': self.is_mining,
                         'shares': self.shares.pop_interval(),
                         'hardware': self.stats.hardware.as_obj()
                     }

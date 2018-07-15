@@ -17,23 +17,11 @@ class Process:
 
         # self.watchdog = ProcessWatchdog(self.logger)
         self.first_run = True
-        self.is_mining = False
 
         self.config = None
 
-        self.uptime = 0
-        self.is_collecting = False
-        if os.path.exists(self.uptime_path):
-            with open(self.uptime_path, 'r') as f:
-                self.uptime = int(f.read())
-
-        self.is_fee = False
         self.process = None
         self.process_streams = None
-
-    @property
-    def uptime_path(self):
-        return os.path.join('/tmp/.ivy-uptime')
 
     @property
     def miner_dir(self):
@@ -53,7 +41,6 @@ class Process:
             raise Exception('Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
         self.first_run = False
-        self.is_mining = False
 
         self.config = config
 
@@ -130,8 +117,6 @@ class Process:
         return installer
 
     async def stop(self):
-        self.is_collecting = False
-
         killed = False
 
         if self.is_running:
