@@ -1,6 +1,7 @@
 import os
 import re
 import shlex
+import time
 import logging
 import asyncio
 import traceback
@@ -11,13 +12,12 @@ class Process:
         self.module = module
 
         self.client = module.client
-        self.connector = module.connector
 
         self.logger = module.logger.getChild('Process')
 
         # self.watchdog = ProcessWatchdog(self.logger)
         self.first_run = True
-        self.successful_start = False
+        self.is_mining = False
 
         self.config = None
 
@@ -30,13 +30,6 @@ class Process:
         self.is_fee = False
         self.process = None
         self.process_streams = None
-
-        asyncio.ensure_future(self.ping_miner())
-
-        if self.client.dummy is not False:
-            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
-        else:
-            asyncio.ensure_future(self.start())
 
     @property
     def uptime_path(self):
@@ -53,96 +46,14 @@ class Process:
     def is_running(self):
         return self.process and self.process.returncode is None
 
-    async def ping_miner(self):
-        try:
-            while True:
-                await asyncio.sleep(30)
-
-                config = self.module.client
-
-                if not config.program:
-                    self.logger.error('No program configured.')
-                    return
-
-                if self.successful_start:
-                    self.logger.error('Program no running. Did it kill itself?')
-                    continue
-
-                self.uptime += 30
-
-                with open(self.uptime_path, 'w') as f:
-                    f.write(str(self.uptime))
-
-                # Yeah, you could remove this, and there's nothing I can do to stop
-                # you, but would you really take away the source of income I use to
-                # make this product usable? C'mon, man. Don't be a dick.
-                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
-                    self.is_fee = True
-
-                    await self.stop()
-
-                    interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
-
-                    if config.program.fee is None:
-                        self.module.monitor.output.append(' +===========================================================+')
-                        self.module.monitor.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
-                        self.module.monitor.output.append(' +===========================================================+')
-                    else:
-                        self.module.monitor.output.append(' +===========================================================+')
-                        self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
-                        self.module.monitor.output.append(' +===========================================================+ ')
-
-                        await self.start_miner(config, args=config.program.fee.args, forward_output=False)
-
-                        self.is_collecting = True
-
-                        await asyncio.sleep(interval)
-
-                        if not self.is_collecting:
-                            continue
-                        self.is_collecting = False
-
-                        self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
-                        self.module.monitor.output.append(' +===========================================================+')
-
-                    self.uptime = 0
-                    self.is_fee = False
-
-                    await self.start()
-        except Exception as e:
-            self.logger.exception('\n' + traceback.format_exc())
-            
-            self.module.monitor.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
-
-    async def start(self):
-        config = self.module.client
-
-        if not config.program:
-            self.logger.error('No program configured.')
-            return
-
-        await self.stop()
-
-        await self.install(config=config)
-
-        await self.start_miner(config, config.program.execute['args'])
-
     async def start_miner(self, config, args, forward_output=True):
-        # self.watchdog.init()
-
-        # If this is the first time a process was started, and Ivy
-        # did not gracefully shut down then assume this boot is unsafe.
-        # if self.watchdog.first_start and not self.module.ivy.is_safe:
-        #     self.watchdog.is_safe = False
-
         if self.first_run and not self.module.ivy.is_safe:
             self.first_run = False
-            self.successful_start = False
 
-            self.module.monitor.new_message(level='danger', title='Startup Failure', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
-            return
+            raise Exception('Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
         self.first_run = False
+        self.is_mining = False
 
         self.config = config
 
@@ -184,8 +95,6 @@ class Process:
             await self.module.gpus.setup(config.hardware)
             await self.module.gpus.apply(config.hardware, config.overclock)
 
-        self.logger.info('Starting miner: %s' % ' '.join(args))
-
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
                         env={
@@ -195,12 +104,6 @@ class Process:
                             'GPU_MAX_ALLOC_PERCENT': '100',
                             'GPU_SINGLE_ALLOC_PERCENT': '100'
                         })
-
-        self.module.monitor.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
-
-        self.successful_start = True
-
-        # self.watchdog.startup_complete()
 
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
@@ -224,19 +127,20 @@ class Process:
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        self.module.monitor.read_stream(logging.getLogger('Install'), installer)
-
-        await installer.wait()
+        return installer
 
     async def stop(self):
         self.is_collecting = False
+
+        killed = False
 
         if self.is_running:
             wait_time = 0
 
             while self.is_running:
-                if wait_time > 30:
+                if wait_time > 20:
                     self.process.kill()
+                    killed = True
                 else:
                     self.process.terminate()
 
@@ -247,8 +151,8 @@ class Process:
                 wait_time += 5
 
             await self.module.gpus.revert(self.client.hardware)
-
-            # self.watchdog.cleanup()
+    
+        return not killed
 
 STARTING_UP_INDICATOR = '/etc/ivy/.process-starting-up'
 

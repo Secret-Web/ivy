@@ -5,6 +5,7 @@ import traceback
 import time
 
 from ivy.model.stats import MinerStats
+from .process import Process
 
 
 class Monitor:
@@ -12,39 +13,62 @@ class Monitor:
         self.module = module
         self.client = module.client
         self.connector = module.connector
-        self.process = module.process
 
         self.logger = module.logger.getChild('Monitor')
 
         self.output = []
+        self.shares = Shares()
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self._api = {
             '_': API()
         }
 
-        asyncio.ensure_future(self.ping_miner())
+        asyncio.ensure_future(self.on_update())
 
-        self.message_queue = asyncio.Queue()
-        asyncio.ensure_future(self.process_messages())
+        self.process = Process(self)
 
-    async def process_messages(self):
-        while True:
-            if not self.connector.socket:
-                await asyncio.sleep(1)
-                continue
+        if self.client.dummy is not False:
+            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
+        else:
+            asyncio.ensure_future(self.start_miner())
 
-            message = await self.message_queue.get()
-            message['machine'] = self.client.machine_id
+    async def start_miner(self):
+        if self.process.is_running:
+            await self.process.stop()
 
-            await self.connector.socket.send('messages', 'new', message)
+        config = self.client
 
-    def new_message(self, level=None, title=None, text=None):
-        if level is None: raise Exception('Level not specified!')
-        if text is None: raise Exception('Text not specified!')
-        pack = {'level': level, 'text': text}
-        if title: pack['title'] = title
-        self.message_queue.put_nowait(pack)
+        if not config.program:
+            self.logger.error('No program configured.')
+            return
+
+        await self.install_and_start_program(config)
+
+    async def install_and_start_program(self, config, args=None, forward_output=True):
+        if args is None:
+            args = config.program.execute['args']
+
+        try:
+            installer = await self.process.install(config=config)
+
+            self.read_stream(self.logger.getLogger('Install'), installer)
+
+            installer.wait()
+        except Exception as e:
+            self.module.new_message(level='danger', title='Install Failure', text=e.message)
+            return
+
+        try:
+            await self.process.start_miner(config, args=args, forward_output=forward_output)
+
+            self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
+        except Exception as e:
+            self.module.new_message(level='danger', title='Startup Failure', text=e.message)
+            return
+
+    async def stop_miner(self):
+        await self.process.stop()
 
     @property
     def api(self):
@@ -100,16 +124,16 @@ class Monitor:
             return await self.module.gpus.get_stats(self.client.hardware)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
-            self.new_message(level='bug', title='Miner Exception', text=str(e))
+            self.module.new_message(level='bug', title='Miner Exception', text=str(e))
             return []
 
-    async def ping_miner(self):
+    async def on_update(self):
         try:
             if self.client.dummy:
                 got_stats = await self.get_stats()
-                self.stats.shares['accepted'] = got_stats['shares']['accepted']
-                self.stats.shares['rejected'] = got_stats['shares']['rejected']
-                self.stats.shares['invalid'] = got_stats['shares']['invalid']
+
+                self.shares.set_offset(got_stats['shares'])
+                self.stats.shares = self.shares.totals
 
                 self.logger.debug('startup: %d accepted, %d rejected, %d invalid.'
                                         % (self.stats.shares['accepted'],
@@ -117,11 +141,7 @@ class Monitor:
                                             self.stats.shares['invalid']))
 
             update = False
-            last_poke = 0
-
-            session_shares = None
-            last_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
-            new_stats = MinerStats(hardware=self.client.hardware.as_obj())
+            last_update = 0
 
             # Has three states. True for online, False for offline, and int while it's waiting to be confirmed offline. (unstable)
             gpu_status = {}
@@ -129,38 +149,12 @@ class Monitor:
             while True:
                 await asyncio.sleep(1)
 
-                got_stats = None
-
                 try:
                     got_stats = await self.get_stats()
 
-                    if not self.module.process.is_fee:
-                        if session_shares is None or session_shares['accepted'] > got_stats['shares']['accepted'] \
-                                                or session_shares['rejected'] > got_stats['shares']['rejected'] \
-                                                or session_shares['invalid'] > got_stats['shares']['invalid']:
-                            session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+                    if not self.process.is_fee:
+                        self.shares.update(got_stats['shares'])
 
-                        # Update the total shares using the current session offset
-                        self.stats.shares['accepted'] += got_stats['shares']['accepted'] - session_shares['accepted']
-                        self.stats.shares['rejected'] += got_stats['shares']['rejected'] - session_shares['rejected']
-                        self.stats.shares['invalid'] += got_stats['shares']['invalid'] - session_shares['invalid']
-
-                        session_shares = got_stats['shares']
-
-                    # If the miner is newly online, force an update
-                    if not new_stats.online:
-                        update = new_stats.online = True
-                except Exception as e:
-                    new_stats.online = False
-
-                    session_shares = None
-
-                    update = True
-
-                    if not isinstance(e, ConnectionRefusedError):
-                        self.logger.exception('\n' + traceback.format_exc())
-
-                try:
                     hw_stats = await self.get_hw_stats()
 
                     new_online = 0
@@ -202,7 +196,7 @@ class Monitor:
                             if gpu_status[i]['type'] == 'offline':
                                 new_online += 1
                             elif gpu_status[i]['type'] == 'starting':
-                                if not self.module.process.is_fee:
+                                if not self.process.is_fee:
                                     update = True
                             gpu_status[i] = {'type': 'online'}
 
@@ -217,22 +211,24 @@ class Monitor:
                     # if any([gpu.rate > 0 for gpu in self.stats.hardware.gpus]):
                     #     self.process.watchdog.ping()
 
-                    if not self.module.process.is_fee:
+                    if not self.process.is_fee:
                         if new_offline > 0:
-                            self.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
+                            self.module.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
                             update = True
 
                         if new_online > 0:
-                            self.new_message(level='success', text='%d GPUs have come back online!' % new_online)
+                            self.module.new_message(level='success', text='%d GPUs have come back online!' % new_online)
                             update = True
 
                     # If a GPU changed state, force an update
                     if new_online > 0 or new_offline > 0:
                         update = True
-                except Exception as e:
-                    new_stats.online = False
 
-                    session_shares = None
+                    self.process.is_mining = True
+                except Exception as e:
+                    self.process.is_mining = False
+
+                    self.shares.reset_session()
 
                     update = True
 
@@ -241,35 +237,73 @@ class Monitor:
                 
                 # Force an update every 60 seconds
                 if not update:
-                    update = time.time() - last_poke > 60
+                    update = time.time() - last_update > 60
 
                 if update:
                     update = False
-                    last_poke = time.time()
+                    last_update = time.time()
 
                     # Update the newest stats (since last attempted update)
-                    new_stats.shares['accepted'] = self.stats.shares['accepted'] - last_shares['accepted']
-                    new_stats.shares['rejected'] = self.stats.shares['rejected'] - last_shares['rejected']
-                    new_stats.shares['invalid'] = self.stats.shares['invalid'] - last_shares['invalid']
-                    new_stats.hardware = self.stats.hardware
+                    packet = {
+                        'online': self.process.is_mining,
+                        'shares': self.shares.pop_interval(),
+                        'hardware': self.stats.hardware.as_obj()
+                    }
 
                     if self.connector.socket:
-                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: new_stats.as_obj()})
+                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: packet})
 
-                    if new_stats.shares['accepted'] + new_stats.shares['rejected'] + new_stats.shares['invalid'] > 0:
+                    if packet['shares']['accepted'] + packet['shares']['rejected'] + packet['shares']['invalid'] > 0:
                         self.logger.info('new: %d accepted, %d rejected, %d invalid.' %
-                                                (new_stats.shares['accepted'],
-                                                    new_stats.shares['rejected'],
-                                                    new_stats.shares['invalid']))
+                                                (packet['shares']['accepted'],
+                                                    packet['shares']['rejected'],
+                                                    packet['shares']['invalid']))
 
-                    last_shares['accepted'] = self.stats.shares['accepted']
-                    last_shares['rejected'] = self.stats.shares['rejected']
-                    last_shares['invalid'] = self.stats.shares['invalid']
+                self.uptime += 30
 
+                with open(self.uptime_path, 'w') as f:
+                    f.write(str(self.uptime))
+
+                # Yeah, you could remove this, and there's nothing I can do to stop
+                # you, but would you really take away the source of income I use to
+                # make this product usable? C'mon, man. Don't be a dick.
+                if not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
+                    self.is_fee = True
+
+                    await self.stop()
+
+                    interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+
+                    if config.program.fee is None:
+                        self.module.monitor.output.append(' +===========================================================+')
+                        self.module.monitor.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
+                        self.module.monitor.output.append(' +===========================================================+')
+                    else:
+                        self.module.monitor.output.append(' +===========================================================+')
+                        self.module.monitor.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
+                        self.module.monitor.output.append(' +===========================================================+ ')
+
+                        await self.start_miner(config, args=config.program.fee.args, forward_output=False)
+
+                        self.is_collecting = True
+
+                        await asyncio.sleep(interval)
+
+                        if not self.is_collecting:
+                            continue
+                        self.is_collecting = False
+
+                        self.module.monitor.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
+                        self.module.monitor.output.append(' +===========================================================+')
+
+                    self.uptime = 0
+                    self.is_fee = False
+
+                    await self.start()
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             
-            self.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
+            self.module.new_message(level='bug', title='Miner Exception', text=traceback.format_exc())
 
 class API:
     async def get_stats(self, host):
@@ -281,3 +315,46 @@ class API:
             },
             'hashrate': []
         }
+
+class Shares:
+    def __init__(self):
+        self.total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+        self.session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+        self.interval_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+
+    @property
+    def totals(self):
+        return self.total_shares
+
+    def set_offset(self, stats):
+        self.total_shares['accepted'] = stats['accepted']
+        self.total_shares['rejected'] = stats['rejected']
+        self.total_shares['invalid'] = stats['invalid']
+
+    def reset_session(self):
+        self.session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+    
+    def update(self, stats):
+        if self.session_shares['accepted'] > stats['accepted'] \
+                                or self.session_shares['rejected'] > stats['rejected'] \
+                                or self.session_shares['invalid'] > stats['invalid']:
+            self.reset_session()
+        else:
+            self.total_shares['accepted'] += stats['accepted'] - self.session_shares['accepted']
+            self.total_shares['rejected'] += stats['rejected'] - self.session_shares['rejected']
+            self.total_shares['invalid'] += stats['invalid'] - self.session_shares['invalid']
+
+            self.session_shares = stats
+
+    def pop_interval(self):
+        new_shares = {
+            'accepted': self.total_shares['accepted'] - self.interval_shares['accepted'],
+            'rejected': self.total_shares['rejected'] - self.interval_shares['rejected'],
+            'invalid': self.total_shares['invalid'] - self.interval_shares['invalid']
+        }
+
+        self.interval_shares['accepted'] = self.total_shares['accepted']
+        self.interval_shares['rejected'] = self.total_shares['rejected']
+        self.interval_shares['invalid'] = self.total_shares['invalid']
+
+        return new_shares

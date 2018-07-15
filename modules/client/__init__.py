@@ -8,7 +8,6 @@ from ivy.model.hardware import get_hardware
 from . import api_server
 from .gpu import GPUControl
 from .monitor import Monitor
-from .process import Process
 
 
 class ClientModule(Module):
@@ -20,15 +19,35 @@ class ClientModule(Module):
 
         self.register_events(self.connector)
 
+        self.message_queue = asyncio.Queue()
+        asyncio.ensure_future(self.process_messages())
+
         self.gpus = GPUControl()
 
-        self.process = Process(self)
         self.monitor = Monitor(self)
 
         asyncio.ensure_future(api_server.start(self))
 
     async def on_stop(self):
-        await self.process.stop()
+        await self.monitor.stop_miner()
+
+    async def process_messages(self):
+        while True:
+            if not self.connector.socket:
+                await asyncio.sleep(1)
+                continue
+
+            message = await self.message_queue.get()
+            message['machine'] = self.client.machine_id
+
+            await self.connector.socket.send('messages', 'new', message)
+
+    def new_message(self, level=None, title=None, text=None):
+        if level is None: raise Exception('Level not specified!')
+        if text is None: raise Exception('Text not specified!')
+        pack = {'level': level, 'text': text}
+        if title: pack['title'] = title
+        self.message_queue.put_nowait(pack)
 
     def on_connect_relay(self, service):
         self.connector.open(service.ip, service.port, {
@@ -74,7 +93,7 @@ class ClientModule(Module):
 
                 await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
-                await self.process.start()
+                await self.monitor.start_miner()
             elif packet.payload['id'] == 'shutdown':
                 os.system('/sbin/shutdown now')
             elif packet.payload['id'] == 'reboot':
