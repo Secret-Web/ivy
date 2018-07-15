@@ -22,6 +22,8 @@ class Process:
         self.process = None
         self.process_streams = None
 
+        self.output = []
+
     @property
     def miner_dir(self):
         cwd = os.path.join('/etc', 'ivy', 'miners')
@@ -33,7 +35,7 @@ class Process:
     def is_running(self):
         return self.process and self.process.returncode is None
 
-    async def start_miner(self, config, args, forward_output=True):
+    async def start_miner(self, config, args=None, forward_output=True):
         if self.first_run and not self.module.ivy.is_safe:
             self.first_run = False
 
@@ -42,6 +44,9 @@ class Process:
         self.first_run = False
 
         self.config = config
+
+        if args is None:
+            args = config.program.execute['args']
 
         if config.wallet:
             args = re.sub('{user}', '%s' % config.wallet.address, args)
@@ -91,6 +96,8 @@ class Process:
                             'GPU_SINGLE_ALLOC_PERCENT': '100'
                         })
 
+        self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
+
     async def install(self, config):
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if os.path.exists(miner_dir): return
@@ -113,7 +120,9 @@ class Process:
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        return installer
+        self.read_stream(logging.getLogger('install:' + config.program.name), installer)
+
+        installer.wait()
 
     async def stop(self):
         killed = False
@@ -138,46 +147,26 @@ class Process:
     
         return not killed
 
-STARTING_UP_INDICATOR = '/etc/ivy/.process-starting-up'
+    def read_stream(self, logger, process, forward_output=True):
+        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output))
+        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output))
 
-class ProcessWatchdog:
-    def __init__(self, logger):
-        self.logger = logger.getChild('Watchdog')
+    async def _read_stream(self, logger, stream, is_error, forward_output=True):
+        while True:
+            line = await stream.readline()
+            if not line:
+                break
 
-        self.first_start = True
-        self.is_safe = True
+            line = line.decode('UTF-8', errors='ignore').replace('\n', '')
+            line = re.sub('\033\[.+?m', '', line)
 
-        self.online = False
+            if forward_output:
+                self.output.append(line)
+                del self.output[:-128]
 
-    def init(self):
-        self.online = False
+            if len(line) == 0: continue
 
-        self.is_safe = not os.path.exists(STARTING_UP_INDICATOR)
-
-        open(STARTING_UP_INDICATOR, 'a').close()
-
-        self.logger.info('Detected an ungraceful shutdown of the process.')
-
-    def startup_complete(self):
-        self.first_start = False
-
-        self.logger.info('Process starting up. Waiting for success confirmation.')
-
-    def startup_failure(self):
-        self.first_start = False
-
-        self.logger.info('Process startup failed.')
-
-        self.cleanup()
-
-    def ping(self):
-        if not self.online:
-            self.logger.info('Process successfully started')
-
-        self.online = True
-
-        self.cleanup()
-
-    def cleanup(self):
-        if os.path.exists(STARTING_UP_INDICATOR):
-            os.remove(STARTING_UP_INDICATOR)
+            if is_error:
+                logger.critical(line)
+            else:
+                logger.info(line)

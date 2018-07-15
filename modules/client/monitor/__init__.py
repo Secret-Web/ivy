@@ -21,7 +21,6 @@ class Monitor:
             '_': API()
         }
 
-        self.output = []
         self.shares = Shares()
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
@@ -46,39 +45,8 @@ class Monitor:
     def uptime_path(self):
         return os.path.join('/tmp/.ivy-uptime')
 
-    async def start_miner(self):
-        if self.process.is_running:
-            await self.process.stop()
-
-        config = self.client
-
-        if not config.program:
-            self.logger.error('No program configured.')
-            return
-
-        await self.install_and_start_program(config)
-
-    async def install_and_start_program(self, config, args=None, forward_output=True):
-        if args is None:
-            args = config.program.execute['args']
-
-        try:
-            installer = await self.process.install(config=config)
-
-            self.read_stream(logging.getLogger('install:' + config.program.name), installer)
-
-            installer.wait()
-        except Exception as e:
-            self.module.new_message(level='danger', title='Install Failure', text=str(e))
-            return
-
-        try:
-            await self.process.start_miner(config, args=args, forward_output=forward_output)
-
-            self.read_stream(logging.getLogger(config.program.name), self.process.process, forward_output=forward_output)
-        except Exception as e:
-            self.module.new_message(level='danger', title='Startup Failure', text=str(e))
-            return
+    async def start_miner(self, *args, **kwargs):
+        await self.process.start_miner(*args, **kwargs)
 
     async def stop_miner(self):
         await self.process.stop()
@@ -104,30 +72,6 @@ class Monitor:
                 self.logger.exception('\n' + traceback.format_exc())
                 self._api[api_id] = self._api['_']
         return self._api[self.process.config.program.api]
-
-    def read_stream(self, logger, process, forward_output=True):
-        asyncio.ensure_future(self._read_stream(logger, process.stdout, is_error=False, forward_output=forward_output))
-        asyncio.ensure_future(self._read_stream(logger, process.stderr, is_error=True, forward_output=forward_output))
-
-    async def _read_stream(self, logger, stream, is_error, forward_output=True):
-        while True:
-            line = await stream.readline()
-            if not line:
-                break
-
-            line = line.decode('UTF-8', errors='ignore').replace('\n', '')
-            line = re.sub('\033\[.+?m', '', line)
-
-            if forward_output:
-                self.output.append(line)
-                del self.output[:-128]
-
-            if len(line) == 0: continue
-
-            if is_error:
-                logger.critical(line)
-            else:
-                logger.info(line)
 
     async def get_stats(self):
         return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
