@@ -6,6 +6,7 @@ import time
 import logging
 
 from ivy.model.stats import MinerStats
+from ivy.net import Packet
 from ..process import Process
 
 
