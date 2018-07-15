@@ -57,7 +57,7 @@ class Process:
             try:
                 await asyncio.sleep(30)
 
-                if not self.process and self.is_running:
+                if not self.config or not self.process or not self.is_running:
                     continue
 
                 self.uptime += 30
