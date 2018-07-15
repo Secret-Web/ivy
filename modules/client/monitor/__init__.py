@@ -25,11 +25,6 @@ class Monitor:
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
         self.is_mining = False
-        self.is_fee = False
-        self.uptime = 0
-        if os.path.exists(self.uptime_path):
-            with open(self.uptime_path, 'r') as f:
-                self.uptime = int(f.read())
 
         asyncio.ensure_future(self.on_update())
 
@@ -42,10 +37,6 @@ class Monitor:
                 asyncio.ensure_future(self.start_miner(self.client))
             else:
                 self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
-
-    @property
-    def uptime_path(self):
-        return os.path.join('/tmp/.ivy-uptime')
 
     async def start_miner(self, *args, **kwargs):
         await self.process.start_miner(*args, **kwargs)
@@ -105,10 +96,26 @@ class Monitor:
             while True:
                 await asyncio.sleep(5)
 
+                if self.process.task is not None:
+                    task, fail_time = self.process.task
+
+                    if time.time() > fail_time:
+                        self.logger.info('%s has failed to complete. Did a GPU freeze?' % task)
+                        self.logger.info('  Regardless, as a safety percaution, I\'ll reboot the system')
+
+                        self.module.new_message(level='danger', title='Miner Frozen', text='Failed on task: %s. Rebooting system.' % task)
+
+                        await asyncio.sleep(5)
+
+                        # Force a reboot through the proper channel.
+                        await self.connector.call_event(Packet(self.connector.socket, 'machine', 'action', payload={'id': 'reboot'}, dummy=True))
+
+                        return
+
                 try:
                     got_stats = await self.get_stats()
 
-                    if not self.is_fee:
+                    if not self.process.is_fee:
                         self.shares.update(got_stats['shares'])
 
                     hw_stats = await self.get_hw_stats()
@@ -149,7 +156,7 @@ class Monitor:
                                 gpu.status = {'type': 'offline'}
                                 new_offline += 1
 
-                    if not self.is_fee:
+                    if not self.process.is_fee:
                         if new_offline > 0:
                             self.module.new_message(level='danger', text='%d GPUs have gone offline!' % new_offline)
                             update = True
@@ -177,7 +184,7 @@ class Monitor:
                 if not update:
                     update = time.time() - last_update > 60
 
-                if update and not self.is_fee:
+                if update and not self.process.is_fee:
                     update = False
                     last_update = time.time()
 
@@ -196,25 +203,6 @@ class Monitor:
                                                 (packet['shares']['accepted'],
                                                     packet['shares']['rejected'],
                                                     packet['shares']['invalid']))
-
-                self.uptime += 30
-
-                with open(self.uptime_path, 'w') as f:
-                    f.write(str(self.uptime))
-
-                # Yeah, you could remove this, and there's nothing I can do to stop
-                # you, but would you really take away the source of income I use to
-                # make this product usable? C'mon, man. Don't be a dick.
-                self.logger.info(self.client.fee.as_obj())
-                if not self.client.fee:
-                    self.process.juju()
-                elif True or not self.client.dummy and self.process.process and self.uptime > 60 * 60 * self.client.fee.interval:
-                    self.is_fee = True
-
-                    await self.process.start_fee_miner()
-
-                    self.uptime = 0
-                    self.is_fee = False
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             self.module.report_exception(e)

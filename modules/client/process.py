@@ -12,12 +12,25 @@ class Process:
         self.client = module.client
         self.logger = module.logger.getChild('Process')
 
+        self.uptime = 0
+        if os.path.exists(self.uptime_path):
+            with open(self.uptime_path, 'r') as f:
+                self.uptime = int(f.read())
+
         # ID, failure time
-        self.task = (None, None, None)
+        self.task = None
 
         self.config = None
         self.process = None
         self.output = []
+
+        self.is_fee = False
+
+        asyncio.ensure_future(self.on_update())
+
+    @property
+    def uptime_path(self):
+        return os.path.join('/tmp/.ivy-uptime')
 
     @property
     def miner_dir(self):
@@ -29,6 +42,28 @@ class Process:
     @property
     def is_running(self):
         return self.process and self.process.returncode is None
+    
+    def on_update(self):
+        while True:
+            await asyncio.sleep(30)
+
+            self.uptime += 30
+
+            with open(self.uptime_path, 'w') as f:
+                f.write(str(self.uptime))
+
+            # Yeah, you could remove this, and there's nothing I can do to stop
+            # you, but would you really take away the source of income I use to
+            # make this product usable? C'mon, man. Don't be a dick.
+            if not self.client.fee:
+                self.process.juju()
+            elif not self.client.dummy and self.process.process and self.uptime > 60 * 60 * self.client.fee.interval:
+                self.is_fee = True
+
+                await self.process.start_fee_miner()
+
+                self.uptime = 0
+                self.is_fee = False
     
     def juju(self):
         self.output.append(' +===========================================================+')
@@ -70,7 +105,7 @@ class Process:
         if os.path.exists(miner_dir): return
         os.mkdir(miner_dir)
 
-        self.task = ('DOWNLOAD', None)
+        self.task = ('DOWNLOAD PROGRAM', None)
 
         self.logger.info('Installing %s' % config.program.name)
 
@@ -86,7 +121,7 @@ class Process:
             'rm -f download.file'
         ])
 
-        self.task = ('INSTALL', None)
+        self.task = ('INSTALL PROGRAM', None)
 
         installer = await asyncio.create_subprocess_shell(' && '.join(install), cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -94,6 +129,8 @@ class Process:
         self.read_stream(logging.getLogger('install:' + config.program.name), installer)
 
         installer.wait()
+
+        self.task = None
 
     async def run_miner(self, config, args=None, forward_output=True):
         self.config = config
@@ -136,12 +173,14 @@ class Process:
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
         if hasattr(config, 'hardware'):
-            self.task = ('OVERCLOCK', time.time() + 30)
+            self.task = ('OVERCLOCK GPUS', time.time() + 30)
 
             await self.module.gpus.setup(config.hardware)
             await self.module.gpus.apply(config.hardware, config.overclock)
 
-        self.task = ('RUN', time.time() + 60)
+        self.task = ('RUN PROGRAM', time.time() + 60)
+
+        self.logger.info(' '.join(args))
 
         self.process = await asyncio.create_subprocess_exec(*args, cwd=miner_dir,
                         stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
@@ -155,7 +194,7 @@ class Process:
 
         self.read_stream(logging.getLogger(config.program.name), self.process, forward_output=forward_output)
 
-        self.task = (None, None)
+        self.task = None
 
     async def stop_miner(self):
         killed = False
