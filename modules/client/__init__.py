@@ -99,7 +99,7 @@ class ClientModule(Module):
 
                 await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
-                await self.monitor.start_miner()
+                await self.monitor.start_miner(self.client)
             elif packet.payload['id'] == 'shutdown':
                 os.system('/sbin/shutdown now')
             elif packet.payload['id'] == 'reboot':
