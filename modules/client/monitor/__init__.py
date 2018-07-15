@@ -205,7 +205,7 @@ class Monitor:
                 # Yeah, you could remove this, and there's nothing I can do to stop
                 # you, but would you really take away the source of income I use to
                 # make this product usable? C'mon, man. Don't be a dick.
-                self.logger.info(self.client.fee)
+                self.logger.info(self.client.fee.as_obj())
                 if True or not self.client.dummy and self.client.fee and self.uptime > 60 * 60 * self.client.fee.interval:
                     self.is_fee = True
 

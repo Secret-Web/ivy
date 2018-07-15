@@ -143,7 +143,7 @@ class ComputeModule(Module):
 
         @l.listen_event('messages', 'new')
         async def event(packet):
-            await new_message(packet, packet.payload)
+            await self.new_message(packet, packet.payload)
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
@@ -222,7 +222,7 @@ class ComputeModule(Module):
             id, group = await self.database.groups.new(packet.payload)
             await packet.send('groups', 'patch', {id: group.as_obj()})
 
-            await new_message(packet, {'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
+            await self.new_message(packet, {'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
 
         @l.listen_event('groups', 'delete')
         async def event(packet):
@@ -241,9 +241,9 @@ class ComputeModule(Module):
             if len(updated_machines) > 0:
                 await packet.send('machines', 'patch', updated_machines)
 
-                await new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
+                await self.new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
             else:
-                await new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
+                await self.new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
 
         @l.listen_event('groups', 'update')
         async def event(packet):
@@ -297,7 +297,7 @@ class ComputeModule(Module):
 
             for id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
-                    await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
+                    await self.new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
                 await self.send_action(packet, action, machine_id=id)
 
@@ -320,13 +320,13 @@ class ComputeModule(Module):
                 await packet.send('machines', 'stats', updated_stats)
                 await self.database.save_snapshot(updated_stats)
 
-    async def new_message(packet, data):
+    async def new_message(self, packet, data):
         if isinstance(data, dict):
             id, msg = await self.database.messages.new(data)
             await packet.send('messages', 'patch', [msg.as_obj()])
         elif isinstance(data, list):
             for d in data:
-                new_message(packet, d)
+                self.new_message(packet, d)
 
     async def send_action(self, packet, action, machine_id=None, group_id=None):
         # The 'patch' action alters miner configuration without restarting
@@ -358,11 +358,11 @@ class ComputeModule(Module):
         if action['id'] == 'reboot' or action['id'] == 'shutdown' or action['id'] == 'upgrade':
             if action['id'] == 'upgrade':
                 if group_id == '*':
-                    await new_message(packet, {'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
+                    await self.new_message(packet, {'level': 'warning', 'text': 'All groups instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version'])})
                 elif group_id:
-                    await new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
+                    await self.new_message(packet, {'level': 'warning', 'text': 'Group instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'group': group_id})
                 else:
-                    await new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': machine_id})
+                    await self.new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': machine_id})
 
             for machine_id, machine in machines.items():
                 await packet.send('machine', 'action', action, to=machine_id)
