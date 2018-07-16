@@ -147,6 +147,7 @@ async def system_check():
     await run_command('apt', 'install', '-y', 'xorg', 'i3', 'jq', 'chromium-browser')
     await run_command('systemctl', 'set-default', 'multi-user.target')
     await run_command('usermod', '-a', '-G', 'video', 'ivy')
+    await run_command('apt', 'install', '-y', 'xvfb')
     display.step_done()
 
     display.set_step('Removing unnecessary packages')
