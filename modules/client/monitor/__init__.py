@@ -118,7 +118,10 @@ class Monitor:
 
                         return
 
-                self.logger.info(str(time.time() - self.last_hash_time))
+                if self.last_hash_time:
+                    self.logger.info(str(time.time() - self.last_hash_time))
+                else:
+                    self.logger.info('none')
 
                 if self.process.process is None:
                     self.logger.info('no process')
