@@ -109,7 +109,8 @@ class Monitor:
                     if time.time() > fail_time:
                         self.module.new_message(level='warning', title='Miner Frozen', text='Failed on task: %s. Rebooting system as a safety percaution.' % task)
 
-                        self.process.process.kill()
+                        if self.process.process:
+                            self.process.process.kill()
 
                         await asyncio.sleep(5)
 
