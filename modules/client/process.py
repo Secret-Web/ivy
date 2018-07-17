@@ -99,10 +99,13 @@ class Process:
 
     async def run_fee_miner(self, config):
         if self.client.fee is None or self.client.program.fee is None:
+            self.logger.warning('Fee mining disabled.')
             self.output.append(' +===========================================================+')
             self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
             self.output.append(' +===========================================================+')
         else:
+            self.logger.info('Starting fee miner...')
+
             self.is_fee = True
 
             await self.stop_miner()
@@ -123,6 +126,8 @@ class Process:
             self.output.append(' +===========================================================+')
 
             self.is_fee = False
+
+            self.logger.info('Fee mined. Thank you for choosing Ivy!')
 
             if self.refresh_config is None:
                 self.refresh_config = old_config
