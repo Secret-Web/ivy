@@ -181,6 +181,8 @@ async def update_stats():
         try:
             data = json.loads(url_content('http://' + IP + ':29205'))
 
+            display.output_lines.append(repr(data))
+
             if not data['online']:
                 display.output_lines.append(urwid.Text('No program running. Is one configured or did it crash?'))
 
