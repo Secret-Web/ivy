@@ -70,7 +70,7 @@ class Process:
     async def on_update(self):
         while True:
             try:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
 
                 if self.is_fee:
                     continue
@@ -92,6 +92,8 @@ class Process:
                         f.write(str(self.uptime))
 
                     if self.is_fee_ready:
+                        self.is_fee = True
+
                         asyncio.ensure_future(self.run_fee_miner(self.config))
             except Exception as e:
                 self.module.report_exception(e)
@@ -171,7 +173,7 @@ class Process:
 
         self.read_stream(logging.getLogger('install:' + config.program.name), installer)
 
-        installer.wait()
+        await installer.wait()
 
         self.task = None
 
