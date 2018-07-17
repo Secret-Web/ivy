@@ -29,7 +29,7 @@ class ClientModule(Module):
         asyncio.ensure_future(api_server.start(self))
 
     async def on_stop(self):
-        await self.monitor.stop_miner()
+        await self.monitor.on_stop()
 
     async def process_messages(self):
         while True:

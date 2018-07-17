@@ -36,19 +36,16 @@ class Monitor:
             self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
         else:
             if self.module.ivy.is_safe:
-                asyncio.ensure_future(self.start_miner(self.client))
+                self.process.on_start()
             else:
                 # If the process was previously online for more than an hour, assume it was stable
                 if self.process.miner_uptime > 60 * 60:
                     self.module.new_message(level='warning', title='Miner Offline', text='Miner failed to start up previously. However, it seemed stable before. Starting up miner...')
-                    asyncio.ensure_future(self.start_miner(self.client))
+                    self.process.on_start()
                 else:
                     self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
-    async def start_miner(self, *args, **kwargs):
-        await self.process.start_miner(*args, **kwargs)
-
-    async def stop_miner(self):
+    async def on_stop(self):
         await self.process.stop_miner()
 
     @property

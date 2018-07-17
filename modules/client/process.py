@@ -51,71 +51,75 @@ class Process:
     @property
     def is_running(self):
         return self.process and self.process.returncode is None
+
+    @property
+    def is_fee_ready(self):
+        return not self.client.dummy and self.uptime > 60 * 60 * self.client.fee.interval
+
+    def on_start(self):
+        if self.client.fee is None or self.is_fee_ready:
+            asyncio.ensure_future(self.run_fee_miner(self.client))
+            return
+        
+        asyncio.ensure_future(self.start_miner(self.client))
     
     async def on_update(self):
         while True:
             try:
-                await asyncio.sleep(30)
+                await asyncio.sleep(5)
 
-                if not self.config or not self.process or not self.is_running:
+                if not self.config or not self.process or not self.is_running or self.is_fee:
                     continue
 
-                self.uptime += 30
-
-                with open(self.uptime_path, 'w') as f:
-                    f.write(str(self.uptime))
-
-                self.miner_uptime += 30
+                self.miner_uptime += 5
 
                 with open(self.miner_uptime_path, 'w') as f:
                     f.write(str(self.miner_uptime))
 
-                # Yeah, you could remove this, and there's nothing I can do to stop
-                # you, but would you really take away the source of income I use to
-                # make this product usable? C'mon, man. Don't be a dick.
-                if not self.config.fee:
-                    self.process.juju()
-                elif not self.config.dummy and self.uptime > 60 * 60 * self.config.fee.interval:
-                    self.is_fee = True
+                self.uptime += 5
 
-                    await self.start_fee_miner()
+                with open(self.uptime_path, 'w') as f:
+                    f.write(str(self.uptime))
 
-                    self.uptime = 0
-                    self.is_fee = False
+                if self.is_fee_ready:
+                    await self.run_fee_miner(self.config)
             except Exception as e:
                 self.module.report_exception(e)
-    
-    def juju(self):
-        self.output.append(' +===========================================================+')
-        self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
-        self.output.append(' +===========================================================+')
 
-    async def start_fee_miner(self):
-        await self.stop_miner()
-
-        interval = (self.config.fee.interval / 24) * self.config.fee.daily * 60
-
-        old_config = self.config
-
-        if self.config.program.fee is None:
-            self.juju()
+    async def run_fee_miner(self, config):
+        if self.client.fee is None or self.client.program.fee is None:
+            self.output.append(' +===========================================================+')
+            self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
+            self.output.append(' +===========================================================+')
         else:
+            self.is_fee = True
+
+            await self.stop_miner()
+
+            old_config = self.config
+
+            interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+
             self.output.append(' +===========================================================+')
             self.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')
             self.output.append(' +===========================================================+ ')
 
-            await self.start_miner(self.config, args=self.config.program.fee.args)
+            await self.start_miner(config, args=config.program.fee.args)
 
             await asyncio.sleep(interval)
 
             self.output.append('<|  Development fee collected.  Thank you for choosing Ivy!  |>')
             self.output.append(' +===========================================================+')
 
-        await self.start_miner(old_config)
+            self.is_fee = False
 
-        return self.config.program.fee is None
+            await self.start_miner(old_config)
+
+        self.uptime = 0
 
     async def start_miner(self, config, args=None):
+        self.config = config
+
         await self.install(config)
 
         await self.run_miner(config, args=args)
@@ -158,8 +162,6 @@ class Process:
         if not self.is_fee:
             self.miner_uptime = 0
 
-        self.config = config
-
         if args is None:
             args = config.program.execute['args']
 
@@ -184,7 +186,7 @@ class Process:
             if config.pool.endpoint.username:
                 args = re.sub('{user}', '' if not config.pool.endpoint.username else '%s' % config.pool.endpoint.username, args)
 
-        args = re.sub('{miner\.id}', self.config.worker_id, args)
+        args = re.sub('{miner\.id}', config.worker_id, args)
 
         args = re.sub('{network\.id}', 'testnetid', args)
 
