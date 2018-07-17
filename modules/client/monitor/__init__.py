@@ -45,6 +45,9 @@ class Monitor:
                 else:
                     self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
+    async def refresh_miner(self, config):
+        await self.process.refresh_miner(config)
+
     async def on_stop(self):
         await self.process.stop_miner()
 
