@@ -59,6 +59,8 @@ class Process:
         return not self.client.dummy and self.uptime > 60 * 60 * self.client.fee.interval
 
     def on_start(self):
+        self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.client.fee.interval))
+
         if self.client.fee is None or self.is_fee_ready:
             asyncio.ensure_future(self.run_fee_miner(self.client))
             return
@@ -127,7 +129,7 @@ class Process:
 
             self.is_fee = False
 
-            self.logger.info('Fee mined. Thank you for choosing Ivy!')
+            self.logger.info('Fee mined. Thank you for choosing Ivy!a')
 
             if self.refresh_config is None:
                 self.refresh_config = old_config
