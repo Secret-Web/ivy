@@ -22,7 +22,7 @@ class Process:
             with open(self.miner_uptime_path, 'r') as f:
                 self.miner_uptime = int(f.read())
         
-        self.new_config = None
+        self.refresh_config = None
 
         # ID, failure time
         self.task = None
@@ -63,7 +63,7 @@ class Process:
             asyncio.ensure_future(self.run_fee_miner(self.client))
             return
         
-        asyncio.ensure_future(self.start_miner(self.client))
+        self.refresh_config = self.client
     
     async def on_update(self):
         while True:
@@ -73,9 +73,9 @@ class Process:
                 if self.is_fee:
                     continue
                 
-                if self.new_config is not None:
-                    config = self.new_config
-                    self.new_config = None
+                if self.refresh_config is not None:
+                    config = self.refresh_config
+                    self.refresh_config = None
                     await self.start_miner(config)
 
                 if self.config and self.process and self.is_running:
@@ -90,12 +90,12 @@ class Process:
                         f.write(str(self.uptime))
 
                     if self.is_fee_ready:
-                        await self.run_fee_miner(self.config)
+                        asyncio.ensure_future(self.run_fee_miner(self.config))
             except Exception as e:
                 self.module.report_exception(e)
 
     async def refresh_miner(self, config):
-        self.new_config = config
+        self.refresh_config = config
 
     async def run_fee_miner(self, config):
         if self.client.fee is None or self.client.program.fee is None:
@@ -124,8 +124,8 @@ class Process:
 
             self.is_fee = False
 
-            if self.new_config is None:
-                self.new_config = old_config
+            if self.refresh_config is None:
+                self.refresh_config = old_config
 
         self.uptime = 0
 
