@@ -1,0 +1,18 @@
+[Unit]
+Description=Ivy cryptocurrency mining farm manager
+After=network.target
+
+[Service]
+User=root
+Group=ivy
+Type=simple
+WorkingDirectory=/opt/ivy/
+ExecStart=/usr/bin/python3.6 /opt/ivy/start.py
+ExecStop=/usr/bin/python3.6 /opt/ivy/stop.py
+ExecStopPost=/bin/rm -f /etc/ivy/.pid
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

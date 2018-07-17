@@ -32,7 +32,8 @@ for id, config in s.config.items():
 
 try:
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname).4s:%(name)s] %(message)s', datefmt='%Y-%m-%d %H:%M'))
+#    handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname).4s:%(name)s] %(message)s', datefmt='%Y-%m-%d %H:%M'))
+    handler.setFormatter(logging.Formatter('[%(levelname).4s:%(name)s] %(message)s'))
     #handler.addFilter(LastPartFilter())
 
     logger = logging.getLogger()

@@ -8,7 +8,7 @@ Group=ivy
 Type=simple
 Environment=DISPLAY=:99
 WorkingDirectory=/opt/ivy/
-ExecStart=/usr/bin/xvfb-run --server-args="-screen 0 800x600x16" --server-num=99 /usr/bin/python3.6 /opt/ivy/start.py
+ExecStart=/usr/bin/xinit /usr/bin/python3.6 /opt/ivy/start.py -- :99
 ExecStop=/usr/bin/python3.6 /opt/ivy/stop.py
 ExecStopPost=/bin/rm -f /etc/ivy/.pid
 Restart=always

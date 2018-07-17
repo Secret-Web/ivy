@@ -14,7 +14,7 @@ HOME = expanduser('~')
 PATH = os.path.dirname(os.path.realpath(__file__))
 
 SYMLINKS = [
-    ('ivy.service', '/etc/systemd/system/ivy.service'),
+    ('ivy-<gpu>.service', '/etc/systemd/system/ivy.service'),
     ('i3status.conf', '/etc/i3status.conf'),
     ('i3config.conf', os.path.expanduser('~/.config/i3/config')),
     ('Xresources', os.path.expanduser('~/.Xresources')),
@@ -111,142 +111,152 @@ class Display:
         self.urwid.run()
 
 async def system_check():
-    display.set_step('Applying branding')
-    with open('/etc/issue', 'w') as f:
-        f.write('Ivy - SecretWeb.com \\l\n')
-    display.step_done()
+    try:
+        display.set_step('Applying branding')
+        with open('/etc/issue', 'w') as f:
+            f.write('Ivy - SecretWeb.com \\l\n')
+        display.step_done()
 
-    display.set_step('Cleaning symlinks')
-    for f, t in SYMLINKS:
-        os.makedirs(os.path.dirname(os.path.realpath(t)), exist_ok=True)
-        with suppress(FileNotFoundError):
-            display.add_line(os.path.abspath(t))
-            os.remove(os.path.abspath(t))
-    display.step_done()
-
-    display.set_step('Checking for new system patches')
-    await run_command('apt', 'update')
-
-    display.set_step('Applying system patches')
-    await run_command('apt', 'upgrade', '-y')
-    display.step_done()
-
-    #display.set_step('Updating Kernel')
-    #await run_command('apt', 'install', '-y', 'linux-image-' + KERNEL_VERSION, 'linux-headers-' + KERNEL_VERSION, 'linux-image-extra-' + KERNEL_VERSION)
-    #display.step_done()
-
-    display.set_step('Installing tools')
-    await run_command('apt', 'install', '-y', 'libcurl4-openssl-dev', 'libssl-dev', 'libjansson-dev', 'automake', 'autotools-dev', 'build-essential')
-    await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
-    await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
-    await run_command('apt', 'install', '-y', 'software-properties-common')
-    await run_command('apt', 'install', '-y', 'lshw', 'ocl-icd-opencl-dev', 'libcurl4-openssl-dev')
-    display.step_done()
-
-    display.set_step('Installing XOrg + i3')
-    await run_command('apt', 'install', '-y', 'xorg', 'i3', 'jq', 'chromium-browser')
-    await run_command('systemctl', 'set-default', 'multi-user.target')
-    await run_command('usermod', '-a', '-G', 'video', 'ivy')
-    await run_command('apt', 'install', '-y', 'xvfb')
-    display.step_done()
-
-    display.set_step('Removing unnecessary packages')
-    await run_command('apt', 'autoremove', '-y')
-    display.step_done()
-
-    display.set_step('Installing python requirements')
-    await run_command(sys.executable, '-m', 'pip', 'install', '-r', os.path.join(PATH, '../requirements.txt'))
-    display.step_done()
-
-    display.set_step('Creating symlinks')
-    for f, t in SYMLINKS:
-        display.add_line(os.path.join(PATH, f) + ' -> ' + os.path.abspath(t))
-        os.link(os.path.join(PATH, f), os.path.abspath(t))
-    await run_command('systemctl', 'daemon-reload')
-    display.step_done()
-
-    display.set_step('Verifying graphics drivers')
-
-    p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out = p.communicate()[0].decode('UTF-8').strip()
-    graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
-
-    display.add_line('Cards: %r' % graphics)
-
-    await asyncio.sleep(1)
-
-    installed = False
-
-    if 'NVIDIA' in graphics:
-        display.set_step('Verifying NVIDIA drivers')
-
-        await asyncio.sleep(1)
-
-        if not is_installed('nvidia-390'):
-            display.set_step('Installing NVIDIA drivers')
-            await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
-            await run_command('apt', 'update')
-            await run_command('apt', 'install', '-y', 'nvidia-%s' % GFX_VERSION['NVIDIA'], 'nvidia-cuda-toolkit')
-
-            installed = True
-
-    if 'AMD' in graphics:
-        display.set_step('Verifying AMD drivers')
-
-        await asyncio.sleep(1)
-
-        if not is_installed('amdgpu-pro-core') and not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
-            display.set_step('Installing AMD drivers')
-
-            await run_command('apt', 'install', '-y', 'amdgpu-dkms', 'libdrm-amdgpu-amdgpu1', 'libdrm-amdgpu1', 'libdrm2-amdgpu')
-
-            await run_command('wget', '--referer=http://support.amd.com', '--limit-rate', '1024k', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
-
-            TMP_DIR = '/tmp/amdgpu-pro'
+        display.set_step('Cleaning symlinks')
+        for f, t in SYMLINKS:
+            os.makedirs(os.path.dirname(os.path.realpath(t)), exist_ok=True)
             with suppress(FileNotFoundError):
-                shutil.rmtree(TMP_DIR)
-            os.mkdir(TMP_DIR)
-            await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
-            await run_command('./amdgpu-install', '-y', '--opencl=legacy', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+                display.add_line(os.path.abspath(t))
+                os.remove(os.path.abspath(t))
+        display.step_done()
 
-            '''await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
-            await run_command('apt', 'update')
-            await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
+        display.set_step('Checking for new system patches')
+        await run_command('apt', 'update')
 
-            display.set_step('Installing HWE Kernel')
+        display.set_step('Applying system patches')
+        await run_command('apt', 'upgrade', '-y')
+        display.step_done()
 
-            await run_command('apt', 'install', '--install-recommends', 'linux-generic-hwe-16.04', 'xserver-xorg-hwe-16.04')
+        #display.set_step('Updating Kernel')
+        #await run_command('apt', 'install', '-y', 'linux-image-' + KERNEL_VERSION, 'linux-headers-' + KERNEL_VERSION, 'linux-image-extra-' + KERNEL_VERSION)
+        #display.step_done()
 
-            '''
-            installed = True
+        display.set_step('Installing tools')
+        await run_command('apt', 'install', '-y', 'libcurl4-openssl-dev', 'libssl-dev', 'libjansson-dev', 'automake', 'autotools-dev', 'build-essential')
+        await run_command('apt', 'install', '-y', 'gcc-5', 'g++-5')
+        await run_command('update-alternatives', '--install', '/usr/bin/gcc', 'gcc', '/usr/bin/gcc-5', '1')
+        await run_command('apt', 'install', '-y', 'software-properties-common')
+        await run_command('apt', 'install', '-y', 'lshw', 'ocl-icd-opencl-dev', 'libcurl4-openssl-dev')
+        display.step_done()
 
-        # For AMD table overriding
-        display.set_step('Installing OhGodATool')
+        display.set_step('Installing XOrg + i3')
+        await run_command('apt', 'install', '-y', 'xorg', 'i3', 'jq', 'chromium-browser')
+        await run_command('systemctl', 'set-default', 'multi-user.target')
+        await run_command('usermod', '-a', '-G', 'video', 'ivy')
+        await run_command('apt', 'install', '-y', 'xvfb')
+        display.step_done()
+
+        display.set_step('Removing unnecessary packages')
+        await run_command('apt', 'autoremove', '-y')
+        display.step_done()
+
+        display.set_step('Installing python requirements')
+        await run_command(sys.executable, '-m', 'pip', 'install', '-r', os.path.join(PATH, '../requirements.txt'))
+        display.step_done()
+
+        display.set_step('Detecting graphics cards')
+
+        p = subprocess.Popen('lspci -vnnn | grep VGA', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = p.communicate()[0].decode('UTF-8').strip()
+        graphics = ['Intel' if 'Intel' in line else 'AMD' if 'AMD' in line else 'NVIDIA' if 'NVIDIA' in line else 'Unknown' for line in out.split('\n')]
+
+        display.add_line('Cards: %r' % graphics)
 
         await asyncio.sleep(1)
 
-        await run_command('apt', 'install', '-y', 'libpci-dev')
+        display.set_step('Creating symlinks')
+        for f, t in SYMLINKS:
+            if '<gpu>' in f:
+                f = f.replace('<gpu>', 'nvidia' if 'NVIDIA' in graphics else 'other')
+            display.add_line(os.path.join(PATH, f) + ' -> ' + os.path.abspath(t))
+            os.link(os.path.join(PATH, f), os.path.abspath(t))
+        await run_command('systemctl', 'daemon-reload')
+        display.step_done()
 
-        OHGODATOOL_PATH = os.path.join('/opt', 'OhGodATool/')
-        if not os.path.exists(OHGODATOOL_PATH):
-            await run_command('git', 'clone', 'https://github.com/OhGodACompany/OhGodATool.git', cwd='/opt')
+        display.set_step('Verifying graphics drivers')
 
-        await run_command('git', 'pull', cwd=OHGODATOOL_PATH)
+        installed = False
 
-        # TODO: Only run this if there was an update
-        await run_command('make', cwd=OHGODATOOL_PATH)
+        if 'NVIDIA' in graphics:
+            display.set_step('Verifying NVIDIA drivers')
 
-        OHGODATOOL_USR_BIN = os.path.join('/usr', 'bin', 'ohgodatool')
-        with suppress(FileNotFoundError):
-            os.remove(OHGODATOOL_USR_BIN)
-        os.link(os.path.join(OHGODATOOL_PATH, 'ohgodatool'), OHGODATOOL_USR_BIN)
+            await asyncio.sleep(1)
 
-    if installed:
-        await run_command('shutdown', '-r', 'now')
+            if not is_installed('nvidia-390'):
+                display.set_step('Installing NVIDIA drivers')
+                await run_command('add-apt-repository', '-y', 'ppa:graphics-drivers')
+                await run_command('apt', 'update')
+                await run_command('apt', 'install', '-y', 'nvidia-%s' % GFX_VERSION['NVIDIA'], 'nvidia-cuda-toolkit')
 
-    display.step_done()
+                installed = True
 
-    await asyncio.sleep(5)
+        if 'AMD' in graphics:
+            display.set_step('Verifying AMD drivers')
+
+            await asyncio.sleep(1)
+
+            if not is_installed('amdgpu-pro-core') and not is_installed('amdgpu-pro') and not is_installed('amdgpu'):
+                display.set_step('Installing AMD drivers')
+
+                await run_command('apt', 'install', '-y', 'amdgpu-dkms', 'libdrm-amdgpu-amdgpu1', 'libdrm-amdgpu1', 'libdrm2-amdgpu')
+
+                await run_command('wget', '--referer=http://support.amd.com', '--limit-rate', '1024k', 'https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-18.10-572953.tar.xz', '-O', 'amdgpu-pro.tar.gz', cwd='/tmp')
+
+                TMP_DIR = '/tmp/amdgpu-pro'
+                with suppress(FileNotFoundError):
+                    shutil.rmtree(TMP_DIR)
+                os.mkdir(TMP_DIR)
+                await run_command('tar', 'xvfJ', 'amdgpu-pro.tar.gz', '-C', TMP_DIR, cwd='/tmp')
+                await run_command('./amdgpu-install', '-y', '--opencl=legacy', '--headless', cwd=os.path.join(TMP_DIR, os.listdir(TMP_DIR)[0]))
+
+                '''await run_command('add-apt-repository', 'ppa:paulo-miguel-dias/mesa')
+                await run_command('apt', 'update')
+                await run_command('apt', 'install', '-y', 'libclc-amdgcn', 'mesa-opencl-icd')
+
+                display.set_step('Installing HWE Kernel')
+
+                await run_command('apt', 'install', '--install-recommends', 'linux-generic-hwe-16.04', 'xserver-xorg-hwe-16.04')
+
+                '''
+                installed = True
+
+            # For AMD table overriding
+            display.set_step('Installing OhGodATool')
+
+            await asyncio.sleep(1)
+
+            await run_command('apt', 'install', '-y', 'libpci-dev')
+
+            OHGODATOOL_PATH = os.path.join('/opt', 'OhGodATool/')
+            if not os.path.exists(OHGODATOOL_PATH):
+                await run_command('git', 'clone', 'https://github.com/OhGodACompany/OhGodATool.git', cwd='/opt')
+
+            await run_command('git', 'pull', cwd=OHGODATOOL_PATH)
+
+            # TODO: Only run this if there was an update
+            await run_command('make', cwd=OHGODATOOL_PATH)
+
+            OHGODATOOL_USR_BIN = os.path.join('/usr', 'bin', 'ohgodatool')
+            with suppress(FileNotFoundError):
+                os.remove(OHGODATOOL_USR_BIN)
+            os.link(os.path.join(OHGODATOOL_PATH, 'ohgodatool'), OHGODATOOL_USR_BIN)
+
+        if installed:
+            await run_command('shutdown', '-r', 'now')
+
+        display.step_done()
+
+        await asyncio.sleep(5)
+    except Exception as e:
+        display.set_step('- Error -')
+        display.add_line(str(e))
+
+        await asyncio.sleep(10)
 
     loop.stop()
 
@@ -286,3 +296,4 @@ display = Display(loop=loop)
 loop.create_task(system_check())
 
 display.run()
+
