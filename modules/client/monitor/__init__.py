@@ -228,11 +228,11 @@ class Monitor:
                     }
 
                     if self.process.is_fee:
-                        packet['status'] == 'fee'
+                        packet['status'] = 'fee'
                     elif self.is_mining:
-                        packet['status'] == 'mining'
+                        packet['status'] = 'mining'
                     elif self.process.process:
-                        packet['status'] == 'online'
+                        packet['status'] = 'online'
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: packet})
