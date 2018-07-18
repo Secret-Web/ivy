@@ -145,8 +145,7 @@ class Monitor:
                 try:
                     got_stats = await self.get_stats()
 
-                    if not self.process.is_fee:
-                        self.shares.update(got_stats['shares'])
+                    self.shares.update(got_stats['shares'])
 
                     hw_stats = await self.get_hw_stats()
 
@@ -217,16 +216,23 @@ class Monitor:
                 if not update:
                     update = time.time() - last_update > 60
 
-                if update and not self.process.is_fee:
+                if update:
                     update = False
                     last_update = time.time()
 
                     # Update the newest stats (since last attempted update)
                     packet = {
-                        'online': self.is_mining,
+                        'status': 'offline',
                         'shares': self.shares.pop_interval(),
                         'hardware': self.stats.hardware.as_obj()
                     }
+
+                    if self.process.is_fee:
+                        packet['status'] == 'fee'
+                    elif self.is_mining:
+                        packet['status'] == 'mining'
+                    elif self.process.process:
+                        packet['status'] == 'online'
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: packet})
