@@ -222,17 +222,14 @@ class Monitor:
 
                     # Update the newest stats (since last attempted update)
                     packet = {
-                        'status': 'offline',
+                        'status': {
+                            'type': 'offline' if self.process.process is None else 'online' if not self.is_mining else 'mining',
+                            'fee': self.process.is_fee,
+                            'monitoring': self.client.dummy
+                        },
                         'shares': self.shares.pop_interval(),
                         'hardware': self.stats.hardware.as_obj()
                     }
-
-                    if self.process.is_fee:
-                        packet['status'] = 'fee'
-                    elif self.is_mining:
-                        packet['status'] = 'mining'
-                    elif self.process.process:
-                        packet['status'] = 'online'
 
                     if self.connector.socket:
                         await self.connector.socket.send('machines', 'stats', {self.client.machine_id: packet})
