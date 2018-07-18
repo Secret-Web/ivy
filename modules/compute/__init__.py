@@ -96,7 +96,7 @@ class ComputeModule(Module):
                 if miner_id in self.database.stats:
                     stats = self.database.stats[miner_id]
                     stats.connected = False
-                    stats.online = False
+                    stats.status = 'offline'
                     stats.runtime = 0
 
                     stats.hardware.reset()

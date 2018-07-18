@@ -183,7 +183,7 @@ async def update_stats():
 
             display.output_lines.append(repr(data))
 
-            if not data['online']:
+            if data['status'] == 'offline':
                 display.output_lines.append(urwid.Text('No program running. Is one configured or did it crash?'))
 
             if 'name' in data['config']:

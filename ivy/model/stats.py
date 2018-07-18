@@ -4,7 +4,7 @@ class MinerStats:
 
     def update(self, **kwargs):
         self.connected = False
-        self.online = kwargs['online'] if 'online' in kwargs else False
+        self.status = kwargs['status'] if 'status' in kwargs else False
         self.shares = kwargs['shares'] if 'shares' in kwargs else {'invalid': 0, 'accepted': 0, 'rejected': 0}
         self.hardware = MinerHardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
 
@@ -12,7 +12,7 @@ class MinerStats:
         obj = {}
 
         if self.connected is not None: obj['connected'] = self.connected
-        if self.online is not None: obj['online'] = self.online
+        if self.status is not None: obj['status'] = self.status
         if self.shares is not None: obj['shares'] = self.shares
         if self.hardware is not None: obj['hardware'] = self.hardware.as_obj()
 
