@@ -95,11 +95,8 @@ class ComputeModule(Module):
 
                 if miner_id in self.database.stats:
                     stats = self.database.stats[miner_id]
-                    stats.connected = False
-                    stats.status = 'offline'
-                    stats.runtime = 0
-
-                    stats.hardware.reset()
+                    
+                    stats.reset()
 
                     await packet.send('machines', 'stats', {miner_id: stats.as_obj()})
 

@@ -224,8 +224,7 @@ class Monitor:
                     packet = {
                         'status': {
                             'type': 'offline' if self.process.process is None else 'online' if not self.is_mining else 'mining',
-                            'fee': self.process.is_fee,
-                            'monitoring': self.client.dummy
+                            'fee': self.process.is_fee
                         },
                         'shares': self.shares.pop_interval(),
                         'hardware': self.stats.hardware.as_obj()

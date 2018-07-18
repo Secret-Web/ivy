@@ -4,9 +4,14 @@ class MinerStats:
 
     def update(self, **kwargs):
         self.connected = False
-        self.status = kwargs['status'] if 'status' in kwargs else False
+        self.status = kwargs['status'] if 'status' in kwargs else {'type': 'offline', 'fee': False}
         self.shares = kwargs['shares'] if 'shares' in kwargs else {'invalid': 0, 'accepted': 0, 'rejected': 0}
         self.hardware = MinerHardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
+    
+    def reset(self):
+        self.connected = False
+        self.status = {'type': 'offline', 'fee': False}
+        self.hardware.reset()
 
     def as_obj(self):
         obj = {}
