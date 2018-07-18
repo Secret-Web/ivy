@@ -116,14 +116,33 @@ class Database(dict):
 
         while True:
             try:
-                coins = json.loads(url_content('https://whattomine.com/coins.json'))['coins']
+                coins1 = json.loads(url_content('https://whattomine.com/coins.json'))['coins']
+                coins2 = json.loads(url_content('https://www.coincalculators.io/api/allcoins.aspx?hashrate=1'))
 
                 self.coins.clear()
 
-                for name, coin in coins.items():
-                    coin['name'] = name
-                    self.coins[coin['tag']] = coin
-                    del coin['tag']
+                for name, coin in coins1.items():
+                    self.coins[coin['tag']] = {
+                        'name': name,
+                        'algorithm': coin['algorithm'],
+                        'block_time': coin['block_time'],
+                        'block_reward': coin['block_reward'],
+                        'nethash': coin['nethash'],
+                        'exchange_rate': coin['exchange_rate']
+                    }
+
+                for coin in coins2:
+                    # Trust WhatToMine over CoinCalculators
+                    if coin['symbol'] in self.coins: continue
+
+                    self.coins[coin['symbol']] = {
+                        'name': coin['name'],
+                        'algorithm': coin['algorithm'],
+                        'block_time': coin['blockTime'],
+                        'block_reward': coin['blockReward'],
+                        'nethash': coin['currentNethash'],
+                        'exchange_rate': coin['price_btc']
+                    }
 
                 with open(self.coins_file, 'w') as f:
                     json.dump(self.coins, f, indent=2)

@@ -113,8 +113,6 @@ class Process:
 
             self.is_fee = True
 
-            await self.stop_miner()
-
             old_config = self.config
 
             interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
