@@ -142,6 +142,8 @@ class Process:
     async def start_miner(self, config, args=None):
         self.config = config
 
+        await self.stop_miner()
+
         await self.install(config)
 
         await self.run_miner(config, args=args)
