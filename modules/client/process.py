@@ -82,12 +82,12 @@ class Process:
                     await self.start_miner(config)
 
                 if self.config and self.process and self.is_running:
-                    self.miner_uptime += 5
+                    self.miner_uptime += 1
 
                     with open(self.miner_uptime_path, 'w') as f:
                         f.write(str(self.miner_uptime))
 
-                    self.uptime += 5
+                    self.uptime += 1
 
                     with open(self.uptime_path, 'w') as f:
                         f.write(str(self.uptime))

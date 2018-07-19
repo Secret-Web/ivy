@@ -39,7 +39,7 @@ class Monitor:
                 self.process.on_start()
             else:
                 # If the process was previously online for more than an hour, assume it was stable
-                if self.process.miner_uptime > 60 * 60:
+                if self.process.miner_uptime > 60 * 30:
                     self.module.new_message(level='warning', title='Miner Offline', text='Miner failed to start up previously. However, it seemed stable before. Starting up miner...')
                     self.process.on_start()
                 else:
