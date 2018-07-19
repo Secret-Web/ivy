@@ -7,7 +7,7 @@ import logging
 
 from ivy.model.stats import MinerStats
 from ivy.net import Packet
-from ..process import Process
+from .process import Process
 
 
 class Monitor:

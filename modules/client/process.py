@@ -5,7 +5,7 @@ import time
 import asyncio
 import logging
 
-from .monitor import API
+from .api import API
 
 
 class Process:
@@ -46,16 +46,16 @@ class Process:
 
         if api_id not in self._api:
             try:
-                api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
+                api = __import__('modules.client.api.%s' % api_id, globals(), locals(), ['object'], 0)
                 self._api[api_id] = api.__api__()
             except AttributeError as ae:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self.logger.warning('Failed to load "%s" api. Falling back to default.' % api_id)
                 self._api[api_id] = API()
             except ModuleNotFoundError as me:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self.logger.warning('Failed to load "%s" api. Falling back to default.' % api_id)
                 self._api[api_id] = API()
             except Exception as e:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self.logger.warning('Failed to load "%s" api. Falling back to default.' % api_id)
                 self.logger.exception('\n' + traceback.format_exc())
                 self._api[api_id] = self._api['_']
         return self._api[api_id]
