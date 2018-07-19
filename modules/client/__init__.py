@@ -10,6 +10,20 @@ from .gpu import GPUControl
 from .monitor import Monitor
 
 
+class API:
+    async def get_forced_args(self):
+        return ''
+
+    async def get_stats(self, host):
+        return {
+            'shares': {
+                'accepted': 0,
+                'invalid': 0,
+                'rejected': 0
+            },
+            'hashrate': []
+        }
+
 class ClientModule(Module):
     def on_load(self):
         if 'worker_id' not in self.config:

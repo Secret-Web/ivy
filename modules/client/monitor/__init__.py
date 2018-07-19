@@ -18,10 +18,6 @@ class Monitor:
 
         self.logger = module.logger.getChild('Monitor')
 
-        self._api = {
-            '_': API()
-        }
-
         self.shares = Shares()
         self.stats = MinerStats(hardware=self.client.hardware.as_obj())
 
@@ -51,31 +47,6 @@ class Monitor:
     async def on_stop(self):
         await self.process.stop_miner()
 
-    @property
-    def api(self):
-        if not self.process.config:
-            return self._api['_']
-
-        if self.process.config.program.api not in self._api:
-            try:
-                api_id = self.process.config.program.api
-                api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
-                self._api[api_id] = api.__api__()
-            except AttributeError as ae:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
-                self._api[api_id] = API()
-            except ModuleNotFoundError as me:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
-                self._api[api_id] = API()
-            except Exception as e:
-                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % self.process.config.program.api)
-                self.logger.exception('\n' + traceback.format_exc())
-                self._api[api_id] = self._api['_']
-        return self._api[self.process.config.program.api]
-
-    async def get_stats(self):
-        return await self.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
-
     async def get_hw_stats(self):
         try:
             return await self.module.gpus.get_stats(self.client.hardware)
@@ -87,7 +58,7 @@ class Monitor:
     async def on_update(self):
         try:
             if self.client.dummy:
-                got_stats = await self.get_stats()
+                got_stats = await self.process.get_stats()
 
                 self.shares.set_offset(got_stats['shares'])
                 self.stats.shares = self.shares.totals
@@ -143,7 +114,7 @@ class Monitor:
                         return
 
                 try:
-                    got_stats = await self.get_stats()
+                    got_stats = await self.process.get_stats()
 
                     self.shares.update(got_stats['shares'])
 
@@ -241,17 +212,6 @@ class Monitor:
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
             self.module.report_exception(e)
-
-class API:
-    async def get_stats(self, host):
-        return {
-            'shares': {
-                'accepted': 0,
-                'invalid': 0,
-                'rejected': 0
-            },
-            'hashrate': []
-        }
 
 class Shares:
     def __init__(self):

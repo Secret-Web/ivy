@@ -5,6 +5,9 @@ from . import API
 
 
 class ClaymoreAPI(API):
+    async def get_forced_args(self):
+        return '-wd 0'
+
     async def get_stats(self, host):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 3333))

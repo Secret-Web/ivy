@@ -58,8 +58,9 @@ class GPUStats:
         self.status = kwargs['status'] if 'status' in kwargs else {'type': 'idle'}
         self.watts = kwargs['watts'] if 'watts' in kwargs else 0
         self.temp = kwargs['temp'] if 'temp' in kwargs else 0
-        self.rate = kwargs['rate'] if 'rate' in kwargs else 0
         self.fan = kwargs['fan'] if 'fan' in kwargs else 0
+
+        self.rate = kwargs['rate'] if 'rate' in kwargs else []
 
     def as_obj(self):
         obj = {}
@@ -67,7 +68,8 @@ class GPUStats:
         if self.status is not None: obj['status'] = self.status
         if self.watts is not None: obj['watts'] = self.watts
         if self.temp is not None: obj['temp'] = self.temp
-        if self.rate is not None: obj['rate'] = self.rate
         if self.fan is not None: obj['fan'] = self.fan
+
+        if self.rate is not None: obj['rate'] = self.rate
 
         return obj

@@ -5,12 +5,18 @@ import time
 import asyncio
 import logging
 
+from .monitor import API
+
 
 class Process:
     def __init__(self, module):
         self.module = module
         self.client = module.client
         self.logger = module.logger.getChild('Process')
+
+        self._api = {
+            '_': API()
+        }
 
         self.uptime = 0
         if os.path.exists(self.uptime_path):
@@ -34,6 +40,34 @@ class Process:
         self.is_fee = False
 
         asyncio.ensure_future(self.on_update())
+
+    def get_api(self, config):
+        api_id = config.program.api
+
+        if api_id not in self._api:
+            try:
+                api = __import__('modules.client.monitor.%s' % api_id, globals(), locals(), ['object'], 0)
+                self._api[api_id] = api.__api__()
+            except AttributeError as ae:
+                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self._api[api_id] = API()
+            except ModuleNotFoundError as me:
+                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self._api[api_id] = API()
+            except Exception as e:
+                self.logger.warning('Failed to load "%s" monitor. Falling back to default.' % api_id)
+                self.logger.exception('\n' + traceback.format_exc())
+                self._api[api_id] = self._api['_']
+        return self._api[api_id]
+
+    @property
+    def api(self):
+        if not self.config:
+            return self._api['_']
+        return self.get_api(self.config)
+
+    async def get_stats(self):
+        return await self.process.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
 
     @property
     def uptime_path(self):
@@ -213,6 +247,8 @@ class Process:
         args = re.sub('{network\.id}', 'testnetid', args)
 
         args = re.sub('\B(--?[^-\s]+) ({[^\s]+)', '', args)
+
+        args += ' ' + self.get_api(config).get_forced_args()
 
         args = shlex.split(args)
 
