@@ -67,7 +67,7 @@ class Process:
         return self.get_api(self.config)
 
     async def get_stats(self):
-        return await self.process.api.get_stats('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy)
+        return await self.api.get_stats('localhost' if not isinstance(self.config.dummy, str) else self.config.dummy)
 
     @property
     def uptime_path(self):
