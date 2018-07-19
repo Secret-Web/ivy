@@ -44,6 +44,13 @@ def get_hardware():
             })
         elif x['id'] == 'display':
             if 'vendor' not in x: continue
+            
+'''            if 'NVIDIA' in x['vendor']:
+                with open('/proc/driver/nvidia/gpus/%s/information' % x['bus_id'], 'r') as f:
+                    for line in f:
+                        if 'Model:' in line:
+                            x['product'] = line.split(':', 1)[1].strip()
+                            break'''
 
             gpus.append({
                 'bus_id': x['businfo'],
