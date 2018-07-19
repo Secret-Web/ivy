@@ -21,6 +21,8 @@ from .database import Database
 
 # TODO: Currently, 'patch'es aren't consumed by secondary storage services. This needs to be fixed.
 
+IMMEDIATE_STAT_CUTOFF = 100
+
 def new_id():
     return ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for i in range(8))
 
@@ -38,21 +40,25 @@ class ComputeModule(Module):
         asyncio.ensure_future(self.update())
     
     async def update(self):
+        last_refresh = time.time()
+
         while True:
             try:
-                await asyncio.sleep(60 * 60)
+                await asyncio.sleep(60)
 
-                await self.connector.socket.send('coins', 'data', self.database.coins)
-                await self.connector.socket.send('tickers', 'data', self.database.tickers)
+                if time.time() - last_refresh > 60 * 60:
+                    await self.connector.socket.send('coins', 'data', self.database.coins)
+                    await self.connector.socket.send('tickers', 'data', self.database.tickers)
+                    await self.connector.socket.send('software', 'data', self.database.software)
 
-                '''if len(self.machines) > IMMEDIATE_STAT_CUTOFF:
-                    all_stats = {}
+                # Reset miners that have taken more than 10 minutes to update their stats
+                for id, stats in self.data.stats.items():
+                    if time.time() - stats.time > 60 * 10:
+                        self.data.stats[id].reset()
 
-                    for id, miner in self.database.machines.items():
-                        all_stats[id] = miner['stats']
-
-                    # Batch notify listeners of miner stats
-                    await packet.reply('machines', 'stats', all_stats)'''
+                # Batch notify listeners of miner stats
+                if len(self.database.stats) >= IMMEDIATE_STAT_CUTOFF:
+                    await packet.reply('machines', 'stats', {k: v.as_obj() for k, v in self.data.stats.items()})
             except Exception as e:
                 self.logger.exception('\n' + traceback.format_exc())
 
@@ -94,11 +100,12 @@ class ComputeModule(Module):
                 miner_id = packet.payload['headers']['Miner-ID']
 
                 if miner_id in self.database.stats:
-                    self.database.stats[miner_id].reset()
+                    stats = self.database.stats[miner_id]
 
-                    del self.database.stats[miner_id]
+                    stats.reset()
 
-                    await packet.send('machines', 'stats', {miner_id: None})
+                    if len(self.database.stats) < IMMEDIATE_STAT_CUTOFF:
+                        await packet.send('machines', 'stats', {miner_id: stats.as_obj()})
 
         @l.listen_event('stats', 'query')
         async def event(packet):
@@ -315,7 +322,9 @@ class ComputeModule(Module):
 
             if len(updated_stats) > 0:
                 await self.database.save_snapshot(updated_stats)
-                await packet.send('machines', 'stats', updated_stats)
+
+                if len(self.database.stats) < IMMEDIATE_STAT_CUTOFF:
+                    await packet.send('machines', 'stats', updated_stats)
 
     async def new_message(self, packet, data):
         if isinstance(data, dict):
