@@ -53,8 +53,12 @@ class ComputeModule(Module):
 
                 # Reset miners that have taken more than 10 minutes to update their stats
                 for id, stats in self.data.stats.items():
+                    if not stats.connected: continue
+
                     if time.time() - stats.time > 60 * 10:
                         self.data.stats[id].reset()
+
+                        self.new_message({'level': 'danger', 'text': 'Watchdog detected an idle miner. Did it freeze?', 'machine': id})
 
                 # Batch notify listeners of miner stats
                 if len(self.database.stats) >= IMMEDIATE_STAT_CUTOFF:
@@ -304,6 +308,18 @@ class ComputeModule(Module):
                     await self.new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
                 await self.send_action(packet, action, machine_id=id)
+
+        @l.listen_event('machines', 'stats')
+        async def event(packet):
+            for id, data in packet.payload.items():
+                if id not in self.database.stats:
+                    stats = MinerStats(**data)
+                    stats.connected = True
+                    self.database.stats[id] = stats
+                else:
+                    stats = self.database.stats[id]
+                    stats.update(**data)
+                    stats.connected = True
 
         @l.listen_event('machines', 'new_stats')
         async def event(packet):
