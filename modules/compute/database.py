@@ -122,6 +122,8 @@ class Database(dict):
                 self.coins.clear()
 
                 for name, coin in coins1.items():
+                    if 'Nicehash' in name: continue
+
                     self.coins[coin['tag']] = {
                         'name': name,
                         'algorithm': coin['algorithm'],
@@ -132,6 +134,8 @@ class Database(dict):
                     }
 
                 for coin in coins2:
+                    if 'Nicehash' in coin['name']: continue
+
                     # Trust WhatToMine over CoinCalculators
                     if coin['symbol'] in self.coins: continue
 
