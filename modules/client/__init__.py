@@ -15,7 +15,7 @@ class ClientModule(Module):
         if 'worker_id' not in self.config:
             self.config['worker_id'] = self.ivy.id
 
-        self.client = Client(**{**self.config, {'machine_id': self.ivy.id, 'hardware': get_hardware()}})
+        self.client = Client(**{**self.config, **{'machine_id': self.ivy.id, 'hardware': get_hardware()}})
 
         self.register_events(self.connector)
 
