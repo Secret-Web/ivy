@@ -175,7 +175,8 @@ class Monitor:
 
                         self.last_hash_time = time.time()
                 except Exception as e:
-                    self.logger.exception('\n' + traceback.format_exc())
+                    if not isinstance(e, ConnectionRefusedError):
+                        self.logger.exception('\n' + traceback.format_exc())
 
                     self.is_mining = False
 
