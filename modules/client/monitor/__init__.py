@@ -231,7 +231,7 @@ class Monitor:
                     }
 
                     if self.connector.socket:
-                        await self.connector.socket.send('machines', 'stats', {self.client.machine_id: packet})
+                        await self.connector.socket.send('machines', 'new_stats', {self.client.machine_id: packet})
 
                     if packet['shares']['accepted'] + packet['shares']['rejected'] + packet['shares']['invalid'] > 0:
                         self.logger.info('new: %d accepted, %d rejected, %d invalid.' %

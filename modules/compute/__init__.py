@@ -94,11 +94,11 @@ class ComputeModule(Module):
                 miner_id = packet.payload['headers']['Miner-ID']
 
                 if miner_id in self.database.stats:
-                    stats = self.database.stats[miner_id]
-                    
-                    stats.reset()
+                    self.database.stats[miner_id].reset()
 
-                    await packet.send('machines', 'stats', {miner_id: stats.as_obj()})
+                    del self.database.stats[miner_id]
+
+                    await packet.send('machines', 'stats', {miner_id: None})
 
         @l.listen_event('stats', 'query')
         async def event(packet):
@@ -298,7 +298,7 @@ class ComputeModule(Module):
 
                 await self.send_action(packet, action, machine_id=id)
 
-        @l.listen_event('machines', 'stats')
+        @l.listen_event('machines', 'new_stats')
         async def event(packet):
             updated_stats = {}
 
@@ -314,8 +314,8 @@ class ComputeModule(Module):
                 updated_stats[id] = self.database.stats[id].as_obj()
 
             if len(updated_stats) > 0:
-                await packet.send('machines', 'stats', updated_stats)
                 await self.database.save_snapshot(updated_stats)
+                await packet.send('machines', 'stats', updated_stats)
 
     async def new_message(self, packet, data):
         if isinstance(data, dict):
