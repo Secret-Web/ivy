@@ -58,7 +58,7 @@ class ComputeModule(Module):
                     if time.time() - stats.time > 60 * 10:
                         self.data.stats[id].reset()
 
-                        self.new_message({'level': 'danger', 'text': 'Watchdog detected an idle miner. Did it freeze?', 'machine': id})
+                        await self.new_message({'level': 'danger', 'text': 'Watchdog detected an idle miner. Did it freeze?', 'machine': id})
 
                 # Batch notify listeners of miner stats
                 if len(self.database.stats) >= IMMEDIATE_STAT_CUTOFF:
