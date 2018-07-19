@@ -11,7 +11,7 @@ from .monitor import Monitor
 
 
 class API:
-    async def get_forced_args(self):
+    def get_forced_args(self):
         return ''
 
     async def get_stats(self, host):

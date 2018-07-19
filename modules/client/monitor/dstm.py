@@ -5,6 +5,9 @@ from . import API
 
 
 class DSTMAPI(API):
+    def get_forced_args(self):
+        return '--telemetry'
+
     async def get_stats(self, host):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 2222))

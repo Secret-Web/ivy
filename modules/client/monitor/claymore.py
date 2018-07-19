@@ -5,7 +5,7 @@ from . import API
 
 
 class ClaymoreAPI(API):
-    async def get_forced_args(self):
+    def get_forced_args(self):
         return '-wd 0'
 
     async def get_stats(self, host):
