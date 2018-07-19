@@ -190,3 +190,5 @@ class NetConnector(Net):
                 self.logger.critical('Connection closed! %r' % e)
         finally:
             await self.call_event(Packet(self.socket, 'connection', 'closed', dummy=True))
+        
+        self.socket = None
