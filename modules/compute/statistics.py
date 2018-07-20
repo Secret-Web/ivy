@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
                         )
                     )
 
-        print('saved: %r' % rows)
+        self.logger.info('saved: %r' % rows)
 
         self.query.executemany('''REPLACE INTO `statistics` VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', rows)
 
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         stats = None
 
         for row in rows:
-            print(row)
+            self.logger.info(row)
 
             while row[1] - interval_stats[0] >= increment:
                 if stats is not None:
