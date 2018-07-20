@@ -163,9 +163,6 @@ class FileStrategy(Strategy):
             with open(self.database_file, 'w') as f:
                 f.write(json.dumps(obj, indent=2))
 
-    async def save_snapshot(self, snapshot):
-        pass
-    
     async def on_bind(self, l):
         l.listen_event('connection', 'open')(self.on_connected)
         l.listen_event('connection', 'closed')(self.on_disconnected)

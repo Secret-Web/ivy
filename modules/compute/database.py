@@ -188,11 +188,6 @@ class Database(dict):
 
     async def save_snapshot(self, snapshot):
         try:
-            await self.strategy.save_snapshot(snapshot)
-        except Exception as e:
-            self.logger.exception('\n' + traceback.format_exc())
-        
-        try:
             await self.statistics.save_snapshot(snapshot)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())

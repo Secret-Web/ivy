@@ -10,16 +10,13 @@ class Strategy:
         self.ivy = ivy
 
         self.logger = logger.getChild('strategy')
-    
+
     async def on_load(self, config):
         pass
-    
-    async def save_snapshot(self, snap):
-        pass
-    
+
     async def on_bind(self, l):
         pass
-    
+
     async def on_unbind(self, l):
         pass
 
