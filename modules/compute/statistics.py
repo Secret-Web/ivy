@@ -136,9 +136,9 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         row = None
         if machine_id is None:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `is_fee` = 0 AND `date` BETWEEN ? and ?', (start, end + increment))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ?', (start, end + increment))
         else:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `is_fee` = 0 AND `machine_id` = ? AND `date` BETWEEN ? and ?', (machine_id, start, end + increment))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `machine_id` = ? AND `date` BETWEEN ? and ?', (machine_id, start, end + increment))
 
         interval_stats = None
 
