@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         increment = parse_time(increment).total_seconds()
 
-        end = end % increment
+        end = end + dt % increment
 
         if start is None:
             start = end - increment * 24
