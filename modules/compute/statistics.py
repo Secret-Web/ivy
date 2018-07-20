@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         self.sql.commit()
 
-    def save_snapshot(self, snapshots):
+    async def save_snapshot(self, snapshots):
         rows = []
         for id, stats in snapshots.items():
             rows.append(
