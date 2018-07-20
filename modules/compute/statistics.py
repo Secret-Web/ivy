@@ -23,68 +23,6 @@ def parse_time(time_str):
 def ceil_dt(dt, delta):
     return dt + (datetime.min - dt) % delta
 
-class Stats:
-    def __init__(self):
-        self._machines = {}
-
-    def push(self, id, data):
-        if id not in self._machines:
-            self._machines[id] = new_pack()
-        stats = self._machines[id]
-
-        stats['snapshots'] += 1
-
-        if 'online' in data and data['online']:
-            stats['online'] += 1
-        else:
-            stats['offline'] += 1
-
-        if 'shares' in data:
-            stats['shares']['invalid'] += data['shares']['invalid']
-            stats['shares']['accepted'] += data['shares']['accepted']
-            stats['shares']['rejected'] += data['shares']['rejected']
-
-        if 'hardware' in data:
-            if 'gpus' in data['hardware']:
-                for piece in data['hardware']['gpus']:
-                    stats['gpus'] += 1
-                    stats['rate'] += piece['rate']
-
-    @property
-    def machines(self):
-        totals = {}
-
-        for id, data in self._machines.items():
-            total = new_pack()
-
-            total['online'] += data['online'] / data['snapshots']
-            total['offline'] += data['offline'] / data['snapshots']
-            total['gpus'] += data['gpus'] / data['snapshots']
-            total['rate'] += data['rate'] / data['snapshots']
-
-            total['shares']['invalid'] += data['shares']['invalid']
-            total['shares']['accepted'] += data['shares']['accepted']
-            total['shares']['rejected'] += data['shares']['rejected']
-
-            totals[id] = total
-
-        return totals
-
-    def result(self):
-        total = new_pack()
-
-        for id, data in self._machines.items():
-            total['online'] += data['online'] / data['snapshots']
-            total['offline'] += data['offline'] / data['snapshots']
-            total['gpus'] += data['gpus'] / data['snapshots']
-            total['rate'] += data['rate'] / data['snapshots']
-
-            total['shares']['invalid'] += data['shares']['invalid']
-            total['shares']['accepted'] += data['shares']['accepted']
-            total['shares']['rejected'] += data['shares']['rejected']
-
-        return total
-
 class Store:
     def __init__(self):
         self.sql = sqlite3.connect(os.path.join('/etc', 'ivy', 'statistics.sql'))

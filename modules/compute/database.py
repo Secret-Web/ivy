@@ -6,7 +6,7 @@ import traceback
 import urllib.request
 
 from ivy.model.fee import Fee
-from .statistics import get_statistics
+from .statistics import Store
 
 
 def url_content(url):
@@ -28,6 +28,8 @@ class Database(dict):
 
         if 'last_check' not in self.config:
             self.config['last_check'] = 0
+
+        self.statistics = Store()
 
         self.strategy = None
         asyncio.ensure_future(self.apply_strategy(config['type']))
@@ -191,4 +193,4 @@ class Database(dict):
             self.logger.exception('\n' + traceback.format_exc())
     
     async def get_statistics(self, *args, **kwargs):
-        return await get_statistics(*args, **kwargs)
+        return await self.statistics.get_statistics(*args, **kwargs)
