@@ -103,9 +103,9 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         row = None
         if machine_id is None:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = 0', (start, end))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `is_fee` = 0 AND `date` BETWEEN ? and ?', (start, end))
         else:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = 0 AND `machine_id` = ?', (start, end, machine_id))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `is_fee` = 0 AND `machine_id` = ? AND `date` BETWEEN ? and ?', (machine_id, start, end))
 
         stats = None
 
@@ -157,8 +157,5 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         while interval_stats[0] < end:
             interval_stats = [interval_stats[0] + increment, None]
             results.append(interval_stats)
-
-        for stat in results:
-            stat[0] = stat[0].replace(tzinfo=timezone.utc).timestamp()
 
         return results
