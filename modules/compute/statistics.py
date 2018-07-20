@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
                             stats.connected,
                             stats.status['type'],
-                            stats.status['is_fee'],
+                            stats.status['fee'],
                             
                             sum([gpu.watts for gpu in stats.hardware.gpus]),
                             max([gpu.temp for gpu in stats.hardware.gpus]),
