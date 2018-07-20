@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         # Populate the `results` list with all increments remaining up to `end`
         while interval_stats[0] < end:
-            interval_stats = [interval_stats[0] + increment, None]
+            interval_stats = [(interval_stats[0] + increment).replace(tzinfo=timezone.utc).timestamp(), None]
             results.append(interval_stats)
 
         return results
