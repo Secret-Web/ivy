@@ -114,8 +114,12 @@ class ComputeModule(Module):
 
         @l.listen_event('stats', 'query')
         async def event(packet):
+            stat_id = packet.payload['id']
+            del packet.payload['id']
+
             stats = await self.database.get_statistics(**packet.payload)
-            await packet.reply('stats', 'response', payload={'id': packet.payload['id'], 'data': stats})
+            
+            await packet.reply('stats', 'response', payload={'id': stat_id, 'data': stats})
 
 
         for thing in ['software', 'coins', 'tickers', 'fee']:
