@@ -53,6 +53,10 @@ def compile_stats(interval_stats):
 
         stats['rate'] += machine_stats['rate']
 
+        stats['shares']['accepted'] += machine_stats['shares']['accepted']
+        stats['shares']['rejected'] += machine_stats['shares']['rejected']
+        stats['shares']['invalid'] += machine_stats['shares']['invalid']
+
     return stats
 
 class Store:
