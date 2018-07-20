@@ -18,7 +18,7 @@ def parse_time(time_str):
     if 'months' in time_params:
         time_params['days'] = time_params['months'] * 30 + (time_params['days'] if 'days' in time_params else 0)
         del time_params['months']
-    return timedelta(**time_params)
+    return timedelta(**time_params).total_seconds()
 
 def ceil_dt(dt, delta):
     return dt + (datetime.min - dt) % delta
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         self.sql.commit()
 
     async def get_statistics(self, start=None, end=None, increment='5m', machine_id=None):
-        increment = parse_time(increment).replace(tzinfo=timezone.utc).timestamp()
+        increment = parse_time(increment)
 
         if end is None:
             end = datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()
