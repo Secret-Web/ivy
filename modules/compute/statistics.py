@@ -90,6 +90,10 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         if start is None:
             start = end - increment * 24
 
+        self.logger.info('start: %r' % start)
+        self.logger.info('end  : %r' % end)
+        self.logger.info('incre: %r' % increment)
+
         results = []
 
         if end < start:
@@ -161,5 +165,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
             interval_stats = [interval_stats[0] + increment, None]
             results.append(interval_stats)
+        
+        self.logger.info('true end: %r' % interval_stats[0])
 
         return results
