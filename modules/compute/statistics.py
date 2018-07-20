@@ -20,6 +20,41 @@ def parse_time(time_str):
         del time_params['months']
     return timedelta(**time_params)
 
+def new_pack():
+    return {
+        'watts': 0,
+        'temp': 0,
+        'fan': 0,
+        'rate': 0,
+        
+        'shares': {
+            'accepted': 0,
+            'rejected': 0,
+            'invalid': 0
+        }
+    }
+
+def compile_stats(interval_stats):
+    stats = new_pack()
+
+    for id, machine_stats in interval_stats.items():
+        machine_stats['watts'] /= machine_stats['snapshots']
+        machine_stats['temp'] /= machine_stats['snapshots']
+        machine_stats['fan'] /= machine_stats['snapshots']
+        machine_stats['rate'] /= machine_stats['snapshots']
+    
+        stats['watts'] += machine_stats['watts']
+
+        if machine_stats['temp'] > stats['temp']:
+            stats['temp'] = machine_stats['temp']
+
+        if machine_stats['fan'] > stats['fan']:
+            stats['fan'] = machine_stats['fan']
+
+        stats['rate'] += machine_stats['rate']
+
+    return stats
+
 class Store:
     def __init__(self, logger):
         self.logger = logger.getChild('stats')
@@ -93,7 +128,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         if end < start:
             return results
 
-        interval_stats = [start, None]
+        interval_pack = [start, None]
 
         row = None
         if machine_id is None:
@@ -101,63 +136,46 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         else:
             rows = self.query.execute('SELECT * FROM `statistics` WHERE `is_fee` = 0 AND `machine_id` = ? AND `date` BETWEEN ? and ?', (machine_id, start, end + increment))
 
-        stats = None
+        interval_stats = None
 
         for row in rows:
-            while row[1] - interval_stats[0] >= increment:
-                if stats is not None:
-                    stats['watts'] /= stats['snapshots']
-                    stats['temp'] /= stats['snapshots']
-                    stats['fan'] /= stats['snapshots']
-                    stats['rate'] /= stats['snapshots']
+            while row[1] - interval_pack[0] >= increment:
+                if interval_stats is not None:
+                    interval_pack[1] = compile_stats(interval_stats)
 
-                    interval_stats[1] = stats
+                    interval_stats = None
 
-                    stats = None
+                interval_pack = [interval_pack[0] + increment, None]
+                results.append(interval_pack)
 
-                interval_stats = [interval_stats[0] + increment, None]
-                results.append(interval_stats)
-
-            if stats is None:
-                stats = {
-                    'snapshots': 0,
-
-                    'watts': 0,
-                    'temp': 0,
-                    'fan': 0,
-                    'rate': 0,
-                    
-                    'shares': {
-                        'accepted': 0,
-                        'rejected': 0,
-                        'invalid': 0
-                    }
-                }
+            if interval_stats is None:
+                interval_stats = {}
             
-            stats['snapshots'] += 1
+            if row[0] not in interval_stats:
+                interval_stats[row[0]] = new_pack()
+                interval_stats[row[0]]['snapshots'] = 0
+            
+            machine_stats = interval_stats[row[0]]
+            
+            machine_stats['snapshots'] += 1
 
-            stats['watts'] += row[5]
-            stats['temp'] += row[6]
-            stats['fan'] += row[7]
-            stats['rate'] += row[8]
+            machine_stats['watts'] += row[5]
+            machine_stats['temp'] += row[6]
+            machine_stats['fan'] += row[7]
+            machine_stats['rate'] += row[8]
 
-            stats['shares']['accepted'] += row[9]
-            stats['shares']['rejected'] += row[10]
-            stats['shares']['invalid'] += row[11]
+            machine_stats['shares']['accepted'] += row[9]
+            machine_stats['shares']['rejected'] += row[10]
+            machine_stats['shares']['invalid'] += row[11]
 
-        if stats is not None:
-            stats['watts'] /= stats['snapshots']
-            stats['temp'] /= stats['snapshots']
-            stats['fan'] /= stats['snapshots']
-            stats['rate'] /= stats['snapshots']
+        if interval_stats is not None:
+            interval_pack[1] = compile_stats(interval_stats)
 
-            interval_stats[1] = stats
-
-            stats = None
+            interval_stats = None
 
         # Populate the `results` list with all increments remaining up to `end`
-        while interval_stats[0] + increment <= end:
-            interval_stats = [interval_stats[0] + increment, None]
-            results.append(interval_stats)
+        while interval_pack[0] + increment <= end:
+            interval_pack = [interval_pack[0] + increment, None]
+            results.append(interval_pack)
 
         return results
