@@ -82,11 +82,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         self.sql.commit()
 
-    async def get_statistics(self, start, end, increment, machine_id=None):
-        '''
-            Start and end dates are in YYYY-MM-DD HH:MM:SS format.
-            Increment: 0 = 5 minutes, 1 = 10 minutes, 2 = 30 minutes, 3 = 1 hour, 4 = 6 hours, 5 = 12 hours, 6 = 1 day, 7 = 1 week
-        '''
+    async def get_statistics(self, start=None, end=None, increment='5m', machine_id=None):
         increment = parse_time(increment).replace(tzinfo=timezone.utc).timestamp()
 
         if end is None:
