@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         stats = None
 
         for row in rows:
+            self.logger.info(row[1])
+
             while row[1] - interval_stats[0] >= increment:
                 if stats is not None:
                     stats['watts'] /= stats['snapshots']
@@ -123,6 +125,8 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
                 interval_stats = [interval_stats[0] + increment, None]
                 results.append(interval_stats)
+
+                self.logger.info('new increment %r' % interval_stats[0])
 
             if stats is None:
                 stats = {
@@ -152,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
             stats['shares']['invalid'] += row[11]
 
         # Populate the `results` list with all increments remaining up to `end`
-        while interval_stats[0] + increment < end:
+        while interval_stats[0] + increment <= end:
             if stats is not None:
                 stats['watts'] /= stats['snapshots']
                 stats['temp'] /= stats['snapshots']
