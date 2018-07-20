@@ -91,6 +91,11 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         end = ceil_dt(end, increment)
 
+
+        self.logger.info('start: %r' % start)
+        self.logger.info('end  : %r' % end)
+        self.logger.info('incre: %r' % increment)
+
         if start is None:
             start = end - increment * 24
 
