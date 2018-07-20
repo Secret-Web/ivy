@@ -24,10 +24,13 @@ def ceil_dt(dt, delta):
     return dt + (datetime.min - dt) % delta
 
 class Store:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger.getChild('stats')
+
         self.sql = sqlite3.connect(os.path.join('/etc', 'ivy', 'statistics.sql'))
         self.query = self.sql.cursor()
 
+        self.logger.info('Creating table if it does not exist...')
         self.query.execute('''
 CREATE TABLE IF NOT EXISTS `statistics` (
   `machine_id` VARCHAR(64) NOT NULL,

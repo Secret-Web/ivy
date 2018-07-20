@@ -29,7 +29,7 @@ class Database(dict):
         if 'last_check' not in self.config:
             self.config['last_check'] = 0
 
-        self.statistics = Store()
+        self.statistics = Store(self.logger)
 
         self.strategy = None
         asyncio.ensure_future(self.apply_strategy(config['type']))
