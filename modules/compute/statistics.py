@@ -73,8 +73,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
                         )
                     )
 
-        self.logger.info('saved: %r' % rows)
-
         self.query.executemany('''REPLACE INTO `statistics` VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', rows)
 
         self.sql.commit()
@@ -89,10 +87,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         if start is None:
             start = end - increment * 24
-
-        self.logger.info('start: %r' % start)
-        self.logger.info('end  : %r' % end)
-        self.logger.info('incre: %r' % increment)
 
         results = []
 
@@ -110,8 +104,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         stats = None
 
         for row in rows:
-            self.logger.info(row[1])
-
             while row[1] - interval_stats[0] >= increment:
                 if stats is not None:
                     stats['watts'] /= stats['snapshots']
@@ -125,8 +117,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
                 interval_stats = [interval_stats[0] + increment, None]
                 results.append(interval_stats)
-
-                self.logger.info('new increment %r' % interval_stats[0])
 
             if stats is None:
                 stats = {
@@ -169,7 +159,5 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         while interval_stats[0] + increment <= end:
             interval_stats = [interval_stats[0] + increment, None]
             results.append(interval_stats)
-        
-        self.logger.info('true end: %r' % interval_stats[0])
 
         return results
