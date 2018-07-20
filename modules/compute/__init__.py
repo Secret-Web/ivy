@@ -376,7 +376,7 @@ class ComputeModule(Module):
 
         if action['id'] == 'wake':
             for machine_id, machine in machines.items():
-                send_magic_packet(miner.hardware.mac)
+                send_magic_packet(machine.hardware.mac)
             return
 
         if action['id'] == 'reboot' or action['id'] == 'shutdown' or action['id'] == 'upgrade':
