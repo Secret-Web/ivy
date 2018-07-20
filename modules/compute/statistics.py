@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
                     stats = None
 
-                interval_stats = [(interval_stats[0] + increment).replace(tzinfo=timezone.utc).timestamp(), None]
+                interval_stats = [interval_stats[0] + increment, None]
                 results.append(interval_stats)
 
             if stats is None:
@@ -148,7 +148,10 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         # Populate the `results` list with all increments remaining up to `end`
         while interval_stats[0] < end:
-            interval_stats = [(interval_stats[0] + increment).replace(tzinfo=timezone.utc).timestamp(), None]
+            interval_stats = [interval_stats[0] + increment, None]
             results.append(interval_stats)
+
+        for stat in results:
+            stat[0] = stat[0].replace(tzinfo=timezone.utc).timestamp()
 
         return results
