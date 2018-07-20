@@ -53,7 +53,7 @@ class ComputeModule(Module):
                     await self.connector.socket.send('software', 'data', self.database.software)
 
                 # Reset miners that have taken more than 10 minutes to update their stats
-                for id, stats in self.data.stats.items():
+                for id, stats in self.database.stats.items():
                     if not stats.connected: continue
 
                     if time.time() - stats.time > 60 * 10:
