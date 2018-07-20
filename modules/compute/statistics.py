@@ -52,24 +52,24 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
     def save_snapshot(self, snapshots):
         rows = []
-        for id, stat in stats.machines.items():
+        for id, stats in snapshots.items():
             rows.append(
                         (
                             id,
-                            stat.time,
+                            stats.time,
 
-                            stat.connected,
-                            stat.status['type'],
-                            stat.status['is_fee'],
+                            stats.connected,
+                            stats.status['type'],
+                            stats.status['is_fee'],
                             
-                            sum([gpu.watts for gpu in stat.hardware.gpus]),
-                            max([gpu.temp for gpu in stat.hardware.gpus]),
-                            max([gpu.fan for gpu in stat.hardware.gpus]),
-                            sum([gpu.rate for gpu in stat.hardware.gpus]),
+                            sum([gpu.watts for gpu in stats.hardware.gpus]),
+                            max([gpu.temp for gpu in stats.hardware.gpus]),
+                            max([gpu.fan for gpu in stats.hardware.gpus]),
+                            sum([gpu.rate for gpu in stats.hardware.gpus]),
 
-                            stat.shares['accepted'],
-                            stat.shares['rejected'],
-                            stat.shares['invalid']
+                            stats.shares['accepted'],
+                            stats.shares['rejected'],
+                            stats.shares['invalid']
                         )
                     )
 
