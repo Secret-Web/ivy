@@ -85,85 +85,61 @@ class Stats:
 
         return total
 
-def new_pack():
-    return {
-        'snapshots': 0,
-
-        'gpus': 0,
-        'online': 0,
-        'offline': 0,
-        'rate': 0,
-        'shares': {
-            'invalid': 0,
-            'accepted': 0,
-            'rejected': 0
-        }
-    }
-
 class Store:
     def __init__(self):
         self.sql = sqlite3.connect(os.path.join('/etc', 'ivy', 'statistics.sql'))
         self.query = self.sql.cursor()
 
         self.query.execute('''
-CREATE TABLE IF NOT EXISTS `snapshots` (
-  `machine_id` VARCHAR(64) NOT NULL,
-  `date` DATETIME NOT NULL,
-  `snapshot` TEXT NOT NULL,
-  PRIMARY KEY (`machine_id`, `date`)
-)''')
-
-        self.query.execute('''
 CREATE TABLE IF NOT EXISTS `statistics` (
   `machine_id` VARCHAR(64) NOT NULL,
   `date` DATETIME NOT NULL,
-  `gpus` INT(11) NOT NULL,
-  `online` INT(11) NOT NULL,
-  `offline` INT(11) NOT NULL,
+
+  `connected` BOOLEAN NOT NULL,
+  `status` INT(11) NOT NULL,
+  `is_fee` BOOLEAN NOT NULL,
+
+  `watts` INT(11) NOT NULL,
+  `temp` INT(11) NOT NULL,
+  `fan` INT(11) NOT NULL,
   `rate` INT(11) NOT NULL,
-  `shares_invalid` INT(11) NOT NULL,
+
   `shares_accepted` INT(11) NOT NULL,
   `shares_rejected` INT(11) NOT NULL,
+  `shares_invalid` INT(11) NOT NULL,
   PRIMARY KEY (`machine_id`, `date`)
 )''')
 
         self.sql.commit()
 
     def save(self, snapshots):
-        today = datetime.utcnow()
-        datestr = '%d-%.2d-%.2d %.2d:%.2d:%.2d' % (today.year, today.month, today.day, today.hour, today.minute, today.second)
-
-        # Save the raw snapshot just in case we want to do additional stuff later.
-        self.query.executemany('INSERT INTO `snapshots` VALUES(?, ?, ?)', [(id, datestr, json.dumps(data)) for id, data in snapshots.items()])
-
-        stats = Stats()
-        for id, data in snapshots.items():
-            stats.push(id, data)
-
-        datestr = '%d-%.2d-%.2d %.2d:%.2d:00' % (today.year, today.month, today.day, today.hour, today.minute)
-
         rows = []
-        for id, total in stats.machines.items():
+        for id, stat in stats.machines.items():
             rows.append(
                         (
                             id,
-                            datestr,
+                            stat.time,
 
-                            total['gpus'],
-                            total['online'],
-                            total['offline'],
-                            total['rate'],
-                            total['shares']['invalid'],
-                            total['shares']['accepted'],
-                            total['shares']['rejected']
+                            stat.connected,
+                            stat.status['type'],
+                            stat.status['is_fee'],
+                            
+                            sum([gpu.watts for gpu in stat.hardware.gpus]),
+                            max([gpu.temp for gpu in stat.hardware.gpus]),
+                            max([gpu.fan for gpu in stat.hardware.gpus]),
+                            sum([gpu.rate for gpu in stat.hardware.gpus]),
+
+                            stat.shares['accepted'],
+                            stat.shares['rejected'],
+                            stat.shares['invalid']
                         )
                     )
 
-        self.query.executemany('''REPLACE INTO `statistics` VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''', rows)
+        self.query.executemany('''REPLACE INTO `statistics` VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', rows)
 
         self.sql.commit()
 
-    def get_statistics(self, start, end, increment, machine=None):
+    def get_statistics(self, start, end, increment, machine_id=None):
         '''
             Start and end dates are in YYYY-MM-DD HH:MM:SS format.
             Increment: 0 = 5 minutes, 1 = 10 minutes, 2 = 30 minutes, 3 = 1 hour, 4 = 6 hours, 5 = 12 hours, 6 = 1 day, 7 = 1 week
@@ -181,64 +157,62 @@ CREATE TABLE IF NOT EXISTS `statistics` (
             return results
 
         time_stats = [start, None]
+
         machine_stats = None
 
-        rows = self.query.execute('SELECT * FROM `snapshots` WHERE `date` BETWEEN ? and ?', (start, end))
+        row = None
+        if machine_id is None:
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = false', (start, end))
+        else:
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = false AND `machine_id` = ?', (start, end, machine_id))
+
+        stats = None
+
         for row in rows:
-            if machine is not None and row[0] is not machine:
-                continue
+            while row[1] - interval_stats[0] >= increment:
+                if stats is not None:
+                    stats['watts'] /= stats['snapshots']
+                    stats['temp'] /= stats['snapshots']
+                    stats['fan'] /= stats['snapshots']
+                    stats['rate'] /= stats['snapshots']
 
-            row_time = datetime.strptime(row[1], '%Y-%m-%d %H:%M:%S')
+                    interval_stats[1] = stats
 
-            while machine_stats is None or row_time - time_stats[0] >= increment:
-                if machine_stats is not None:
-                    for id, data in machine_stats.items():
-                        time_stats[1]['online'] += data['online'] / data['snapshots']
-                        time_stats[1]['offline'] += data['offline'] / data['snapshots']
-                        time_stats[1]['gpus'] += data['gpus'] / data['snapshots']
-                        time_stats[1]['rate'] += data['rate'] / data['snapshots']
+                    stats = None
 
-                        time_stats[1]['shares']['invalid'] += data['shares']['invalid']
-                        time_stats[1]['shares']['accepted'] += data['shares']['accepted']
-                        time_stats[1]['shares']['rejected'] += data['shares']['rejected']
+                interval_stats = [interval_stats[0] + increment, None]
+                results.append(interval_stats)
 
-                time_stats = [time_stats[0] + increment, None]
-                machine_stats = {}
-                results.append(time_stats)
+            if stats is None:
+                stats = {
+                    'snapshots': 0,
 
-            if time_stats[1] is None:
-                time_stats[1] = new_pack()
+                    'watts': 0,
+                    'temp': 0,
+                    'fan': 0,
+                    'rate': 0,
+                    
+                    'shares': {
+                        'accepted': 0,
+                        'rejected': 0,
+                        'invalid': 0
+                    }
+                }
+            
+            stats['snapshots'] += 1
 
-            data = json.loads(row[2])
+            stats['watts'] += row[5]
+            stats['temp'] += row[6]
+            stats['fan'] += row[7]
+            stats['rate'] += row[8]
 
-            if row[0] not in machine_stats:
-                machine_stats[row[0]] = new_pack()
-                machine_stats[row[0]]['snapshots'] = 0
-            stat = machine_stats[row[0]]
+            stats['shares']['accepted'] += row[9]
+            stats['shares']['rejected'] += row[10]
+            stats['shares']['invalid'] += row[11]
 
-            stat['snapshots'] += 1
-
-            if 'online' in data and data['online']:
-                stat['online'] += 1
-            else:
-                stat['offline'] += 1
-
-            if 'shares' in data:
-                stat['shares']['invalid'] += data['shares']['invalid']
-                stat['shares']['accepted'] += data['shares']['accepted']
-                stat['shares']['rejected'] += data['shares']['rejected']
-
-            if 'hardware' in data:
-                if 'gpus' in data['hardware']:
-                    for piece in data['hardware']['gpus']:
-                        stat['gpus'] += 1
-                        stat['rate'] += piece['rate']
-
-        while time_stats[0] < end:
-            time_stats = [time_stats[0] + increment, None]
-            results.append(time_stats)
-
-        for row in results:
-            row[0] = '%d-%.2d-%.2d %.2d:%.2d:%.2d' % (row[0].year, row[0].month, row[0].day, row[0].hour, row[0].minute, row[0].second)
+        # Populate the `results` list with all increments remaining up to `end`
+        while interval_stats[0] < end:
+            interval_stats = [interval_stats[0] + increment, None]
+            results.append(interval_stats)
 
         return results

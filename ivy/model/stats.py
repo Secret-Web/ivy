@@ -9,7 +9,7 @@ class MinerStats:
         self.connected = False
         self.time = time.time()
         self.status = kwargs['status'] if 'status' in kwargs else {'type': 'offline', 'fee': False}
-        self.shares = kwargs['shares'] if 'shares' in kwargs else {'invalid': 0, 'accepted': 0, 'rejected': 0}
+        self.shares = kwargs['shares'] if 'shares' in kwargs else {'accepted': 0, 'rejected': 0, 'invalid': 0}
         self.hardware = MinerHardware(**kwargs['hardware'] if 'hardware' in kwargs else {})
     
     def reset(self):

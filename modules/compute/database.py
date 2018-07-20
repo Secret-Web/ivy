@@ -6,6 +6,7 @@ import traceback
 import urllib.request
 
 from ivy.model.fee import Fee
+from .statistics import get_statistics
 
 
 def url_content(url):
@@ -190,4 +191,4 @@ class Database(dict):
             self.logger.exception('\n' + traceback.format_exc())
     
     async def get_statistics(self, *args, **kwargs):
-        pass
+        return await get_statistics(*args, **kwargs)

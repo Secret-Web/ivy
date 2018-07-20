@@ -179,8 +179,8 @@ class Monitor:
                         self.logger.exception('\n' + traceback.format_exc())
 
                     self.is_mining = False
-
                     self.shares.reset_session()
+                    self.stats.reset()
 
                     update = True
                 
@@ -216,9 +216,9 @@ class Monitor:
 
 class Shares:
     def __init__(self):
-        self.total_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
-        self.session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
-        self.interval_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+        self.total_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
+        self.session_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
+        self.interval_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
 
     @property
     def totals(self):
@@ -230,7 +230,7 @@ class Shares:
         self.total_shares['invalid'] = stats['invalid']
 
     def reset_session(self):
-        self.session_shares = {'invalid': 0, 'accepted': 0, 'rejected': 0}
+        self.session_shares = {'accepted': 0, 'rejected': 0, 'invalid': 0}
     
     def update(self, stats):
         if self.session_shares['accepted'] > stats['accepted'] \

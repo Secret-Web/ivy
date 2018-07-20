@@ -116,7 +116,7 @@ class ComputeModule(Module):
             stats = await self.database.get_statistics(packet.payload['start'] if 'start' in packet.payload else None,
                                                 packet.payload['end'] if 'end' in packet.payload else datetime.utcnow(),
                                                 increment=packet.payload['increment'] if 'increment' in packet.payload else None,
-                                                machine=packet.payload['machine'] if 'machine' in packet.payload else None)
+                                                machine_id=packet.payload['machine_id'] if 'machine_id' in packet.payload else None)
             await packet.reply('stats', 'response', payload={'id': packet.payload['id'], 'data': stats})
 
 
@@ -334,13 +334,13 @@ class ComputeModule(Module):
                     stats = self.database.stats[id]
                     stats.update(**data)
                     stats.connected = True
-                updated_stats[id] = self.database.stats[id].as_obj()
+                updated_stats[id] = self.database.stats[id]
 
             if len(updated_stats) > 0:
                 await self.database.save_snapshot(updated_stats)
 
                 if len(self.database.stats) < IMMEDIATE_STAT_CUTOFF:
-                    await packet.send('machines', 'stats', updated_stats)
+                    await packet.send('machines', 'stats', {k: v for k, v in updated_stats.items()})
 
     async def new_message(self, packet, data):
         if isinstance(data, dict):
