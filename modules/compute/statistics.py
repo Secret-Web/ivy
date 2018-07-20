@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         self.sql.commit()
 
-    def get_statistics(self, start, end, increment, machine_id=None):
+    async def get_statistics(self, start, end, increment, machine_id=None):
         '''
             Start and end dates are in YYYY-MM-DD HH:MM:SS format.
             Increment: 0 = 5 minutes, 1 = 10 minutes, 2 = 30 minutes, 3 = 1 hour, 4 = 6 hours, 5 = 12 hours, 6 = 1 day, 7 = 1 week
@@ -100,9 +100,9 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
         row = None
         if machine_id is None:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = false', (start, end))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = 0', (start, end))
         else:
-            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = false AND `machine_id` = ?', (start, end, machine_id))
+            rows = self.query.execute('SELECT * FROM `statistics` WHERE `date` BETWEEN ? and ? AND `is_fee` = 0 AND `machine_id` = ?', (start, end, machine_id))
 
         stats = None
 
