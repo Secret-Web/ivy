@@ -90,10 +90,6 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         if start is None:
             start = end - increment * 24
 
-        self.logger.info('start: %r' % start)
-        self.logger.info('end  : %r' % end)
-        self.logger.info('incre: %r' % increment)
-
         results = []
 
         if end < start:
@@ -110,9 +106,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         stats = None
 
         for row in rows:
-            self.logger.info(row)
-
-            while row[1] - interval_stats[0] > increment:
+            while row[1] - interval_stats[0] >= increment:
                 if stats is not None:
                     stats['watts'] /= stats['snapshots']
                     stats['temp'] /= stats['snapshots']
@@ -154,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
             stats['shares']['invalid'] += row[11]
 
         # Populate the `results` list with all increments remaining up to `end`
-        while interval_stats[0] < end:
+        while interval_stats[0] + increment < end:
             if stats is not None:
                 stats['watts'] /= stats['snapshots']
                 stats['temp'] /= stats['snapshots']
