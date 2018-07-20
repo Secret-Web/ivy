@@ -57,7 +57,7 @@ class ComputeModule(Module):
                     if not stats.connected: continue
 
                     if time.time() - stats.time > 60 * 10:
-                        self.data.stats[id].reset()
+                        self.database.stats[id].reset()
 
                         await self.new_message({'level': 'danger', 'text': 'Watchdog detected an idle miner. Did it freeze?', 'machine': id})
 
