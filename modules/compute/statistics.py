@@ -20,9 +20,6 @@ def parse_time(time_str):
         del time_params['months']
     return timedelta(**time_params)
 
-def ceil_dt(dt, delta):
-    return dt + (datetime.min - dt) % delta
-
 class Store:
     def __init__(self, logger):
         self.logger = logger.getChild('stats')
@@ -86,18 +83,15 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         if end is None:
             end = datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()
 
-        increment = parse_time(increment)
+        increment = parse_time(increment).total_seconds()
 
-        end = ceil_dt(end, increment)
-
-        increment = increment.total_seconds()
+        end = end % increment
 
         if start is None:
             start = end - increment * 24
 
         self.logger.info('start: %r' % start)
         self.logger.info('end  : %r' % end)
-        self.logger.info('end  : %r' % dir(end))
         self.logger.info('incre: %r' % increment)
 
         results = []
