@@ -191,6 +191,11 @@ class Database(dict):
             await self.strategy.save_snapshot(snapshot)
         except Exception as e:
             self.logger.exception('\n' + traceback.format_exc())
+        
+        try:
+            await self.statistics.save_snapshot(snapshot)
+        except Exception as e:
+            self.logger.exception('\n' + traceback.format_exc())
     
     async def get_statistics(self, *args, **kwargs):
         return await self.statistics.get_statistics(*args, **kwargs)
