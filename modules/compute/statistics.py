@@ -155,18 +155,18 @@ CREATE TABLE IF NOT EXISTS `statistics` (
             stats['shares']['rejected'] += row[10]
             stats['shares']['invalid'] += row[11]
 
+        if stats is not None:
+            stats['watts'] /= stats['snapshots']
+            stats['temp'] /= stats['snapshots']
+            stats['fan'] /= stats['snapshots']
+            stats['rate'] /= stats['snapshots']
+
+            interval_stats[1] = stats
+
+            stats = None
+
         # Populate the `results` list with all increments remaining up to `end`
         while interval_stats[0] + increment <= end:
-            if stats is not None:
-                stats['watts'] /= stats['snapshots']
-                stats['temp'] /= stats['snapshots']
-                stats['fan'] /= stats['snapshots']
-                stats['rate'] /= stats['snapshots']
-
-                interval_stats[1] = stats
-
-                stats = None
-
             interval_stats = [interval_stats[0] + increment, None]
             results.append(interval_stats)
         
