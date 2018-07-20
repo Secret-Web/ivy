@@ -114,10 +114,7 @@ class ComputeModule(Module):
 
         @l.listen_event('stats', 'query')
         async def event(packet):
-            stats = await self.database.get_statistics(packet.payload['start'] if 'start' in packet.payload else None,
-                                                packet.payload['end'] if 'end' in packet.payload else datetime.utcnow(),
-                                                increment=packet.payload['increment'] if 'increment' in packet.payload else None,
-                                                machine_id=packet.payload['machine_id'] if 'machine_id' in packet.payload else None)
+            stats = await self.database.get_statistics(**packet.payload)
             await packet.reply('stats', 'response', payload={'id': packet.payload['id'], 'data': stats})
 
 

@@ -87,17 +87,19 @@ CREATE TABLE IF NOT EXISTS `statistics` (
             Start and end dates are in YYYY-MM-DD HH:MM:SS format.
             Increment: 0 = 5 minutes, 1 = 10 minutes, 2 = 30 minutes, 3 = 1 hour, 4 = 6 hours, 5 = 12 hours, 6 = 1 day, 7 = 1 week
         '''
-        increment = parse_time(increment)
+        increment = parse_time(increment).replace(tzinfo=timezone.utc).timestamp()
+
+        if end is None:
+            end = datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()
 
         end = ceil_dt(end, increment)
 
+        if start is None:
+            start = end - increment * 24
 
         self.logger.info('start: %r' % start)
         self.logger.info('end  : %r' % end)
         self.logger.info('incre: %r' % increment)
-
-        if start is None:
-            start = end - increment * 24
 
         results = []
 
