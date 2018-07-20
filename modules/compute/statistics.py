@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         for row in rows:
             self.logger.info(row)
 
-            while row[1] - interval_stats[0] >= increment:
+            while row[1] - interval_stats[0] > increment:
                 if stats is not None:
                     stats['watts'] /= stats['snapshots']
                     stats['temp'] /= stats['snapshots']
