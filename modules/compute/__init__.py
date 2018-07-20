@@ -341,7 +341,7 @@ class ComputeModule(Module):
                 await self.database.save_snapshot(updated_stats)
 
                 if len(self.database.stats) < IMMEDIATE_STAT_CUTOFF:
-                    await packet.send('machines', 'stats', {k: v for k, v.as_obj() in updated_stats.items()})
+                    await packet.send('machines', 'stats', {k: v.as_obj() for k, v in updated_stats.items()})
 
     async def new_message(self, packet, data):
         if isinstance(data, dict):
