@@ -94,9 +94,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
         if end < start:
             return results
 
-        time_stats = [start, None]
-
-        machine_stats = None
+        interval_stats = [start, None]
 
         row = None
         if machine_id is None:
