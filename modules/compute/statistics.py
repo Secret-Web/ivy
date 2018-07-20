@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 import sqlite3
 
 
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
 
                     stats = None
 
-                interval_stats = [interval_stats[0] + increment, None]
+                interval_stats = [(interval_stats[0] + increment).replace(tzinfo=timezone.utc).timestamp(), None]
                 results.append(interval_stats)
 
             if stats is None:
