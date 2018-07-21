@@ -114,7 +114,7 @@ class Monitor:
                         return
 
                 try:
-                    got_stats = await self.process.get_stats()
+                    got_stats = await asyncio.wait_for(self.process.get_stats(), timeout=5)
 
                     self.shares.update(got_stats['shares'])
 
