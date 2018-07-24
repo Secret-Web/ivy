@@ -129,7 +129,7 @@ async def system_check():
         await run_command('apt', 'update')
 
         display.set_step('Applying system patches')
-        await run_command('apt', 'upgrade', '-y')
+        await run_command('apt', 'upgrade', '-y', '--force-yes', '-o', 'Dpkg::Options::="--force-confdef"', '-o', 'Dpkg::Options::="--force-confold"', 'upgrade')
         display.step_done()
 
         #display.set_step('Updating Kernel')
