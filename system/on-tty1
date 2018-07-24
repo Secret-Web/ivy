@@ -1,11 +1,5 @@
 cd /opt/ivy
 
-sudo python3.6 system/on-boot.py
-
-clear
-
-sudo service ivy start
-
 if [ -f /etc/ivy/config.json ]; then
 #    startx
 

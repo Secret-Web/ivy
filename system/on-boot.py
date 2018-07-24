@@ -15,6 +15,7 @@ HOME = expanduser('~')
 PATH = os.path.dirname(os.path.realpath(__file__))
 
 SYMLINKS = [
+    ('ivy-boot.service', '/etc/systemd/system/ivy-boot.service'),
     ('ivy-<gpu>.service', '/etc/systemd/system/ivy.service'),
     ('i3status.conf', '/etc/i3status.conf'),
     ('i3config.conf', os.path.expanduser('~/.config/i3/config')),
@@ -286,6 +287,9 @@ UBUNTU_CODENAME=xenial
         display.step_done()
 
         await asyncio.sleep(5)
+
+        await run_command('systemctl', 'enable', 'ivy')
+        await run_command('service', 'ivy', 'start')
     except Exception as e:
         display.set_step('- Error -')
         display.add_line(str(e))
