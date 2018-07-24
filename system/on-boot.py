@@ -1,4 +1,5 @@
 import sys
+import stat
 import os
 from os.path import expanduser
 import shutil
@@ -20,6 +21,9 @@ SYMLINKS = [
     ('Xresources', os.path.expanduser('~/.Xresources')),
     ('tty1@override.conf', '/etc/systemd/system/getty@tty1.service.d/override.conf')
 ]
+
+VERSION = {'version': '0.1.0', 'codename': 'Alpha Centauri'}
+VERSION['codename_lower'] = VERSION['codename'].lower()
 
 GFX_VERSION = {
     'NVIDIA': '390',
@@ -62,7 +66,7 @@ class Display:
         self.urwid = urwid.MainLoop(
             urwid.AttrMap(urwid.Filler(
                 urwid.Pile([
-                    urwid.AttrMap(urwid.Pile([urwid.Divider(), urwid.Text('Ivy', align='center'), urwid.Divider()]), 'header'),
+                    urwid.AttrMap(urwid.Pile([urwid.Divider(), urwid.Text('Ivy {version} ({codename})'.format(**VERSION), align='center'), urwid.Divider()]), 'header'),
 
                     urwid.Divider(),
 
@@ -112,24 +116,47 @@ class Display:
 
 async def system_check():
     try:
-        display.set_step('Applying branding')
-        with open('/etc/issue', 'w') as f:
-            f.write('Ivy - SecretWeb.com \\l\n')
-        display.step_done()
-
-        display.set_step('Cleaning symlinks')
-        for f, t in SYMLINKS:
-            os.makedirs(os.path.dirname(os.path.realpath(t)), exist_ok=True)
-            with suppress(FileNotFoundError):
-                display.add_line(os.path.abspath(t))
-                os.remove(os.path.abspath(t))
-        display.step_done()
-
         display.set_step('Checking for new system patches')
         await run_command('apt', 'update')
 
         display.set_step('Applying system patches')
-        await run_command('apt', 'upgrade', '-y', '--force-yes', '-o', 'Dpkg::Options::="--force-confdef"', '-o', 'Dpkg::Options::="--force-confold"', 'upgrade')
+        await run_command('apt', '-y', '-o', 'Dpkg::Options::="--force-confdef"', '-o', 'Dpkg::Options::="--force-confold"', 'upgrade')
+        await run_command('apt', '-y', 'autoremove')
+        display.step_done()
+
+        display.set_step('Applying branding')
+        with open('/etc/issue', 'w') as f:
+            f.write('Ivy {version} ({codename}) - SecretWeb.com \\l\n'.format(**VERSION))
+        with open('/etc/dpkg/origins/default', 'w') as f:
+            f.write('''
+Vendor: Ivy
+Vendor-URL: http://ivy.secretweb.com/
+Bugs: https://forum.secretweb.com/
+Parent: Ubuntu
+''')
+        with open('/etc/lsb-release', 'w') as f:
+            f.write('''
+DISTRIB_ID=Ivy
+DISTRIB_RELEASE={version}
+DISTRIB_CODENAME="{codename}"
+DISTRIB_DESCRIPTION="Ivy 0.1.0"
+'''.format(**VERSION))
+        with open('/etc/os-release', 'w') as f:
+            f.write('''
+NAME="Ivy"
+VERSION="{version} ({codename})"
+ID=ubuntu
+ID_LIKE=debian
+PRETTY_NAME="Ivy {version} ({codename})"
+VERSION_ID="0.1.0"
+HOME_URL="http://ivy.secretweb.com/"
+SUPPORT_URL="http://help.secretweb.com/"
+BUG_REPORT_URL="http://forum.secretweb.com/"
+VERSION_CODENAME="{codename_lower}"
+UBUNTU_CODENAME=xenial
+'''.format(**VERSION))
+        with open('/etc/profile.d/00-aliases.sh', 'w') as f:
+            f.write('alias screenfetch=/bin/bash /opt/ivy/system/fetch.sh')
         display.step_done()
 
         #display.set_step('Updating Kernel')
@@ -175,8 +202,13 @@ async def system_check():
         for f, t in SYMLINKS:
             if '<gpu>' in f:
                 f = f.replace('<gpu>', 'nvidia' if 'NVIDIA' in graphics else 'other')
-            display.add_line(os.path.join(PATH, f) + ' -> ' + os.path.abspath(t))
-            os.link(os.path.join(PATH, f), os.path.abspath(t))
+            t = os.path.abspath(t)
+
+            with suppress(FileNotFoundError):
+                os.remove(t)
+
+            display.add_line(os.path.join(PATH, f) + ' -> ' + t)
+            os.link(os.path.join(PATH, f), t)
         await run_command('systemctl', 'daemon-reload')
         display.step_done()
 
