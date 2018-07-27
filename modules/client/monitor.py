@@ -90,14 +90,7 @@ class Monitor:
 
                         return
 
-                if self.last_hash_time:
-                    self.logger.info(str(time.time() - self.last_hash_time))
-                else:
-                    self.logger.info('none')
-
                 if self.process.process is None:
-                    self.logger.info('no process')
-
                     self.last_hash_time = time.time()
                 elif self.last_hash_time is not None:
                     # If the miner has run for 5 minutes without hashing, reboot
@@ -171,8 +164,6 @@ class Monitor:
 
                     self.is_mining = any([gpu.rate > 0 for gpu in self.stats.hardware.gpus])
                     if self.is_mining:
-                        self.logger.info('is mining')
-
                         self.last_hash_time = time.time()
                 except Exception as e:
                     if not isinstance(e, ConnectionRefusedError):
