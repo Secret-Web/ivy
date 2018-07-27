@@ -1,15 +1,13 @@
 cd /opt/ivy
 
-sudo python3.6 system/on-boot.py
-
-clear
-
-sudo service ivy start
-
 if [ -f /etc/ivy/config.json ]; then
 #    startx
 
     exit 0
+else
+    sudo python3.6 install.py
+
+    sudo service ivy-boot restart
 fi
 
-exit 1
+exit 0

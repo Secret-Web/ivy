@@ -1,0 +1,13 @@
+[Unit]
+Description=(Boot) Ivy OS
+After=network.target
+
+[Service]
+User=root
+Group=ivy
+Type=simple
+WorkingDirectory=/opt/ivy/
+ExecStart=/usr/bin/python3.6 /opt/ivy/system/on-boot.py
+
+[Install]
+WantedBy=multi-user.target

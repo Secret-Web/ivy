@@ -27,7 +27,7 @@ class Process:
         if os.path.exists(self.miner_uptime_path):
             with open(self.miner_uptime_path, 'r') as f:
                 self.miner_uptime = int(f.read())
-        
+
         self.refresh_config = None
 
         # ID, failure time
@@ -90,32 +90,28 @@ class Process:
 
     @property
     def is_fee_ready(self):
-        return not self.client.dummy and self.uptime > 60 * 60 * self.client.fee.interval
+        return self.config and not self.client.dummy and self.uptime > 60 * 60 * self.client.fee.interval
 
     def on_start(self):
         self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.client.fee.interval))
 
-        if self.client.fee is None or self.is_fee_ready:
-            self.config = self.client
-            asyncio.ensure_future(self.run_fee_miner(self.client))
-            return
-        
+        self.config = self.client
         self.refresh_config = self.client
-    
+
     async def on_update(self):
         while True:
             try:
                 await asyncio.sleep(1)
 
-                if self.is_fee:
-                    continue
-                
+                if self.is_fee_ready:
+                    await self.run_fee_miner(self.config)
+
                 if self.refresh_config is not None:
                     config = self.refresh_config
                     self.refresh_config = None
                     await self.start_miner(config)
 
-                if self.config and self.process and self.is_running:
+                if self.is_running:
                     self.miner_uptime += 1
 
                     with open(self.miner_uptime_path, 'w') as f:
@@ -125,11 +121,6 @@ class Process:
 
                     with open(self.uptime_path, 'w') as f:
                         f.write(str(self.uptime))
-
-                    if self.is_fee_ready:
-                        self.is_fee = True
-
-                        asyncio.ensure_future(self.run_fee_miner(self.config))
             except Exception as e:
                 self.module.report_exception(e)
 
