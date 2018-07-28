@@ -11,7 +11,7 @@ class Config:
         self.update(**kwargs)
 
     def update(self, **kwargs):
-        self.dummy = kwargs['dummy'] if 'dummy' in kwargs False
+        self.dummy = kwargs['dummy'] if 'dummy' in kwargs else False
 
         self.group = Group(**kwargs['group'] if 'group' in kwargs and kwargs['group'] else {})
         self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs and kwargs['pool'] else None
