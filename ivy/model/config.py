@@ -10,7 +10,9 @@ class Config:
     def __init__(self, **kwargs):
         self.update(**kwargs)
 
-    def update(self, init=False, **kwargs):
+    def update(self, **kwargs):
+        self.dummy = kwargs['dummy'] if 'dummy' in kwargs False
+
         self.group = Group(**kwargs['group'] if 'group' in kwargs and kwargs['group'] else {})
         self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs and kwargs['pool'] else None
         self.wallet = Wallet(**kwargs['wallet']) if 'wallet' in kwargs and kwargs['wallet'] else None
@@ -21,6 +23,8 @@ class Config:
 
     def as_obj(self, slim=False):
         obj = {}
+
+        if self.dummy is not None: obj['dummy'] = self.dummy
 
         if self.group is not None: obj['group'] = self.group.as_obj(slim=slim)
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
