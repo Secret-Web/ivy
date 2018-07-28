@@ -443,7 +443,7 @@ class ComputeModule(Module):
                 coin = None
                 data = {}
 
-                data['group'] = group.as_obj(slim=True)
+                data['group'] = group.as_obj(is_client=True)
                 data['overclock'] = group.hardware.overclock.as_obj()
 
                 if await self.database.pools.has(group.pool.id):
