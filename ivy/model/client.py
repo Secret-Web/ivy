@@ -20,7 +20,7 @@ class Client:
         obj = {}
 
         if self.worker_id is not None: obj['worker_id'] = self.worker_id
-        if self.hardware is not None: obj['hardware'] = self.hardware.as_obj
+        if self.hardware is not None: obj['hardware'] = self.hardware.as_obj()
 
         if self.config is not None: obj['config'] = self.config.as_obj(is_client=True)
 
