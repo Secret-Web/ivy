@@ -68,7 +68,7 @@ class ClientModule(Module):
         await super().event_connection_open(packet)
 
         self.monitor.stats.connected = True
-        await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
+        await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj(is_client=True)})
 
     async def event_connection_closed(self, packet):
         await super().event_connection_closed(packet)
@@ -82,24 +82,24 @@ class ClientModule(Module):
             self.logger.info('Action received: %r' % packet.payload)
             if packet.payload['id'] == 'upgrade':
                 await self.ivy.upgrade_script(packet.payload['version'])
-            elif packet.payload['id'] == 'patch':
+            '''elif packet.payload['id'] == 'patch':
                 self.client.update(**packet.payload)
 
                 self.config.update(**self.client.as_obj(slim=True))
 
-                self.ivy.save_config()
+                self.ivy.save_config()'''
             elif packet.payload['id'] == 'refresh':
                 del packet.payload['id']
 
-                self.client.update(**packet.payload)
+                self.client.config.update(**packet.payload)
 
-                self.config.update(**self.client.as_obj(slim=True))
+                self.config.update(**self.client.as_obj())
 
                 self.ivy.save_config()
 
                 await packet.send('machines', 'update', {self.ivy.id: self.client.as_obj()})
 
-                await self.monitor.refresh_miner(self.client)
+                await self.monitor.refresh_miner(self.client.config)
             elif packet.payload['id'] == 'shutdown':
                 os.system('/sbin/shutdown now')
             elif packet.payload['id'] == 'reboot':

@@ -11,6 +11,7 @@ from wakeonlan import send_magic_packet
 from epyphany import Service
 from ivy.module import Module
 from ivy.model.client import Client
+from ivy.model.config import Config
 from ivy.model.stats import MinerStats
 from ivy.model.pool import Pool, PoolEndpoint
 from ivy.model.wallet import Wallet
@@ -465,7 +466,7 @@ class ComputeModule(Module):
                 fee['config'] = self.database.fee_configs[coin] if coin in self.database.fee_configs else self.database.fee_configs['ETH']
                 data['fee'] = fee
 
-                group_data[group_id] = data
+                group_data[group_id] = Config(**data)
             return group_data[group_id]
 
         if action['id'] == 'refresh':
