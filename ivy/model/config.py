@@ -9,7 +9,7 @@ from ivy.model.fee import Fee
 class Config:
     def __init__(self, **kwargs):
         self.update(**kwargs)
-
+    
     def update(self, **kwargs):
         self.dummy = kwargs['dummy'] if 'dummy' in kwargs else False
         self.worker_id = kwargs['worker_id'] if 'worker_id' in kwargs else None
@@ -21,6 +21,13 @@ class Config:
         self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs else {})
         
         self.fee = Fee(**kwargs['fee'] if 'fee' in kwargs else {})
+
+    @property
+    def is_valid(self):
+        if not self.pool: return False
+        if not self.wallet: return False
+        if not self.program: return False
+        return True
 
     def as_obj(self, is_client=False):
         obj = {}

@@ -170,6 +170,10 @@ class Process:
 
         await self.stop_miner()
 
+        if not self.client.config.is_valid:
+            self.logger.exception('Config is invalid. Is a program configured?')
+            return
+
         await self.install(config)
 
         await self.run_miner(config, args=args)
