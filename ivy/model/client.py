@@ -7,8 +7,8 @@ class Client:
         self.update(init=True, **kwargs)
 
     def update(self, init=False, **kwargs):
-        self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
-        self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
+        if 'machine_id' in kwargs or init: self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
+        if 'hardware' in kwargs or init: self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
 
         if 'config' in kwargs or init: self.config = Config(**kwargs['config'] if 'config' in kwargs else {})
 
