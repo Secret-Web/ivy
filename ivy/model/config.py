@@ -24,11 +24,8 @@ class Config:
 
     @property
     def is_valid(self):
-        print(self.pool)
         if not self.pool: return False
-        print(self.wallet)
         if not self.wallet: return False
-        print(self.program)
         if not self.program: return False
         return True
 
