@@ -294,7 +294,7 @@ class ComputeModule(Module):
 
                 # If the group no longer exists, set it back to default
                 if not await self.database.groups.has(client.group.id):
-                    client.group.reset()
+                    client.config.group.reset()
 
                 await self.database.machines.put(id, client)
 
