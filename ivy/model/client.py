@@ -7,13 +7,13 @@ class Client:
         self.update(init=True, **kwargs)
 
     def update(self, init=False, **kwargs):
-        if 'machine_id' in kwargs or init: self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
-        if 'hardware' in kwargs or init: self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
+        self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
+        self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
 
-        if 'name' in kwargs or init: self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
-        if 'notes' in kwargs or init: self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
+        self.config = Config(**kwargs['config'] if 'config' in kwargs else {})
 
-        if 'config' in kwargs or init: self.config = Config(**kwargs['config'] if 'config' in kwargs else {})
+        self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
+        self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
 
     def as_obj(self, is_client=False):
         obj = {}
