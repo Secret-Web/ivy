@@ -272,9 +272,6 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'get')
         async def event(packet):
-            print('get')
-            print(json.dumps({k: v.as_obj() async for k, v in self.database.machines.all()}, indent=2))
-
             await packet.reply('machines', 'data', {k: v.as_obj() async for k, v in self.database.machines.all()})
             await packet.reply('machines', 'stats', {k: v.as_obj() for k, v in self.database.stats.items()})
 
