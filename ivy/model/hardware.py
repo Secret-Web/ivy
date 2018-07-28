@@ -93,10 +93,10 @@ def search_hw(hardware):
 class Hardware:
     def __init__(self, **kwargs):
         self.mac = kwargs['mac'] if 'mac' in kwargs else None
-        self.cpus = [CPU(**data) for data in kwargs['cpus']] if 'cpus' in kwargs else None
-        self.gpus = [GPU(**data) for data in kwargs['gpus']] if 'gpus' in kwargs else None
-        self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else None
-        self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else None
+        self.cpus = [CPU(**data) for data in kwargs['cpus']] if 'cpus' in kwargs else []
+        self.gpus = [GPU(**data) for data in kwargs['gpus']] if 'gpus' in kwargs else []
+        self.memory = [Memory(**data) for data in kwargs['memory']] if 'memory' in kwargs else []
+        self.storage = [Storage(**data) for data in kwargs['storage']] if 'storage' in kwargs else []
 
     def as_obj(self, slim=False):
         obj = {}
