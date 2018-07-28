@@ -42,7 +42,7 @@ class Process:
         asyncio.ensure_future(self.on_update())
 
     def get_api(self, config):
-        api_id = config.program.api
+        api_id = config.program.api if config.program else '_'
 
         if api_id not in self._api:
             try:

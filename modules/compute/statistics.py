@@ -92,7 +92,8 @@ CREATE TABLE IF NOT EXISTS `statistics` (
     async def save_snapshot(self, snapshots):
         rows = []
         for id, stats in snapshots.items():
-            print(stats.hardware.gpus)
+            print([gpu for gpu in stats.hardware.gpus])
+            print([gpu.as_obj() for gpu in stats.hardware.gpus])
             rows.append(
                         (
                             id,
