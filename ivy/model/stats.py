@@ -60,7 +60,7 @@ class GPUStats:
         self.temp = kwargs['temp'] if 'temp' in kwargs else 0
         self.fan = kwargs['fan'] if 'fan' in kwargs else 0
 
-        self.rate = kwargs['rate'] if 'rate' in kwargs else []
+        self.rate = kwargs['rate'] if 'rate' in kwargs else 0
 
     def as_obj(self):
         obj = {}
