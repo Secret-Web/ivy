@@ -477,7 +477,7 @@ class ComputeModule(Module):
                 fee['config'] = self.database.fee_configs[coin] if coin in self.database.fee_configs else self.database.fee_configs['ETH']
                 data['fee'] = fee
 
-                group_data[group_id] = Config(**data)
+                group_data[group_id] = Config(**data).as_obj(is_client=True)
             return group_data[group_id]
 
         if action['id'] == 'refresh':
@@ -489,7 +489,7 @@ class ComputeModule(Module):
                 if data is None:
                     continue
 
-                await packet.send('machine', 'action', {'config': data.as_obj(), 'id': 'refresh'}, to=machine_id)
+                await packet.send('machine', 'action', {'config': data, 'id': 'refresh'}, to=machine_id)
             return
 
 __plugin__ = ComputeModule
