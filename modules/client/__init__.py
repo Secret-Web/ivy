@@ -45,13 +45,13 @@ class ClientModule(Module):
     def new_message(self, level=None, title=None, text=None):
         if level is None: raise Exception('Level not specified!')
         if text is None: raise Exception('Text not specified!')
-        
+
         self.logger.info('[' + level.upper() + '] ' + ((title + ': ') if title else '') + text)
 
         pack = {'level': level, 'text': text}
         if title: pack['title'] = title
         self.message_queue.put_nowait(pack)
-    
+
     def report_exception(self, e):
         self.new_message(level='bug', title='Miner Exception', text=str(e))
 
