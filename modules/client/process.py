@@ -109,6 +109,9 @@ class Process:
                 if self.refresh_config is not None:
                     config = self.refresh_config
                     self.refresh_config = None
+
+                    self.miner_uptime = 0
+
                     await self.start_miner(config)
 
                 if self.is_running:
@@ -158,7 +161,7 @@ class Process:
             self.logger.info('Fee mined. Thank you for choosing Ivy!')
 
             if self.refresh_config is None:
-                self.refresh_config = old_config
+                await self.start_miner(old_config)
 
         self.uptime = 0
 
@@ -205,9 +208,6 @@ class Process:
 
     async def run_miner(self, config, args=None):
         self.process = None
-
-        if not self.is_fee:
-            self.miner_uptime = 0
 
         if args is None:
             args = config.program.execute['args']
