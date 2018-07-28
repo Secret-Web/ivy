@@ -21,12 +21,12 @@ class Config:
         
         self.fee = Fee(**kwargs['fee']) if 'fee' in kwargs else None
 
-    def as_obj(self, slim=False):
+    def as_obj(self, is_client=False):
         obj = {}
 
         if self.dummy is not None: obj['dummy'] = self.dummy
 
-        if self.group is not None: obj['group'] = self.group.as_obj(slim=slim)
+        if self.group is not None: obj['group'] = self.group.as_obj(is_client=is_client)
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
         if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
         if self.program is not None: obj['program'] = self.program.as_obj()

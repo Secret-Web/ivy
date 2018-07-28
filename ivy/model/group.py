@@ -20,13 +20,13 @@ class Group:
     def reset(self):
         self.update()
 
-    def as_obj(self, slim=False):
+    def as_obj(self, is_client=False):
         obj = {}
 
         if self.id is not None: obj['id'] = self.id
         if self.name is not None: obj['name'] = self.name
 
-        if not slim:
+        if not is_client:
             if self.algorithm is not None: obj['algorithm'] = self.algorithm
 
             if self.pool is not None: obj['pool'] = self.pool.as_obj()

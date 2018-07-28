@@ -282,6 +282,10 @@ class ComputeModule(Module):
                 client = None
 
                 if await self.database.machines.has(id):
+                    # This update was pushed by a miner. Discard the group setting.
+                    #if not isinstance(packet.sender, int):
+                    #    del data['config']
+
                     client = await self.database.machines.get(id)
                 else:
                     client = Client()
