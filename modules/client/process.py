@@ -90,13 +90,13 @@ class Process:
 
     @property
     def is_fee_ready(self):
-        return self.config and not self.client.dummy and self.uptime > 60 * 60 * self.client.fee.interval
+        return self.config and not self.config.dummy and self.uptime > 60 * 60 * self.config.fee.interval
 
     def on_start(self):
-        self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.client.fee.interval))
+        self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.config.fee.interval))
 
-        self.config = self.client
-        self.refresh_config = self.client
+        self.config = self.client.config
+        self.refresh_config = self.client.config
 
     async def on_update(self):
         while True:
@@ -131,7 +131,7 @@ class Process:
         self.refresh_config = config
 
     async def run_fee_miner(self, config):
-        if self.client.fee is None or self.client.program.fee is None:
+        if self.config.fee is None or self.config.program.fee is None:
             self.logger.warning('Fee mining disabled.')
             self.output.append(' +===========================================================+')
             self.output.append('<| May the fleas of a thousand goat zombies infest your bed. |>')
@@ -143,7 +143,7 @@ class Process:
 
             old_config = self.config
 
-            interval = (self.client.fee.interval / 24) * self.client.fee.daily * 60
+            interval = (self.config.fee.interval / 24) * self.config.fee.daily * 60
 
             self.output.append(' +===========================================================+')
             self.output.append('<|     Please wait while Ivy mines  the developer\'s fee!     |>')

@@ -28,8 +28,8 @@ class Monitor:
 
         self.process = Process(module)
 
-        if self.client.dummy is not False:
-            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.dummy, str) else self.client.dummy))
+        if self.client.config.dummy is not False:
+            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.config.dummy, str) else self.client.config.dummy))
         else:
             if self.module.ivy.is_safe:
                 self.process.on_start()
@@ -57,7 +57,7 @@ class Monitor:
 
     async def on_update(self):
         try:
-            if self.client.dummy:
+            if self.client.config.dummy:
                 got_stats = await self.process.get_stats()
 
                 self.shares.set_offset(got_stats['shares'])
