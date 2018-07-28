@@ -294,6 +294,8 @@ class ComputeModule(Module):
 
                 client.update(**data)
 
+                # TODO: Watchdog for client gpu counts
+
                 # If the group no longer exists, set it back to default
                 if not await self.database.groups.has(client.config.group.id):
                     client.config.group.reset()
