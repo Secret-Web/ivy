@@ -490,4 +490,3 @@ class ComputeModule(Module):
             return
 
 __plugin__ = ComputeModule
-'
