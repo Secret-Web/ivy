@@ -12,7 +12,8 @@ class Config:
 
     def update(self, **kwargs):
         self.dummy = kwargs['dummy'] if 'dummy' in kwargs else False
-
+        self.worker_id = kwargs['worker_id'] if 'worker_id' in kwargs else None
+        
         self.group = Group(**kwargs['group'] if 'group' in kwargs and kwargs['group'] else {})
         self.pool = Pool(**kwargs['pool']) if 'pool' in kwargs and kwargs['pool'] else None
         self.wallet = Wallet(**kwargs['wallet']) if 'wallet' in kwargs and kwargs['wallet'] else None

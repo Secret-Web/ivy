@@ -10,7 +10,6 @@ class Client:
         if 'machine_id' in kwargs or init: self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
         if 'hardware' in kwargs or init: self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
 
-        if 'worker_id' in kwargs or init: self.worker_id = kwargs['worker_id'] if 'worker_id' in kwargs else None
         if 'name' in kwargs or init: self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
         if 'notes' in kwargs or init: self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
 
