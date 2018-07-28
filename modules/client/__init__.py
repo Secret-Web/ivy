@@ -93,7 +93,7 @@ class ClientModule(Module):
             elif packet.payload['id'] == 'refresh':
                 del packet.payload['id']
 
-                self.client.config.update(**packet.payload)
+                self.client.update(**packet.payload)
 
                 self.config.update(**self.client.as_obj())
 
