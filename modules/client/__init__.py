@@ -15,9 +15,6 @@ class ClientModule(Module):
     def on_load(self):
         self.client = Client(**{**self.config, **{'machine_id': self.ivy.id, 'hardware': get_hardware()}})
 
-        if not self.client.config.worker_id:
-            self.client.config.worker_id = self.ivy.id
-
         self.register_events(self.connector)
 
         self.message_queue = asyncio.Queue()

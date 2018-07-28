@@ -12,6 +12,9 @@ class Client:
 
         if 'config' in kwargs or init: self.config = Config(**kwargs['config'] if 'config' in kwargs else {})
 
+        if not self.config.worker_id:
+            self.config.worker_id = self.machine_id
+
         if 'name' in kwargs or init: self.name = kwargs['name'] if 'name' in kwargs and kwargs['name'] is not None and len(kwargs['name'].strip()) > 0 else 'Unnamed Miner'
         if 'notes' in kwargs or init: self.notes = kwargs['notes'] if 'notes' in kwargs and kwargs['notes'] is not None and len(kwargs['notes'].strip()) > 0 else None
 
