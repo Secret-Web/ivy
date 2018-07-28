@@ -258,11 +258,11 @@ class Process:
         miner_dir = os.path.join(self.miner_dir, config.program.name)
         if not os.path.exists(miner_dir): os.mkdir(miner_dir)
 
-        if hasattr(config, 'hardware'):
+        if config.overclock:
             self.task = ('OVERCLOCK GPUS', time.time() + 60)
 
-            await self.module.gpus.setup(config.hardware)
-            await self.module.gpus.apply(config.hardware, config.overclock)
+            await self.module.gpus.setup(self.client.hardware)
+            await self.module.gpus.apply(self.client.hardware, config.overclock)
 
         self.task = ('RUN PROGRAM', time.time() + 60)
 
