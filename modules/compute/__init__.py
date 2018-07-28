@@ -304,6 +304,9 @@ class ComputeModule(Module):
                 if isinstance(packet.sender, int):
                     await self.send_action(packet, {'id': 'patch'}, machine_id=id)
 
+            if len(updated_machines) > 0:
+                await packet.send('machines', 'patch', updated_machines)
+
         @l.listen_event('machines', 'action')
         async def event(packet):
             self.logger.info('machine action: %r' % packet.payload)
