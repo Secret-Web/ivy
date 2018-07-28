@@ -54,6 +54,7 @@ class ClientModule(Module):
 
     def report_exception(self, e):
         self.new_message(level='bug', title='Miner Exception', text=str(e))
+        self.logger.exception(tracepack.format_exc())
 
     def on_connect_relay(self, service):
         self.connector.open(service.ip, service.port, {
