@@ -20,13 +20,19 @@ class Process:
 
         self.uptime = 0
         if os.path.exists(self.uptime_path):
-            with open(self.uptime_path, 'r') as f:
-                self.uptime = int(f.read())
+            try:
+                with open(self.uptime_path, 'r') as f:
+                    self.uptime = int(f.read())
+            except:
+                pass
 
         self.miner_uptime = 0
         if os.path.exists(self.miner_uptime_path):
-            with open(self.miner_uptime_path, 'r') as f:
-                self.miner_uptime = int(f.read())
+            try:
+                with open(self.miner_uptime_path, 'r') as f:
+                    self.miner_uptime = int(f.read())
+            except:
+                pass
 
         self.refresh_config = None
 
