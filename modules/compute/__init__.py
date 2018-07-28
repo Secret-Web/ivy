@@ -1,4 +1,4 @@
-import asyncio
+'import asyncio
 import copy
 import random
 import string
@@ -286,8 +286,8 @@ class ComputeModule(Module):
 
                 if await self.database.machines.has(id):
                     # This update was pushed by a miner. Discard the group setting.
-                    #if not isinstance(packet.sender, int):
-                    #    del data['config']
+                    if not isinstance(packet.sender, int):
+                        del data['config']['group']
 
                     client = await self.database.machines.get(id)
                 else:
@@ -476,7 +476,8 @@ class ComputeModule(Module):
             for machine_id, machine in machines.items():
                 machine_group_id = machine.group.id if machine.group else None
 
-                await packet.send('machine', 'action', {**await get_group_data(machine_group_id), **{'id': 'refresh'}}, to=machine_id)
+                await packet.send('machine', 'action', {**await get_group_data(machine_group_id).as_obj(), **{'id': 'refresh'}}, to=machine_id)
             return
 
 __plugin__ = ComputeModule
+'

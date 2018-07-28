@@ -34,8 +34,7 @@ class Config:
 
         if self.dummy is not None: obj['dummy'] = self.dummy
 
-        if not is_client:
-            if self.group is not None: obj['group'] = self.group.as_obj()
+        if self.group is not None: obj['group'] = self.group.as_obj()
 
         if self.pool is not None: obj['pool'] = self.pool.as_obj()
         if self.wallet is not None: obj['wallet'] = self.wallet.as_obj()
