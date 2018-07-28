@@ -25,8 +25,11 @@ class Config:
     @property
     def is_valid(self):
         if not self.pool: return False
+        print('pool valid')
         if not self.wallet: return False
+        print('wallet valid')
         if not self.program: return False
+        print('proram valid')
         return True
 
     def as_obj(self, is_client=False):
