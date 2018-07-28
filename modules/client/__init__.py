@@ -83,12 +83,12 @@ class ClientModule(Module):
             self.logger.info('Action received: %r' % packet.payload)
             if packet.payload['id'] == 'upgrade':
                 await self.ivy.upgrade_script(packet.payload['version'])
-            #elif packet.payload['id'] == 'patch':
-            #    self.client.update(**packet.payload)
+            elif packet.payload['id'] == 'patch':
+                self.client.update(**packet.payload)
 
-            #    self.config.update(**self.client.as_obj(slim=True))
+                self.config.update(**self.client.as_obj())
 
-            #    self.ivy.save_config()
+                self.ivy.save_config()
             elif packet.payload['id'] == 'refresh':
                 del packet.payload['id']
 
