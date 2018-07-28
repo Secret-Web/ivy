@@ -4,9 +4,9 @@ from ivy.model.config import Config
 
 class Client:
     def __init__(self, **kwargs):
-        self.update(init=True, **kwargs)
+        self.update(**kwargs)
 
-    def update(self, init=False, **kwargs):
+    def update(self, **kwargs):
         self.machine_id = kwargs['machine_id'] if 'machine_id' in kwargs else None
         self.hardware = Hardware(**kwargs['hardware'] if 'hardware' in kwargs and kwargs['hardware'] else {})
 
