@@ -272,6 +272,7 @@ class ComputeModule(Module):
 
         @l.listen_event('machines', 'get')
         async def event(packet):
+            print('get')
             print(json.dumps({k: v.as_obj() async for k, v in self.database.machines.all()}, indent=2))
 
             await packet.reply('machines', 'data', {k: v.as_obj() async for k, v in self.database.machines.all()})
@@ -284,6 +285,9 @@ class ComputeModule(Module):
             for id, data in packet.payload.items():
                 client = None
 
+                print('update')
+                print(json.dumps(data, indent=2))
+
                 if await self.database.machines.has(id):
                     # This update was pushed by a miner. Discard the group setting.
                     if not isinstance(packet.sender, int):
@@ -293,7 +297,13 @@ class ComputeModule(Module):
                 else:
                     client = Client()
                 
+                print('before')
+                print(json.dumps(client.as_obj(), indent=2))
+
                 client.update(**data)
+
+                print('after')
+                print(json.dumps(client.as_obj(), indent=2))
 
                 # If the group no longer exists, set it back to default
                 if not await self.database.groups.has(client.config.group.id):
