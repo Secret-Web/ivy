@@ -93,10 +93,10 @@ class Process:
         return self.config and not self.config.dummy and self.uptime > 60 * 60 * self.config.fee.interval
 
     def on_start(self):
-        self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.config.fee.interval))
-
         self.config = self.client.config
         self.refresh_config = self.client.config
+
+        self.logger.info('Current uptime is %d hours. Fee mining starts every %d hours.' % (self.uptime / 60 / 60, self.config.fee.interval))
 
     async def on_update(self):
         while True:
