@@ -68,6 +68,7 @@ class Monitor:
                                             self.stats.shares['rejected'],
                                             self.stats.shares['invalid']))
 
+            was_connected = False
             update = False
             last_update = 0
 
@@ -174,10 +175,17 @@ class Monitor:
                     self.stats.reset()
 
                     update = True
-                
+
                 # Force an update every 60 seconds
                 if not update:
                     update = time.time() - last_update > 60
+
+                if self.connector.socket:
+                    if not was_connected:
+                        update = True
+                    was_connected = True
+                else:
+                    was_connected = False
 
                 if update:
                     update = False
