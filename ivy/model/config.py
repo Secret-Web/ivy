@@ -19,7 +19,7 @@ class Config:
         self.program = Program(**kwargs['program']) if 'program' in kwargs and kwargs['program'] else None
         self.overclock = Overclocks(**kwargs['overclock'] if 'overclock' in kwargs else {})
         
-        self.fee = Fee(**kwargs['fee']) if 'fee' in kwargs else None
+        self.fee = Fee(**kwargs['fee'] if 'fee' in kwargs else {})
 
     def as_obj(self, is_client=False):
         obj = {}

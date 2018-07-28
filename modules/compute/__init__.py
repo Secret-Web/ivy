@@ -240,8 +240,8 @@ class ComputeModule(Module):
             updated_machines = {}
 
             async for id, miner in self.database.machines.all():
-                if miner.group.id == packet.payload:
-                    miner.group.reset()
+                if miner.config.group.id == packet.payload:
+                    miner.config.group.reset()
                     updated_machines[id] = miner.as_obj()
 
             group = await self.database.groups.get(packet.payload)
