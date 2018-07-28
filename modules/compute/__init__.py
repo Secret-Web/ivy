@@ -291,7 +291,8 @@ class ComputeModule(Module):
                 if await self.database.machines.has(id):
                     # This update was pushed by a miner. Discard the group setting.
                     if not isinstance(packet.sender, int):
-                        del data['config']['group']
+                        if 'group' in data['config']:
+                            del data['config']['group']
 
                     client = await self.database.machines.get(id)
                 else:
