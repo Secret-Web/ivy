@@ -28,18 +28,21 @@ class Monitor:
 
         self.process = Process(module)
 
-        if self.client.config.dummy is not False:
-            self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.config.dummy, str) else self.client.config.dummy))
+        if self.client.config is None:
+            self.logger.warning('Not yet configured to run a program.')
         else:
-            if self.module.ivy.is_safe:
-                self.process.on_start()
+            if self.client.config.dummy is not False:
+                self.logger.warning('I am a monitoring script for %s.' % ('localhost' if not isinstance(self.client.config.dummy, str) else self.client.config.dummy))
             else:
-                # If the process was previously online for more than half an hour, assume it was stable
-                if self.process.miner_uptime > 60 * 30:
-                    self.module.new_message(level='warning', title='Miner Offline', text='Miner failed to start up previously. However, it seemed stable before. Starting up miner...')
+                if self.module.ivy.is_safe:
                     self.process.on_start()
                 else:
-                    self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
+                    # If the process was previously online for more than half an hour, assume it was stable
+                    if self.process.miner_uptime > 60 * 30:
+                        self.module.new_message(level='warning', title='Miner Offline', text='Miner failed to start up previously. However, it seemed stable before. Starting up miner...')
+                        self.process.on_start()
+                    else:
+                        self.module.new_message(level='danger', title='Miner Offline', text='Miner failed to start up previously. As a safety precaution, you must refresh the machine to begin mining!')
 
     async def refresh_miner(self, config):
         await self.process.refresh_miner(config)
