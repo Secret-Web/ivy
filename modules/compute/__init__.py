@@ -487,7 +487,12 @@ class ComputeModule(Module):
             for machine_id, machine in machines.items():
                 machine_group_id = machine.config.group.id if machine.config.group else None
 
-                await packet.send('machine', 'action', {'config': (await get_group_data(machine_group_id)).as_obj(), 'id': 'refresh'}, to=machine_id)
+                data = await get_group_data(machine_group_id)
+
+                if data is None:
+                    continue
+
+                await packet.send('machine', 'action', {'config': data.as_obj(), 'id': 'refresh'}, to=machine_id)
             return
 
 __plugin__ = ComputeModule
