@@ -296,7 +296,7 @@ class ComputeModule(Module):
                 if not await self.database.groups.has(client.config.group.id):
                     client.config.group.reset()
                 
-                print(client.config.as_obj())
+                print(json.dumps(client.config.as_obj(), indent=2))
 
                 await self.database.machines.put(id, client)
 
