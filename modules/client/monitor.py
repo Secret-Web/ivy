@@ -101,7 +101,8 @@ class Monitor:
                     if time.time() - self.last_hash_time > 60 * 5:
                         self.module.new_message(level='warning', title='Miner Frozen', text='Machine not hashing! Rebooting the system, now.')
 
-                        self.process.process.kill()
+                        if self.process.process:
+                            self.process.process.kill()
 
                         await asyncio.sleep(5)
 
