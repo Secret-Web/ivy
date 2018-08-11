@@ -41,7 +41,7 @@ class ComputeModule(Module):
         self.register_events(self.connector)
 
         asyncio.ensure_future(self.update())
-    
+
     async def update(self):
         last_refresh = time.time()
 
@@ -155,7 +155,7 @@ class ComputeModule(Module):
 
         @l.listen_event('messages', 'new')
         async def event(packet):
-            await self.new_message(packet, packet.payload)
+            await self.new_message(packet.payload)
 
         @l.listen_event('messages', 'delete')
         async def event(packet):
@@ -234,7 +234,7 @@ class ComputeModule(Module):
             id, group = await self.database.groups.new(packet.payload)
             await packet.send('groups', 'patch', {id: group.as_obj()})
 
-            await self.new_message(packet, {'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
+            await self.new_message({'level': 'info', 'text': 'A new group was created: %s' % group.name, 'group': id})
 
         @l.listen_event('groups', 'delete')
         async def event(packet):
@@ -253,9 +253,9 @@ class ComputeModule(Module):
             if len(updated_machines) > 0:
                 await packet.send('machines', 'patch', updated_machines)
 
-                await self.new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
+                await self.new_message({'level': 'warning', 'text': 'A group was deleted: %s. %d machines have been ejected!' % (group.name, len(updated_machines))})
             else:
-                await self.new_message(packet, {'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
+                await self.new_message({'level': 'warning', 'text': 'A group was deleted: %s' % group.name})
 
         @l.listen_event('groups', 'update')
         async def event(packet):
@@ -315,7 +315,7 @@ class ComputeModule(Module):
 
             for id, action in packet.payload.items():
                 if action['id'] == 'upgrade':
-                    await self.new_message(packet, {'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
+                    await self.new_message({'level': 'warning', 'text': 'Machine instructed to upgrade to %s %s.' % (action['version']['name'], action['version']['version']), 'machine': id})
 
                 await self.send_action(packet, action, machine_id=id)
 
@@ -352,13 +352,13 @@ class ComputeModule(Module):
                 if len(self.database.stats) < IMMEDIATE_STAT_CUTOFF:
                     await packet.send('machines', 'stats', {k: v.as_obj() for k, v in updated_stats.items()})
 
-    async def new_message(self, packet, data):
+    async def new_message(self, data):
         if isinstance(data, dict):
             id, msg = await self.database.messages.new(data)
-            await packet.send('messages', 'patch', [msg.as_obj()])
+            await self.connector.socket.send('messages', 'patch', [msg.as_obj()])
         elif isinstance(data, list):
             for d in data:
-                self.new_message(packet, d)
+                self.new_message(d)
 
     async def send_action(self, packet, action, machine_id=None, group_id=None):
         # The 'patch' action alters miner configuration without restarting
